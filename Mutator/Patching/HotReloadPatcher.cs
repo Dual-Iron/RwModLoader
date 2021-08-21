@@ -133,7 +133,9 @@ namespace Mutator.Patching
                 TypeReference objectType = new("UnityEngine", "Object", unload.Module, baseType.Scope);
 
                 MethodReference findObjectOfType = new("FindObjectOfType", type, objectType);
-                findObjectOfType.GenericParameters.Add(new(findObjectOfType));
+                GenericParameter genericParam = new(findObjectOfType);
+                findObjectOfType.GenericParameters.Add(genericParam);
+                findObjectOfType.ReturnType = genericParam;
 
                 GenericInstanceMethod findObjectOfTypeGeneric = new(findObjectOfType);
                 findObjectOfTypeGeneric.GenericArguments.Add(type);

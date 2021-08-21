@@ -1,8 +1,9 @@
 ﻿using BepInEx.Preloader.Patching;
+using MonoMod.RuntimeDetour;
 using Realm.Logging;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -10,8 +11,10 @@ using UnityEngine;
 
 namespace Realm.ModLoading
 {
-    public sealed class LoadedAssemblyPool
+    public sealed class LoadedAssemblyPool : IDisposable
     {
+        private static readonly DetourModManager manager = new();
+
         public static LoadedAssemblyPool Load(IProgressable progressable, AssemblyPool asmPool)
         {
             LoadedAssemblyPool ret = new(asmPool);
@@ -27,31 +30,62 @@ namespace Realm.ModLoading
 
             ret.RunPatchers(progressable, SetTaskProgress);
 
-            if (progressable.ProgressState == ProgressStateType.Failed) return ret;
+            tasksComplete++;
+            if (progressable.ProgressState == ProgressStateType.Failed) {
+                return ret;
+            }
 
             ret.LoadAssemblies(progressable, SetTaskProgress);
 
-            if (progressable.ProgressState == ProgressStateType.Failed) return ret;
+            tasksComplete++;
+            if (progressable.ProgressState == ProgressStateType.Failed) {
+                return ret;
+            }
 
             ret.InitializeMods(progressable, SetTaskProgress);
 
             return ret;
         }
 
-        private readonly Dictionary<string, Assembly> loadedAssembliesByName = new();
+        private readonly List<LoadedModAssembly> loadedAssemblies = new();
+        private bool disposedValue;
 
-        public AssemblyPool AssemblyPool { get; }
+        public AssemblyPool Pool { get; }
+        public ReadOnlyCollection<LoadedModAssembly> LoadedAssemblies { get; }
 
         private LoadedAssemblyPool(AssemblyPool assemblies)
         {
-            AssemblyPool = assemblies;
+            Pool = assemblies;
+            LoadedAssemblies = new(loadedAssemblies);
         }
 
-        public IEnumerable<string> LoadedAssemblyNames => loadedAssembliesByName.Keys;
-
-        public bool TryGetLoadedAssembly(string name, [MaybeNullWhen(false)] out Assembly asm)
+        public void Dispose()
         {
-            return loadedAssembliesByName.TryGetValue(name, out asm);
+            if (!disposedValue) {
+                Pool.Dispose();
+
+                disposedValue = true;
+            }
+        }
+
+        public void Unload(IProgressable progressable)
+        {
+            int complete = 0;
+            int count = loadedAssemblies.Count;
+
+            foreach (var loadedAsmKvp in loadedAssemblies) {
+                manager.Unload(loadedAsmKvp.Asm);
+
+                try {
+                    Pool[loadedAsmKvp.AsmName].Descriptor.Unload();
+                } catch (Exception e) {
+                    progressable.Message(MessageType.Fatal, $"Assembly {loadedAsmKvp.AsmName} failed to unload: {e}");
+                }
+
+                progressable.Progress = ++complete / (float)count;
+            }
+
+            loadedAssemblies.Clear();
         }
 
         private void RunPatchers(IProgressable progressable, Action<float> setTaskProgress)
@@ -80,7 +114,7 @@ namespace Realm.ModLoading
 
             setTaskProgress(1 / 3f);
 
-            var assembliesByFile = AssemblyPool.Assemblies.ToDictionary(asm => asm.FileName);
+            var assembliesByFile = Pool.Assemblies.ToDictionary(asm => asm.FileName);
 
             // Patch(ref AssemblyDefinition)
             foreach (var patcher in patchers) {
@@ -127,14 +161,14 @@ namespace Realm.ModLoading
             {
                 foreach (var module in asm.AsmDef.Modules)
                     foreach (var reference in module.AssemblyReferences)
-                        if (AssemblyPool.TryGetAssembly(reference.Name, out var item))
+                        if (Pool.TryGetAssembly(reference.Name, out var item))
                             yield return item;
             }
 
             // Sort assemblies by their dependencies
-            IEnumerable<ModAssembly> sortedAssemblies = AssemblyPool.Assemblies.TopologicalSort(GetDependencies);
+            IEnumerable<ModAssembly> sortedAssemblies = Pool.Assemblies.TopologicalSort(GetDependencies);
 
-            int total = AssemblyPool.Count;
+            int total = Pool.Count;
             int finished = 0;
 
             foreach (var asm in sortedAssemblies) {
@@ -142,7 +176,7 @@ namespace Realm.ModLoading
                 // Update assembly references
                 foreach (var module in asm.AsmDef.Modules)
                     foreach (var reference in module.AssemblyReferences)
-                        if (AssemblyPool.TryGetAssembly(reference.FullName, out var asmRefAsm)) {
+                        if (Pool.TryGetAssembly(reference.FullName, out var asmRefAsm)) {
                             reference.Name = asmRefAsm.AsmDef.Name.Name;
                         }
 
@@ -152,7 +186,7 @@ namespace Realm.ModLoading
                 asm.AsmDef.Dispose();
 
                 try {
-                    loadedAssembliesByName.Add(asm.AsmName, Assembly.Load(ms.ToArray()));
+                    loadedAssemblies.Add(new(Assembly.Load(ms.ToArray()), asm.AsmName));
                 } catch (Exception e) {
                     progressable.Message(MessageType.Fatal, $"Assembly {asm.AsmName} failed to load: {e}");
                 }
@@ -166,17 +200,17 @@ namespace Realm.ModLoading
         private void InitializeMods(IProgressable progressable, Action<float> setTaskProgress)
         {
             // EnumExtender dependency fix
-            VirtualEnums.VirtualEnumApi.ReloadWith(loadedAssembliesByName.Values, Program.Logger.LogError);
+            VirtualEnums.VirtualEnumApi.ReloadWith(loadedAssemblies.Select(lm => lm.Asm), Program.Logger.LogError);
 
             StaticFixes.PreLoad();
 
-            int total = loadedAssembliesByName.Count;
+            int total = loadedAssemblies.Count;
             int finished = 0;
 
             // Load mods one-by-one
-            foreach (var loadedAssemblyKvp in loadedAssembliesByName) {
-                ModAssembly modAssembly = AssemblyPool[loadedAssemblyKvp.Key];
-                Assembly loadedModAssembly = loadedAssemblyKvp.Value;
+            foreach (var loadedAssemblyKvp in loadedAssemblies) {
+                ModAssembly modAssembly = Pool[loadedAssemblyKvp.AsmName];
+                Assembly loadedModAssembly = loadedAssemblyKvp.Asm;
 
                 try {
                     modAssembly.Descriptor.Initialize(loadedModAssembly);

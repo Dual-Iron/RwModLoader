@@ -32,10 +32,19 @@ namespace Realm
             NeuterPartiality();
 
             // TODO NEXT: load plugins on startup and reload on demand
-            Progressable progressable = new();
+            PercentMessagingProgressable progressable = new();
+
+            progressable.Message(MessageType.Info, "Getting assemblies");
 
             AssemblyPool pool = AssemblyPool.ReadMods(progressable, Paths.PluginPath);
-            LoadedAssemblyPool loadedPool = LoadedAssemblyPool.Load(progressable, pool);
+
+            progressable.Message(MessageType.Info, "Loading assemblies");
+
+            using LoadedAssemblyPool loadedPool = LoadedAssemblyPool.Load(progressable, pool);
+
+            progressable.Message(MessageType.Info, "Unloading assemblies");
+
+            loadedPool.Unload(progressable);
         }
 
         private static void PreventBepPatcherDisposal()

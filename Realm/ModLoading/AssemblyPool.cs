@@ -1,6 +1,7 @@
 ﻿using BepInEx;
 using Mono.Cecil;
 using Realm.Logging;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -9,11 +10,12 @@ using System.Text;
 
 namespace Realm.ModLoading
 {
-    public sealed class AssemblyPool
+    public sealed class AssemblyPool : IDisposable
     {
         public const string IterationSeparator = ";;";
 
         private static readonly string[] ignore = new[] { "EnumExtender" };
+        private static int id;
 
         public static AssemblyPool ReadMods(IProgressable progressable, string directory)
         {
@@ -103,18 +105,17 @@ namespace Realm.ModLoading
             }
         }
 
-        private static int id;
-
         private readonly Dictionary<string, ModAssembly> modAssemblies = new();
 
-        private AssemblyPool() { }
+        private bool disposedValue;
 
         public int ID { get; } = unchecked(id++);
-
         public int Count => modAssemblies.Count;
         public IEnumerable<string> Names => modAssemblies.Keys;
         public IEnumerable<ModAssembly> Assemblies => modAssemblies.Values;
         public ModAssembly this[string name] => modAssemblies[name];
+
+        private AssemblyPool() { }
 
         public bool TryGetAssembly(string name, [MaybeNullWhen(false)] out ModAssembly modAssembly)
         {
@@ -123,9 +124,24 @@ namespace Realm.ModLoading
 
         public void Dispose()
         {
-            foreach (var modAsm in modAssemblies.Values) {
-                modAsm.AsmDef.Dispose();
+            DoDispose();
+            GC.SuppressFinalize(this);
+        }
+
+        private void DoDispose()
+        {
+            if (!disposedValue) {
+                foreach (var modAsm in modAssemblies.Values) {
+                    modAsm.AsmDef.Dispose();
+                }
+
+                disposedValue = true;
             }
+        }
+
+        ~AssemblyPool()
+        {
+            DoDispose();
         }
     }
 }
