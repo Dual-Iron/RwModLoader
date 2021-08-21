@@ -6,20 +6,21 @@
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <WarningsAsErrors>nullable</WarningsAsErrors>
-
-    <PublishSingleFile>true</PublishSingleFile>
-    <PublishReadyToRun>true</PublishReadyToRun>
-    <PublishTrimmed>true</PublishTrimmed>
-    <TrimMode>link</TrimMode>
+    <AlsoPublish>true</AlsoPublish>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
     <PackageReference Include="Mono.Cecil" Version="0.11.4" />
+
+    <EmbeddedResource Include="..\RwBep.zip">
+      <Visible>false</Visible>
+      <LogicalName>RwBep</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition=" '$(BuildingInsideVisualStudio)' == 'true' ">
-    <Exec Command="dotnet publish $(ProjectDir)$(ProjectName).csproj -f net6.0 -r win-x64 &#45;-self-contained true -o %appdata%\.rw" />
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition=" '$(BuildingInsideVisualStudio)' == 'true' And '$(AlsoPublish)' == 'true' ">
+    <Exec Command="dotnet publish $(ProjectDir)$(ProjectName).csproj -f net6.0 -r win-x64 --no-self-contained -p:PublishReadyToRun=true -p:PublishSingleFile=true -o %appdata%\.rw" />
   </Target>
 
 </Project>
