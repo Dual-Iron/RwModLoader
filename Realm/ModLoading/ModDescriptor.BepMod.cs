@@ -1,8 +1,8 @@
-﻿using BepInEx;
-using BepInEx.Bootstrap;
-using Mono.Cecil;
-using System.Reflection;
+﻿using System.Reflection;
 using UnityEngine;
+using BepInEx;
+using Mono.Cecil;
+using BepInEx.Bootstrap;
 
 namespace Realm.ModLoading
 {

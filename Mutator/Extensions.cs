@@ -15,7 +15,7 @@ namespace Mutator
         public static TypeReference ImportTypeFromSysCore(this ModuleDefinition module, string ns, string name)
         {
             AssemblyNameReference? asmRef = module.AssemblyReferences.FirstOrDefault(a => a.Name == "System.Core");
-            
+
             if (asmRef == null) {
                 asmRef = new AssemblyNameReference("System.Core", new(3, 5));
                 module.AssemblyReferences.Add(asmRef);

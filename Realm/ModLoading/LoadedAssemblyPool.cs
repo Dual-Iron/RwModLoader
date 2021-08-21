@@ -1,6 +1,4 @@
-﻿using BepInEx.Preloader.Patching;
-using MonoMod.RuntimeDetour;
-using Realm.Logging;
+﻿using Realm.Logging;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -8,6 +6,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using BepInEx.Preloader.Patching;
+using MonoMod.RuntimeDetour;
 
 namespace Realm.ModLoading
 {

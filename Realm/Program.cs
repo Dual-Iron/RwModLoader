@@ -1,13 +1,13 @@
-﻿using BepInEx;
-using BepInEx.Logging;
-using BepInEx.Preloader.Patching;
-using Mono.Cecil.Cil;
-using MonoMod.Cil;
-using MonoMod.RuntimeDetour;
-using Partiality.Modloader;
-using Realm.Logging;
+﻿using Realm.Logging;
 using Realm.ModLoading;
 using System;
+using BepInEx;
+using BepInEx.Logging;
+using BepInEx.Preloader.Patching;
+using MonoMod.RuntimeDetour;
+using MonoMod.Cil;
+using Mono.Cecil.Cil;
+using Partiality.Modloader;
 
 namespace Realm
 {

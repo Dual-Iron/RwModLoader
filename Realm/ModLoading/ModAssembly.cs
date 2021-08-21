@@ -1,5 +1,4 @@
 ﻿using Mono.Cecil;
-
 namespace Realm.ModLoading
 {
     public sealed class ModAssembly

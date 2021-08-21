@@ -15,29 +15,22 @@ namespace VirtualEnums
         {
             virtualEnums.Clear();
 
-            foreach (var asm in assemblies)
-            {
+            foreach (var asm in assemblies) {
                 var types = GetTypesSafely(asm);
                 foreach (var type in types)
                     if (type.Name.StartsWith("EnumExt_"))
-                        try
-                        {
+                        try {
                             UseType(type);
-                        }
-                        catch (Exception e)
-                        {
+                        } catch (Exception e) {
                             errorHandler(e);
                         }
             }
 
             static IList<Type> GetTypesSafely(Assembly asm)
             {
-                try
-                {
+                try {
                     return asm.GetTypes();
-                }
-                catch (ReflectionTypeLoadException e)
-                {
+                } catch (ReflectionTypeLoadException e) {
                     var ret = new List<Type>(e.Types.Length);
 
                     foreach (Type type in e.Types)
@@ -61,10 +54,8 @@ namespace VirtualEnums
         {
             bool used = false;
 
-            foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.Static))
-            {
-                if (field.FieldType.IsEnum)
-                {
+            foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.Static)) {
+                if (field.FieldType.IsEnum) {
                     used = true;
 
                     long declared = AddDeclaration(field.FieldType, field.Name);
@@ -73,8 +64,7 @@ namespace VirtualEnums
                 }
             }
 
-            if (!used)
-            {
+            if (!used) {
                 throw new ArgumentException($"Type {type.FullName} should have one or more static fields whose types are enums.");
             }
         }
@@ -93,14 +83,12 @@ namespace VirtualEnums
 
         internal static long AddDeclaration(Type enumType, string name)
         {
-            if (!virtualEnums.TryGetValue(enumType, out var data))
-            {
+            if (!virtualEnums.TryGetValue(enumType, out var data)) {
                 virtualEnums[enumType] = data = new VirtualEnumData();
 
                 Type underlying = Enum.GetUnderlyingType(enumType);
                 Array enumvalues = Enum.GetValues(enumType);
-                foreach (var objValue in enumvalues)
-                {
+                foreach (var objValue in enumvalues) {
                     long value = AsLong(underlying, objValue);
 
                     if (data.MaxValue < value)

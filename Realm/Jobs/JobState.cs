@@ -11,7 +11,7 @@ namespace Realm.Jobs
 
         private static readonly object o = new();
 
-        public JobProgress Progress { get; private set; } 
+        public JobProgress Progress { get; private set; }
         public Exception? Exception { get; private set; }
         public bool Ok => Exception == null;
 
