@@ -171,14 +171,14 @@ namespace Mutator
                 return false;
             }
 
-            string patcherFilePath = Path.Combine(RwDir, "BepInEx", "patchers", "BepInEx.Partiality.Patcher.dll");
+            string patcherFilePath = Path.Combine(RwDir, "BepInEx", "patchers", "Realm.dll");
             if (!File.Exists(patcherFilePath)) {
                 return false;
             }
 
             try {
                 var bepInEx = AssemblyName.GetAssemblyName(Path.Combine(bepInExCoreDirectory, "BepInEx.dll"));
-                return bepInEx.Name == "BepInEx" && bepInEx.Version >= new Version(5, 4, 15, 0);
+                return bepInEx.Name == "BepInEx" && bepInEx.Version >= new Version(5, 4, 15);
             } catch (BadImageFormatException) {
                 return false;
             } catch (FileNotFoundException) {
