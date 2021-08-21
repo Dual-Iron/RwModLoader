@@ -13,7 +13,7 @@ namespace Mutator
         public RepoFiles(IList<string> uris, Version version)
         {
             this.uris = uris;
-            Version = new(version.Major, version.Minor, version.Build, 0);
+            Version = new(version.Major, version.Minor, version.Build);
         }
 
         public bool RwRoot => uris.Count == 1 && uris[0].EndsWith("/Rain World.zip");

@@ -40,9 +40,8 @@ namespace Mutator.Packaging
                         newFile.ProductMinorPart != existingFile.ProductMinorPart ||
                         newFile.ProductBuildPart != existingFile.ProductBuildPart;
                 else
-                    return newFile.ProductMajorPart <= existingFile.ProductMajorPart ||
-                        newFile.ProductMinorPart <= existingFile.ProductMinorPart ||
-                        newFile.ProductBuildPart <= existingFile.ProductBuildPart;
+                    return new Version(newFile.ProductMajorPart, newFile.ProductMinorPart, newFile.ProductBuildPart) <=
+                        new Version(existingFile.ProductMajorPart, existingFile.ProductMinorPart, existingFile.ProductBuildPart);
             } catch {
                 return true;
             } finally {
