@@ -15,16 +15,18 @@ namespace Mutator
                 Run(args);
                 return 0;
             } catch (AssemblyResolutionException e) {
-                Console.Error.WriteLine($"E:{e.AssemblyReference}");
-                Console.Error.WriteLine($"Could not resolve assembly {e.AssemblyReference.Name} v{e.AssemblyReference.Version}. Try adding it to your Rain World plugins folder.");
+                Console.WriteLine($"Could not resolve assembly {e.AssemblyReference.Name} v{e.AssemblyReference.Version}. Try adding it to your Rain World plugins folder.");
+                Console.Error.WriteLine(e);
                 return 1;
             } catch (AggregateException e) {
                 foreach (var innerE in e.Flatten().InnerExceptions) {
+                    Console.WriteLine(innerE.Message);
                     Console.Error.WriteLine(innerE);
                 }
                 return 2;
             } catch (Exception e) {
-                Console.Error.WriteLine(e.Message);
+                Console.WriteLine(e.Message);
+                Console.Error.WriteLine(e);
                 return -1;
             } finally {
                 InstallerApi.Dispose();
@@ -34,7 +36,7 @@ namespace Mutator
         private static void Run(string[] args)
         {
             if (args.Length == 0) {
-                Installer.UserRun().Wait();
+                Installer.UserRun();
                 return;
             }
 
@@ -42,7 +44,7 @@ namespace Mutator
 
             List<Task> tasks = new();
 
-            IEnumerator<string> enumerator = ((IReadOnlyList<string>)args).GetEnumerator();
+            using IEnumerator<string> enumerator = ((IReadOnlyList<string>)args).GetEnumerator();
 
             while (enumerator.MoveNext()) {
                 Task? task = null;
@@ -60,15 +62,17 @@ namespace Mutator
                 } else if (arg0 == "--raindb")
                     task = RaindbGetter.Run();
                 else if (arg0 == "--install")
-                    task = Installer.Install();
+                    task = Task.Run(Installer.Install);
                 else if (arg0 == "--uninstall")
-                    task = Task.Run(Installer.Uninstall);
-                else if (arg0 == "--selfupdate")
-                    task = Installer.SelfUpdate();
-                else if (enumerator.MoveNext()) {
+                    task = Task.Run(Installer.UninstallBepInEx);
+                else if (arg0 == "--selfupdate") {
+                    task = Installer.SelfUpdate(enumerator);
+                } else if (enumerator.MoveNext()) {
                     string arg1 = enumerator.Current;
 
-                    if (arg0 == "--patch")
+                    if (arg0 == "--replace")
+                        task = Installer.Replace(arg1);
+                    else if (arg0 == "--patch")
                         task = AssemblyPatcher.Patch(arg1, false);
                     else if (arg0 == "--patchup")
                         task = AssemblyPatcher.Patch(arg1, true);
@@ -108,21 +112,22 @@ namespace Mutator
             Console.WriteLine($@"
 RwModMutator v{typeof(Program).Assembly.GetName().Version} - Documentation: https://tinyurl.com/rwmmd
 
-help                        You're here!
-parallel                    Toggles between asynchronous and synchronous task execution.
-raindb                      Lists readily-downloadable mods from RainDB as a list of binary strings.
-install                     Installs Realm.
-uninstall                   Uninstalls Realm.
-selfupdate                  Updates Realm. (Not implemented)
-patch [path]                Patches the .NET assembly.
-patchup [path]              Patches the .NET assembly, then updates its RWMOD.
-download [path]             Downloads the RWMOD's contents.
-include [path]              Includes the RWMOD in the user's mods folder.
-wrap [path]                 Wraps the .NET assembly or ZIP into a RWMOD.
-unwrap [path]               Unwraps the RWMOD.
-extract [path]              Extracts the contents of the RWMOD to a folder in the same directory.
-restore [path]              Un-unwraps the RWMOD.
-update [rwmod name] [path]  Updates or creates the file's entry in the RWMOD with the specified name.
+--help                   You're here!
+--parallel               Toggles between asynchronous and synchronous task execution.
+--raindb                 Lists readily-downloadable mods from RainDB as a list of binary strings.
+--install                Installs Realm.
+--uninstall              Uninstalls Realm.
+--selfupdate             Updates Realm. (Not implemented)
+--replace [pid]          Used internally for self-updating.
+--patch [path]           Patches the .NET assembly.
+--patchup [path]         Patches the .NET assembly, then updates its RWMOD.
+--download [path]        Downloads the RWMOD's contents.
+--include [path]         Includes the RWMOD in the user's mods folder.
+--wrap [path]            Wraps the .NET assembly or ZIP into a RWMOD.
+--unwrap [path]          Unwraps the RWMOD.
+--extract [path]         Extracts the contents of the RWMOD to a folder in the same directory.
+--restore [path]         Un-unwraps the RWMOD.
+--update [rwmod] [path]  Updates or creates the file's entry in the RWMOD with the specified name.
 "
 );
         }

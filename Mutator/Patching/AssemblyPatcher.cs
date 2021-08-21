@@ -53,7 +53,7 @@ namespace Mutator.Patching
             asm.Dispose();
 
             if (backUp) {
-                File.Move(filePath, Path.Combine(GetPatchBackupsFolder().FullName, Path.GetFileName(filePath)), true);
+                File.Move(filePath, Path.Combine(PatchBackupsFolder.FullName, Path.GetFileName(filePath)), true);
             }
 
             await File.WriteAllBytesAsync(filePath, ms.ToArray());

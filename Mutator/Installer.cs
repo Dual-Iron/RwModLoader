@@ -1,6 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Reflection;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using static Mutator.InstallerApi;
 
@@ -8,9 +13,7 @@ namespace Mutator
 {
     public static class Installer
     {
-        private const string InstallerFileName = "mutator.exe";
-
-        public static async Task UserRun()
+        public static void UserRun()
         {
             InstallSelf();
 
@@ -21,41 +24,39 @@ namespace Mutator
 
             if (!IsBepInExInstalled()) {
                 Console.WriteLine("RwBepInEx is not installed. Installing.");
-                await InstallBepInEx();
+                InstallBepInEx();
+                Console.WriteLine("Success!");
             } else {
                 Console.Write("RwBepInEx is installed. Do you want to uninstall? (y/n) ");
 
                 if (Console.ReadKey(true).Key == ConsoleKey.Y) {
-                    Uninstall();
+                    UninstallBepInEx();
                     Console.WriteLine("Successfully uninstalled.");
                 }
             }
         }
 
-        public static async Task Install()
+        public static void Install()
         {
             InstallSelf();
 
             if (IsPartialityInstalled()) {
-                Console.WriteLine("Partiality is installed. Uninstalling.");
                 UninstallPartiality();
             }
 
             if (!IsBepInExInstalled()) {
-                Console.WriteLine("RwBepInEx is not installed. Installing.");
-                await InstallBepInEx();
+                InstallBepInEx();
             }
         }
 
         private static void InstallSelf()
         {
             string processPath = Environment.ProcessPath ?? throw new("No process path!");
-            string copyToDirectory = GetRwmodsUserFolder().FullName;
-            string destFileName = Path.Combine(copyToDirectory, Path.GetFileName(processPath));
+            string copyToDirectory = RwmodsUserFolder.FullName;
+            string destFileName = Path.Combine(copyToDirectory, "Mutator.exe");
 
-            if (!File.Exists(destFileName)) {
-                File.Copy(processPath, destFileName);
-            }
+            if (processPath != destFileName)
+                File.Copy(processPath, destFileName, true);
         }
 
         private static bool IsPartialityInstalled()
@@ -99,22 +100,63 @@ namespace Mutator
                     File.Delete(item);
                 }
             }
-
-            Console.WriteLine("Successfully uninstalled Partiality.");
         }
 
-        private const string Organization = "Dual-Iron";
-        private const string BepRepo = "RwBepInEx";
-
-        public static async Task SelfUpdate()
+        public static async Task Replace(string pid)
         {
-            throw new NotImplementedException(); // TODO LOW: self-updating
+            // Give the old process some time to die
+            using Process p = Process.GetProcessById(int.Parse(pid));
+
+            // That being 1000 ms
+            using CancellationTokenSource cts = new(1000);
+
+            try {
+                await p.WaitForExitAsync(cts.Token);
+            } catch { }
+
+            // If it's not dead, kill it
+            if (!p.HasExited) {
+                p.Kill(false);
+            }
         }
 
-        public static void Uninstall()
+        public static async Task SelfUpdate(IEnumerator<string> args)
+        {
+            await VerifyInternetConnection();
+
+            RepoFiles files = await GetFilesFromGitHubRepository("Dual-Iron", "RwModLoader");
+            FileVersionInfo myVersion = FileVersionInfo.GetVersionInfo(Environment.ProcessPath ?? throw new("No process path."));
+
+            // Abort if there's nothing to update
+            if (files.Version <= new Version(myVersion.ProductMajorPart, myVersion.ProductMinorPart, myVersion.ProductBuildPart)) {
+                return;
+            }
+
+            // Provide the new process with this process's arguments
+            StringBuilder processArgs = new($"--replace {Environment.ProcessId}");
+
+            while (args.MoveNext()) {
+                processArgs.Append($" \"{args.Current}\"");
+            }
+
+            // Get a safe temp file name
+            string tempFileName = Path.Combine(Path.GetTempPath(), "~rwtemp");
+
+            // Download to that file
+            using (Stream download = await files.GetOnlineFileStream(0))
+            using (Stream tempFile = File.Create(tempFileName))
+                await download.CopyToAsync(tempFile);
+
+            // Run the file
+            using Process p = Process.Start(new ProcessStartInfo(tempFileName, processArgs.ToString()) {
+                UseShellExecute = false
+            }) ?? throw new("No process created.");
+        }
+
+        public static void UninstallBepInEx()
         {
             if (!IsBepInExInstalled()) {
-                throw Err("Nothing to uninstall.");
+                return;
             }
 
             Directory.Delete(Path.Combine(RwDir, "BepInEx"), true);
@@ -136,7 +178,7 @@ namespace Mutator
 
             try {
                 var bepInEx = AssemblyName.GetAssemblyName(Path.Combine(bepInExCoreDirectory, "BepInEx.dll"));
-                return bepInEx.Name == "BepInEx" && bepInEx.Version >= new Version(5, 4, 5, 0);
+                return bepInEx.Name == "BepInEx" && bepInEx.Version >= new Version(5, 4, 15, 0);
             } catch (BadImageFormatException) {
                 return false;
             } catch (FileNotFoundException) {
@@ -144,20 +186,17 @@ namespace Mutator
             }
         }
 
-        private static async Task InstallBepInEx()
+        private static void InstallBepInEx()
         {
-            string bepInExPath = Path.Combine(RwDir, "BepInEx");
-            if (Directory.Exists(bepInExPath))
-                Directory.Delete(bepInExPath, true);
+            UninstallBepInEx();
 
             try {
-                await GetStreamFromGitHubRepository(Organization, BepRepo)
-                    .ContinueWith(t => DownloadWithProgressAndUnzip(t.Result, RwDir));
+                using Stream rwbep = typeof(Installer).Assembly.GetManifestResourceStream("RwBep") ?? throw new("No stream!");
+                using ZipArchive archive = new(rwbep, ZipArchiveMode.Read, true, UseEncoding);
+                archive.ExtractToDirectory(RwDir, true);
             } catch (AggregateException e) {
                 throw e.Flatten();
             }
-
-            Console.WriteLine("Successfully installed BepInEx.");
         }
     }
 }

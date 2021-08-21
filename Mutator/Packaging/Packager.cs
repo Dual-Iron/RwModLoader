@@ -62,6 +62,8 @@ namespace Mutator.Packaging
                 throw Err("Mod lacks a repository to fetch from.");
             }
 
+            await VerifyInternetConnection();
+
             RepoFiles files = await GetFilesFromGitHubRepository(header.RepositoryAuthor, header.RepositoryName);
 
             if (files.Version > header.ModVersion.ToVersion()) {
@@ -135,7 +137,7 @@ namespace Mutator.Packaging
                 throw Err("No such RWMOD file.");
             }
 
-            string rwmodsListingFolder = GetModsFolder().FullName;
+            string rwmodsListingFolder = ModsFolder.FullName;
             string newPath = Path.Combine(rwmodsListingFolder, Path.GetFileName(path));
 
             File.Move(path, newPath);
@@ -222,7 +224,7 @@ namespace Mutator.Packaging
                 if (File.Exists(outPath)) {
                     if (!ShouldSkipEntry(entry, outPath, false)) {
                         string relative = Path.GetRelativePath(RwDir, outPath);
-                        string restoration = Path.Combine(GetRestorationFolder().FullName, relative);
+                        string restoration = Path.Combine(RestorationFolder.FullName, relative);
 
                         if (!File.Exists(restoration))
                             File.Copy(outPath, restoration);
@@ -295,7 +297,7 @@ namespace Mutator.Packaging
                 }
 
                 string relative = Path.GetRelativePath(RwDir, outPath);
-                string restoration = Path.Combine(GetRestorationFolder().FullName, relative);
+                string restoration = Path.Combine(RestorationFolder.FullName, relative);
 
                 if (File.Exists(restoration))
                     File.Move(restoration, outPath, true);
