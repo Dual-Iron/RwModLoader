@@ -8,11 +8,8 @@ namespace Mutator
     {
         public static async Task Run()
         {
-            await RunAsync();
-        }
+            await InstallerApi.VerifyInternetConnection();
 
-        private static async Task RunAsync()
-        {
             using var stdout = new MemoryStream();
 
             foreach (var mod in await ModList.GetMods()) {
