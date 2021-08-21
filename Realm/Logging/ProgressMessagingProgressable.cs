@@ -1,6 +1,6 @@
 ﻿namespace Realm.Logging
 {
-    public class PercentMessagingProgressable : Progressable
+    public class ProgressMessagingProgressable : Progressable
     {
         public override float Progress {
             get => base.Progress;

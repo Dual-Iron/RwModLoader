@@ -32,7 +32,7 @@ namespace Realm
             NeuterPartiality();
 
             // TODO NEXT: load plugins on startup and reload on demand
-            PercentMessagingProgressable progressable = new();
+            ProgressMessagingProgressable progressable = new();
 
             progressable.Message(MessageType.Info, "Getting assemblies");
 
