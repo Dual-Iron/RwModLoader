@@ -40,11 +40,7 @@ namespace Realm
 
             progressable.Message(MessageType.Info, "Loading assemblies");
 
-            using LoadedAssemblyPool loadedPool = LoadedAssemblyPool.Load(progressable, pool);
-
-            progressable.Message(MessageType.Info, "Unloading assemblies");
-
-            loadedPool.Unload(progressable);
+            LoadedAssemblyPool loadedPool = LoadedAssemblyPool.Load(progressable, pool);
         }
 
         private static void PreventBepPatcherDisposal()
