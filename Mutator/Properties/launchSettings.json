@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Mutator": {
+      "commandName": "Project",
+      "commandLineArgs": "--patch ConfigMachine.dll"
+    }
+  }
+}

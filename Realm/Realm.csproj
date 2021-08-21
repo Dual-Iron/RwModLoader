@@ -1,0 +1,49 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--Modify or create this user.targets file to customize where your RW steam directory is.-->
+  <Import Condition="Exists('user.targets')" Project="user.targets" />
+
+  <PropertyGroup>
+    <SteamPath Condition="'$(SteamPath)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Rain World\</SteamPath>
+    <BepPath>$(SteamPath)BepInEx\</BepPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!--Update version when necessary-->
+    <Version>0.0.1</Version>
+    <TargetFramework>net35</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <DebugType>none</DebugType>
+    <Nullable>enable</Nullable>
+    <WarningsAsErrors>nullable</WarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="$(BepPath)core\BepInEx.dll" />
+    <Reference Include="$(BepPath)core\BepInEx.Preloader.dll" />
+    <Reference Include="$(BepPath)core\Mono.Cecil.dll" />
+    <Reference Include="$(BepPath)rw\MonoMod.dll" />
+    <Reference Include="$(BepPath)core\MonoMod.Utils.dll" />
+    <Reference Include="$(BepPath)core\MonoMod.RuntimeDetour.dll" />
+    <Reference Include="$(BepPath)rw\HOOKS-Assembly-CSharp.dll" />
+    <Reference Include="$(BepPath)rw\Partiality.dll" />
+    <Reference Include="$(SteamPath)RainWorld_Data\Managed\UnityEngine.dll" />
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(SteamPath)RainWorld_Data\Managed\Assembly-CSharp-refstub.dll</HintPath>
+    </Reference>
+
+    <ProjectReference Include="../VirtualEnums/VirtualEnums.csproj" />
+  </ItemGroup>
+
+  <!-- Make all references non-private, so they won't be copied to the output folder -->
+  <Target Name="ClearReferenceCopyLocalPaths" AfterTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Copy SourceFiles="$(TargetDir)$(TargetName)$(TargetExt)" DestinationFolder="$(BepPath)\patchers" />
+  </Target>
+
+</Project>
