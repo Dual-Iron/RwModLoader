@@ -31,7 +31,7 @@ namespace Realm
 
             NeuterPartiality();
 
-            // TODO NEXT: load plugins on startup and reload on demand
+            // TODO NEXT: reload plugins on demand
             ProgressMessagingProgressable progressable = new();
 
             progressable.Message(MessageType.Info, "Getting assemblies");
@@ -40,7 +40,7 @@ namespace Realm
 
             progressable.Message(MessageType.Info, "Loading assemblies");
 
-            LoadedAssemblyPool loadedPool = LoadedAssemblyPool.Load(progressable, pool);
+            LoadedAssemblyPool.Load(progressable, pool);
         }
 
         private static void PreventBepPatcherDisposal()
