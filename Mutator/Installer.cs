@@ -102,7 +102,7 @@ namespace Mutator
             }
         }
 
-        public static async Task Replace(string pid)
+        public static async Task AwaitKill(string pid)
         {
             // Give the old process some time to die
             using Process p = Process.GetProcessById(int.Parse(pid));
@@ -118,6 +118,18 @@ namespace Mutator
             if (!p.HasExited) {
                 p.Kill(false);
             }
+        }
+
+        public static async Task NeedsSelfUpdate()
+        {
+            await VerifyInternetConnection();
+
+            RepoFiles files = await GetFilesFromGitHubRepository("Dual-Iron", "RwModLoader");
+            FileVersionInfo myVersion = FileVersionInfo.GetVersionInfo(Environment.ProcessPath ?? throw new("No process path."));
+
+            bool needs = files.Version > new Version(myVersion.ProductMajorPart, myVersion.ProductMinorPart, myVersion.ProductBuildPart);
+
+            Console.WriteLine(needs ? "y" : "n");
         }
 
         public static async Task SelfUpdate(IEnumerator<string> args)

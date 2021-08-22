@@ -65,13 +65,15 @@ namespace Mutator
                     task = Task.Run(Installer.Install);
                 else if (arg0 == "--uninstall")
                     task = Task.Run(Installer.UninstallBepInEx);
-                else if (arg0 == "--selfupdate") {
+                else if (arg0 == "--needs-self-update")
+                    task = Installer.NeedsSelfUpdate();
+                else if (arg0 == "--self-update")
                     task = Installer.SelfUpdate(enumerator);
-                } else if (enumerator.MoveNext()) {
+                else if (enumerator.MoveNext()) {
                     string arg1 = enumerator.Current;
 
-                    if (arg0 == "--replace")
-                        task = Installer.Replace(arg1);
+                    if (arg0 == "--await-kill")
+                        task = Installer.AwaitKill(arg1);
                     else if (arg0 == "--patch")
                         task = AssemblyPatcher.Patch(arg1, false);
                     else if (arg0 == "--patchup")
@@ -93,6 +95,8 @@ namespace Mutator
 
                         if (arg0 == "--update")
                             task = Packager.Update(arg1, arg2);
+                        else
+                            throw new($"Unknown command: {arg0}");
                     }
                 }
 
@@ -117,8 +121,9 @@ RwModMutator v{typeof(Program).Assembly.GetName().Version} - Documentation: http
 --raindb                 Lists readily-downloadable mods from RainDB as a list of binary strings.
 --install                Installs Realm.
 --uninstall              Uninstalls Realm.
---selfupdate             Updates Realm. (Not implemented)
---replace [pid]          Used internally for self-updating.
+--needs-self-update      Prints 'y' if Realm needs an update or 'n' if not.
+--self-update            Updates Realm. (Not implemented)
+--await-kill [pid]       Kills the specified process.
 --patch [path]           Patches the .NET assembly.
 --patchup [path]         Patches the .NET assembly, then updates its RWMOD.
 --download [path]        Downloads the RWMOD's contents.
