@@ -23,7 +23,7 @@ namespace Realm
                 LoadEmbeddedAssemblies();
             } catch (MissingMethodException) {
                 Logger.LogWarning("EnumExtender in plugins folder.");
-                // TODO LOW: overwrite BepInEx's assembly resolving with our own to prevent old built-in dependencies from even being loaded
+                // TODO LOW: overwrite BepInEx's assembly resolving with our own to prevent old built-in dependencies (like EnumExtender.dll in the plugins folder) from even being loaded
                 // To do so, we would unsubscribe https://github.com/BepInEx/BepInEx/blob/v5-lts/BepInEx.Preloader/Entrypoint.cs#L68 this method and subscribe our own
             }
 
