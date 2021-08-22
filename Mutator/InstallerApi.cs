@@ -77,9 +77,15 @@ namespace Mutator
 
         public static DirectoryInfo PatchBackupsFolder => RwmodsUserFolder.CreateSubdirectory("patch-backups");
 
+        private static bool hasInternet;
+
         public static async Task VerifyInternetConnection()
         {
+            if (hasInternet) return;
+
             (await Client.GetAsync("http://google.com/generate_204")).EnsureSuccessStatusCode();
+
+            hasInternet = true;
         }
 
         public static async Task<RepoFiles> GetFilesFromGitHubRepository(string user, string repo)
