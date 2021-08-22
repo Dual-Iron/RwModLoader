@@ -9,7 +9,6 @@ using Partiality.Modloader;
 using System.Diagnostics;
 using System.IO;
 using Realm.ModLoading;
-using Realm.Remote;
 
 namespace Realm
 {
