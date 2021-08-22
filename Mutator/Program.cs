@@ -72,8 +72,10 @@ namespace Mutator
                 else if (enumerator.MoveNext()) {
                     string arg1 = enumerator.Current;
 
-                    if (arg0 == "--await-kill")
-                        task = Installer.AwaitKill(arg1);
+                    if (arg0 == "--kill")
+                        task = Task.Run(() => Installer.Kill(arg1));
+                    else if (arg0 == "--run")
+                        task = Task.Run(() => Installer.Run(arg1));
                     else if (arg0 == "--patch")
                         task = AssemblyPatcher.Patch(arg1, false);
                     else if (arg0 == "--patchup")
@@ -123,7 +125,7 @@ RwModMutator v{typeof(Program).Assembly.GetName().Version} - Documentation: http
 --uninstall              Uninstalls Realm.
 --needs-self-update      Prints 'y' if Realm needs an update or 'n' if not.
 --self-update            Updates Realm. (Not implemented)
---await-kill [pid]       Kills the specified process.
+--kill [pid]             Kills the specified process.
 --patch [path]           Patches the .NET assembly.
 --patchup [path]         Patches the .NET assembly, then updates its RWMOD.
 --download [path]        Downloads the RWMOD's contents.

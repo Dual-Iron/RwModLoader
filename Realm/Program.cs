@@ -8,6 +8,8 @@ using MonoMod.RuntimeDetour;
 using MonoMod.Cil;
 using Mono.Cecil.Cil;
 using Partiality.Modloader;
+using System.Diagnostics;
+using System.IO;
 
 namespace Realm
 {
@@ -19,6 +21,8 @@ namespace Realm
         // Perfect place to load plugins and add hooks
         internal static void Main()
         {
+            TrySelfUpdate();
+
             try {
                 LoadEmbeddedAssemblies();
             } catch (MissingMethodException) {
@@ -41,6 +45,25 @@ namespace Realm
             progressable.Message(MessageType.Info, "Loading assemblies");
 
             LoadedAssemblyPool.Load(progressable, pool);
+        }
+
+        private static void TrySelfUpdate()
+        {
+            if (Environment.GetEnvironmentVariable("LAUNCHED_FROM_MUTATOR", EnvironmentVariableTarget.Process) != "true") {
+                ProcessResult result = ProcessResult.From(Extensions.MutatorPath, "--needs-self-update", 1000);
+
+                if (result.ExitCode == 0) {
+                    bool needsToUpdate = result.Output == "y";
+                    if (needsToUpdate) {
+                        using var self = Process.GetCurrentProcess();
+                        ProcessResult.From(Extensions.MutatorPath, $"--kill {self.Id} --self-update --uninstall --install --run \"{Path.Combine(Paths.GameRootPath, "RainWorld.exe")}\"");
+                        return;
+                    }
+                    Logger.LogInfo("Realm is up to date!");
+                } else {
+                    Logger.LogWarning("Couldn't determine if Realm is up to date or not.");
+                }
+            }
         }
 
         private static void PreventBepPatcherDisposal()

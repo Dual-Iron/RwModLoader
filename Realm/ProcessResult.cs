@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.IO;
 
-namespace Realm.ModLoading
+namespace Realm
 {
     public sealed class ProcessResult
     {
@@ -11,11 +11,11 @@ namespace Realm.ModLoading
                 throw new FileNotFoundException("Program not found.");
             }
 
-            Process p = Process.Start(new ProcessStartInfo(file, args) {
+            using Process p = Process.Start(new ProcessStartInfo(file, args) {
                 CreateNoWindow = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                UseShellExecute = false // Use CreateProcess, not ShellExecute, because we need the specific mutator file and we want to redirect stderr,
+                UseShellExecute = false // Use CreateProcess, not ShellExecute, because we need the specific mutator file and we want to redirect stderr and stdout
             });
 
             string output = p.StandardOutput.ReadToEnd();

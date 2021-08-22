@@ -102,22 +102,29 @@ namespace Mutator
             }
         }
 
-        public static async Task AwaitKill(string pid)
+        public static void Kill(string pid)
         {
             // Give the old process some time to die
             using Process p = Process.GetProcessById(int.Parse(pid));
 
-            // That being 1000 ms
-            using CancellationTokenSource cts = new(1000);
-
+            // If it's not dead, kill it and wait for it to rot
             try {
-                await p.WaitForExitAsync(cts.Token);
-            } catch { }
+                if (!p.HasExited) {
+                    p.Kill(false);
+                }
 
-            // If it's not dead, kill it
-            if (!p.HasExited) {
-                p.Kill(false);
-            }
+                p.WaitForExit(5000);
+            } catch { }
+        }
+
+        public static void Run(string filePath)
+        {
+            ProcessStartInfo startInfo = new(filePath) {
+                CreateNoWindow = false,
+                UseShellExecute = false,
+            };
+            startInfo.EnvironmentVariables.Add("LAUNCHED_FROM_MUTATOR", "true");
+            Process.Start(startInfo)?.Dispose();
         }
 
         public static async Task NeedsSelfUpdate()
