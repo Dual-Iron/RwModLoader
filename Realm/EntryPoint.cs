@@ -1,6 +1,7 @@
 ﻿using BepInEx;
 using BepInEx.Bootstrap;
 using BepInEx.Logging;
+using BepInEx.Preloader.Patching;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
@@ -37,6 +38,11 @@ namespace Realm
             // Can't reference or hook Chainloader before it's been initialized on its own or the game bluescreens
             // So, instead, just track the logger that Chainloader uses.
             hook = new Hook(typeof(Logger).GetMethod("LogMessage", BindingFlags.NonPublic | BindingFlags.Static), typeof(EntryPoint).GetMethod(nameof(Logger_Log)));
+
+            // Also, prevent patchers from being disposed. We reuse those.
+            static void BeforeDispose(Action orig) { }
+
+            new Hook(typeof(AssemblyPatcher).GetMethod("DisposePatchers"), (Action<Action>)BeforeDispose);
         }
 
         public static void Logger_Log(Action<object> orig, object data)

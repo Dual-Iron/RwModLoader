@@ -93,6 +93,8 @@ namespace Realm.AssemblyLoading
             List<PatcherPlugin> patchers = AssemblyPatcher.PatcherPlugins.ToList();
 
             if (patchers.Count == 0) {
+                progressable.Message(MessageType.Warning, "Chainloader and Realm not listed in patcher plugins! This should never happen! See Realm.EntryPoint.Finish()");
+                setTaskProgress(1f);
                 return;
             }
 
@@ -103,6 +105,7 @@ namespace Realm.AssemblyLoading
             patchers.RemoveAll(pp => pp.TypeName == typeof(EntryPoint).FullName);
 
             if (patchers.Count == 0) {
+                setTaskProgress(1f);
                 return;
             }
 

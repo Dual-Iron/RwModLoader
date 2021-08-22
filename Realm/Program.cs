@@ -2,7 +2,6 @@
 using System;
 using BepInEx;
 using BepInEx.Logging;
-using BepInEx.Preloader.Patching;
 using MonoMod.RuntimeDetour;
 using MonoMod.Cil;
 using Mono.Cecil.Cil;
@@ -30,8 +29,6 @@ namespace Realm
                 // TODO LOW: overwrite BepInEx's assembly resolving with our own to prevent old built-in dependencies (like EnumExtender.dll in the plugins folder) from even being loaded
                 // To do so, we would unsubscribe https://github.com/BepInEx/BepInEx/blob/v5-lts/BepInEx.Preloader/Entrypoint.cs#L68 this method and subscribe our own
             }
-
-            PreventBepPatcherDisposal();
 
             NeuterPartiality();
 
@@ -61,22 +58,15 @@ namespace Realm
             }
         }
 
-        private static void PreventBepPatcherDisposal()
-        {
-            static void BeforeDispose(Action orig) { }
-
-            new Hook(typeof(AssemblyPatcher).GetMethod("DisposePatchers"), (Action<Action>)BeforeDispose);
-        }
-
         private static void NeuterPartiality()
         {
-            static void NeuterPartiality(ILContext il)
+            static void LoadAllModsIL(ILContext il)
             {
                 il.Instrs.Clear();
                 il.Instrs.Add(Instruction.Create(OpCodes.Ret));
             }
 
-            new ILHook(typeof(ModManager).GetMethod("LoadAllMods"), NeuterPartiality);
+            new ILHook(typeof(ModManager).GetMethod("LoadAllMods"), LoadAllModsIL);
         }
 
         private static void LoadEmbeddedAssemblies()
