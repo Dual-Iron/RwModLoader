@@ -2,6 +2,6 @@
 {
     public enum MessageType
     {
-        Info, Warning, Fatal
+        Diagnostic, Info, Warning, Fatal
     }
 }

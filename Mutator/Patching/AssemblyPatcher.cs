@@ -24,7 +24,7 @@ namespace Mutator.Patching
         public static async Task Patch(string filePath, bool shouldUpdate)
         {
             if (!File.Exists(filePath)) {
-                throw Err("Assembly file does not exist.");
+                throw new("Assembly file does not exist.");
             }
 
             using AssemblyDefinition asm = GetBepAssemblyDef(filePath);
@@ -131,7 +131,7 @@ namespace Mutator.Patching
             string hooksAsmPath = Path.Combine(RwDir, "BepInEx", "rw", "HOOKS-Assembly-CSharp.dll");
 
             if (!File.Exists(hooksAsmPath)) {
-                throw Err("The file `HOOKS-Assembly-CSharp.dll` does not exist in `Rain World/BepInEx/rw`.");
+                throw new("The file `HOOKS-Assembly-CSharp.dll` does not exist in `Rain World/BepInEx/rw`.");
             }
 
             LegacyReferenceTransformer? typeScanner = null;

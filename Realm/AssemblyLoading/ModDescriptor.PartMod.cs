@@ -3,7 +3,7 @@ using Partiality.Modloader;
 using System;
 using System.Reflection;
 
-namespace Realm.ModLoading
+namespace Realm.AssemblyLoading
 {
     public abstract partial class ModDescriptor
     {

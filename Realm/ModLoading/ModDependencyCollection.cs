@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Mutator.Packaging
+namespace Realm.ModLoading
 {
     public sealed class ModDependencyCollection
     {
@@ -11,13 +11,13 @@ namespace Mutator.Packaging
             dependencies = dependencyString;
         }
 
-        public ModDependencyCollection(string[] dependencies) : this(string.Join(';', dependencies) + ";")
+        public ModDependencyCollection(string[] dependencies) : this(string.Join(";", dependencies) + ";")
         { }
 
         public ModDependencyCollection() : this("")
         { }
 
-        public string[] Dependencies => dependencies.Split(';', StringSplitOptions.RemoveEmptyEntries);
+        public string[] Dependencies => dependencies.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
 
         public override string ToString() => dependencies;
     }

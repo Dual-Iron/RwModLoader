@@ -14,6 +14,7 @@ namespace Realm.Logging
             }
 
             Program.Logger.Log(messageType switch {
+                MessageType.Diagnostic => LogLevel.Debug,
                 MessageType.Info => LogLevel.Info,
                 MessageType.Warning => LogLevel.Warning,
                 MessageType.Fatal => LogLevel.Fatal,

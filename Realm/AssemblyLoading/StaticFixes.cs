@@ -1,7 +1,7 @@
 ﻿using Partiality;
 using System.Reflection;
 
-namespace Realm.ModLoading
+namespace Realm.AssemblyLoading
 {
     internal static class StaticFixes
     {
@@ -31,8 +31,7 @@ namespace Realm.ModLoading
 
         public static void PostLoad()
         {
-            // TODO LOW: replace calling stubbed init hooks for ProcessManager and RainWorldGame
-            // with a legitimate call, by switching menus when loading mods.
+            // TODO LOW: replace calling stubbed init hooks for ProcessManager and RainWorldGame with a legitimate call by switching menus when loading mods.
 
             // Stub initialization hooks
             stubbed = true;

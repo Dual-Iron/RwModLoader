@@ -36,9 +36,16 @@ namespace Realm
             Error = error;
         }
 
-        // Null if timeout
+        /// <summary>
+        /// The process's exit code, or null if the process timed out.
+        /// </summary>
         public int? ExitCode { get; }
         public string Output { get; }
         public string Error { get; }
+
+        /// <summary>
+        /// An exit message trimmed of punctuation. For example, "Process exited with code 0".
+        /// </summary>
+        public string ExitMessage => $"Process {(ExitCode == null ? "timed out" : "exited with code " + ExitCode)}";
     }
 }

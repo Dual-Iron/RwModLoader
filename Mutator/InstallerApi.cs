@@ -54,15 +54,7 @@ namespace Mutator
                 }
             }
 
-            throw Err("Could not find the Rain World directory. Move the installer into the \"Rain World\" folder.");
-        }
-
-        /// <summary>
-        /// Returns an exception.
-        /// </summary>
-        public static Exception Err(string err)
-        {
-            return new Exception(err);
+            throw new("Could not find the Rain World directory. Move the installer into the \"Rain World\" folder.");
         }
 
         private static DirectoryInfo? rwmodUserFolder;
@@ -83,7 +75,11 @@ namespace Mutator
         {
             if (hasInternet) return;
 
-            (await Client.GetAsync("http://google.com/generate_204")).EnsureSuccessStatusCode();
+            try {
+                (await Client.GetAsync("http://google.com/generate_204")).EnsureSuccessStatusCode();
+            } catch {
+                throw new("No internet connection.");
+            }
 
             hasInternet = true;
         }
@@ -99,7 +95,7 @@ namespace Mutator
             var versionMatch = Regex.Match(message, @"""tag_name"":""(.+?)""");
 
             if (!versionMatch.Success || !Version.TryParse(versionMatch.Groups[1].Value.Trim('v', 'V'), out var version)) {
-                throw Err("Latest release had a tag that was not a simple version.");
+                throw new("Latest release had a tag that was not a simple version.");
             }
 
             // Fetch the download link
@@ -121,9 +117,9 @@ namespace Mutator
                     return await (await Client.SendAsync(request)).EnsureSuccessStatusCode().Content.ReadAsStringAsync();
                 } catch (HttpRequestException e) {
                     if (e.StatusCode == HttpStatusCode.NotFound) {
-                        throw Err("GitHub repository does not exist, or it has no full releases. " + e.Message);
+                        throw new("GitHub repository does not exist, or it has no full releases. " + e.Message);
                     }
-                    throw Err("Connecting to GitHub API failed. " + e.Message);
+                    throw new("Connecting to GitHub API failed. " + e.Message);
                 }
             }
         }

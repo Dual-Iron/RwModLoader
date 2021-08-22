@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace Realm.ModLoading
+namespace Realm.AssemblyLoading
 {
     public class LoadedModAssembly
     {

@@ -33,9 +33,9 @@ namespace Mutator
                 response.EnsureSuccessStatusCode();
             } catch (HttpRequestException e) {
                 if (e.StatusCode == HttpStatusCode.NotFound) {
-                    throw InstallerApi.Err("The RainDB GitHub repository did not exist. " + e.Message);
+                    throw new("The RainDB GitHub repository did not exist. " + e.Message);
                 }
-                throw InstallerApi.Err("Connecting to GitHub API failed. " + e.Message);
+                throw new("Connecting to GitHub API failed. " + e.Message);
             }
 
             string content = await response.Content.ReadAsStringAsync();
@@ -46,17 +46,17 @@ namespace Mutator
 
             int position = content.IndexOf(firstPhrase);
             if (position == -1) {
-                throw InstallerApi.Err("Couldn't find tools and utilities section on RainDB.");
+                throw new("Couldn't find tools and utilities section on RainDB.");
             }
 
             int nextPosition = content.IndexOf(secondPhrase, position);
             if (nextPosition == -1) {
-                throw InstallerApi.Err("Couldn't find v1.5 mods section on RainDB.");
+                throw new("Couldn't find v1.5 mods section on RainDB.");
             }
 
             int lastPosition = content.IndexOf(lastPhrase, nextPosition);
             if (lastPosition == -1) {
-                throw InstallerApi.Err("Couldn't find v1.01 mods section on RainDB.");
+                throw new("Couldn't find v1.01 mods section on RainDB.");
             }
 
             position += firstPhrase.Length;

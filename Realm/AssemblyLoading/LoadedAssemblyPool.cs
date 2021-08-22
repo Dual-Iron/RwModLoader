@@ -9,7 +9,7 @@ using UnityEngine;
 using BepInEx.Preloader.Patching;
 using MonoMod.RuntimeDetour;
 
-namespace Realm.ModLoading
+namespace Realm.AssemblyLoading
 {
     public sealed class LoadedAssemblyPool : IDisposable
     {

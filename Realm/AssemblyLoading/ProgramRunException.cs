@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Realm.ModLoading
+namespace Realm.AssemblyLoading
 {
     [Serializable]
     public class ProgramRunException : Exception

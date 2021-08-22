@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Mutator.Packaging
+namespace Realm.ModLoading
 {
     public struct RwmodVersion
     {

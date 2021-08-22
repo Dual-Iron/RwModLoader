@@ -41,7 +41,7 @@ namespace Mutator
             try {
                 return await (await InstallerApi.Client.GetAsync(uris[index])).EnsureSuccessStatusCode().Content.ReadAsStreamAsync();
             } catch (HttpRequestException e) {
-                throw InstallerApi.Err("Fetching the download file stream failed. " + e.Message);
+                throw new("Fetching the download file stream failed. " + e.Message);
             }
         }
     }

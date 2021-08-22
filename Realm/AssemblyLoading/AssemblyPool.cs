@@ -1,14 +1,13 @@
 ﻿using BepInEx;
 using Mono.Cecil;
+using Partiality.Modloader;
 using Realm.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Linq;
-using System.Text;
 
-namespace Realm.ModLoading
+namespace Realm.AssemblyLoading
 {
     public sealed class AssemblyPool : IDisposable
     {
@@ -17,17 +16,14 @@ namespace Realm.ModLoading
         private static readonly string[] ignore = new[] { "EnumExtender" };
         private static int id;
 
-        public static AssemblyPool ReadMods(IProgressable progressable, string directory)
+        /// <summary>
+        /// Reads assemblies. Ignores assemblies that are not patched.
+        /// </summary>
+        public static AssemblyPool Read(IProgressable progressable, string[] files)
         {
-            Directory.CreateDirectory(directory);
-
-            string[] files = Directory.GetFiles(directory, "*.dll", SearchOption.AllDirectories);
-
             if (files.Length == 0) {
                 return new();
             }
-
-            Patch(progressable, files);
 
             DefaultAssemblyResolver resolver = new();
             resolver.AddSearchDirectory(Paths.BepInExAssemblyDirectory);
@@ -79,30 +75,14 @@ namespace Realm.ModLoading
                     if (type.IsAbstract || type.IsInterface || !type.HasMethods) {
                         continue;
                     }
-                    // TODO LOW: resolve for types indirectly inheriting?
-                    if (type.BaseType?.FullName == "BepInEx.BaseUnityPlugin") {
+                    if (type.IsSubtypeOf(typeof(BaseUnityPlugin))) {
                         return new ModDescriptor.BepMod(type);
                     }
-                    if (type.BaseType?.FullName == "Partiality.Modloader.PartialityMod") {
+                    if (type.IsSubtypeOf(typeof(PartialityMod))) {
                         return new ModDescriptor.PartMod(type.FullName);
                     }
                 }
             return new ModDescriptor.Lib();
-        }
-
-        private static void Patch(IProgressable progressable, string[] files)
-        {
-            StringBuilder args = new("--parallel");
-
-            foreach (var file in files) {
-                args.Append($" --patchup \"{file}\"");
-            }
-
-            ProcessResult result = ProcessResult.From(Extensions.MutatorPath, args.ToString());
-
-            if (result.ExitCode != 0) {
-                progressable.Message(MessageType.Fatal, $"Process exited with exit code {result.ExitCode?.ToString() ?? "TIMEOUT"}. \nE:{result.Error}\nO:{result.Output}");
-            }
         }
 
         private readonly Dictionary<string, ModAssembly> modAssemblies = new();

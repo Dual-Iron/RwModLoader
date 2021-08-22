@@ -4,7 +4,7 @@ using BepInEx;
 using Mono.Cecil;
 using BepInEx.Bootstrap;
 
-namespace Realm.ModLoading
+namespace Realm.AssemblyLoading
 {
     public abstract partial class ModDescriptor
     {

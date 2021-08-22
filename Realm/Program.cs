@@ -1,5 +1,4 @@
 ﻿using Realm.Logging;
-using Realm.ModLoading;
 using System;
 using BepInEx;
 using BepInEx.Logging;
@@ -10,6 +9,7 @@ using Mono.Cecil.Cil;
 using Partiality.Modloader;
 using System.Diagnostics;
 using System.IO;
+using Realm.ModLoading;
 
 namespace Realm
 {
@@ -35,34 +35,29 @@ namespace Realm
 
             NeuterPartiality();
 
-            // TODO NEXT: reload plugins on demand
-            ProgressMessagingProgressable progressable = new();
-
-            progressable.Message(MessageType.Info, "Getting assemblies");
-
-            AssemblyPool pool = AssemblyPool.ReadMods(progressable, Paths.PluginPath);
-
-            progressable.Message(MessageType.Info, "Loading assemblies");
-
-            LoadedAssemblyPool.Load(progressable, pool);
+            // TODO NEXT: GUI rwmod listing
+            new ModLoader().Load(new ProgressMessagingProgressable());
         }
 
         private static void TrySelfUpdate()
         {
-            if (Environment.GetEnvironmentVariable("LAUNCHED_FROM_MUTATOR", EnvironmentVariableTarget.Process) != "true") {
-                ProcessResult result = ProcessResult.From(Extensions.MutatorPath, "--needs-self-update", 1000);
+            if (Environment.GetEnvironmentVariable("LAUNCHED_FROM_MUTATOR", EnvironmentVariableTarget.Process) == "true") {
+                return;
+            }
 
-                if (result.ExitCode == 0) {
-                    bool needsToUpdate = result.Output == "y";
-                    if (needsToUpdate) {
-                        using var self = Process.GetCurrentProcess();
-                        ProcessResult.From(Extensions.MutatorPath, $"--kill {self.Id} --self-update --uninstall --install --run \"{Path.Combine(Paths.GameRootPath, "RainWorld.exe")}\"");
-                        return;
-                    }
-                    Logger.LogInfo("Realm is up to date!");
-                } else {
-                    Logger.LogWarning("Couldn't determine if Realm is up to date or not.");
+            ProcessResult result = ProcessResult.From(Extensions.MutatorPath, "--needs-self-update", 1000);
+
+            if (result.ExitCode == 0) {
+                bool needsToUpdate = result.Output == "y";
+                if (needsToUpdate) {
+                    using var self = Process.GetCurrentProcess();
+                    ProcessResult.From(Extensions.MutatorPath, $"--kill {self.Id} --self-update --uninstall --install --run \"{Path.Combine(Paths.GameRootPath, "RainWorld.exe")}\"");
+                    return;
                 }
+                Logger.LogInfo("Realm is up to date!");
+            } else {
+                Logger.LogWarning("Couldn't determine if Realm is up to date or not.");
+                Logger.LogDebug($"{result.ExitMessage}: {result.Error}");
             }
         }
 
