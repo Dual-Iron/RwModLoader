@@ -1,7 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-  <!--Modify or create this user.targets file to customize where your RW steam directory is.-->
-  <Import Condition="Exists('user.targets')" Project="user.targets" />
+  <Import Project="../global.targets" />
 
   <PropertyGroup>
     <SteamPath Condition="'$(SteamPath)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Rain World\</SteamPath>
@@ -9,10 +7,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <!--Update version when necessary-->
-    <Version>0.0.0</Version>
     <TargetFramework>net35</TargetFramework>
-    <LangVersion>9.0</LangVersion>
     <DebugType>none</DebugType>
     <Nullable>enable</Nullable>
     <WarningsAsErrors>nullable</WarningsAsErrors>
@@ -22,13 +17,6 @@
   <ItemGroup>
     <Reference Include="$(BepPath)core\MonoMod.RuntimeDetour.dll" />
   </ItemGroup>
-
-  <!-- Make all references non-private, so they won't be copied to the output folder -->
-  <Target Name="ClearReferenceCopyLocalPaths" AfterTargets="ResolveAssemblyReferences">
-    <ItemGroup>
-      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" />
-    </ItemGroup>
-  </Target>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Copy SourceFiles="$(TargetDir)$(TargetName)$(TargetExt)" DestinationFolder="$(BepPath)\rw" />
