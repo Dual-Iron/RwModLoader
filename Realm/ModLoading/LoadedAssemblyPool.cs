@@ -93,7 +93,6 @@ namespace Realm.ModLoading
             List<PatcherPlugin> patchers = AssemblyPatcher.PatcherPlugins.ToList();
 
             if (patchers.Count == 0) {
-                setTaskProgress(1);
                 return;
             }
 
@@ -102,6 +101,10 @@ namespace Realm.ModLoading
 
             // Remove self
             patchers.RemoveAll(pp => pp.TypeName == typeof(EntryPoint).FullName);
+
+            if (patchers.Count == 0) {
+                return;
+            }
 
             // Initialize()
             foreach (var patcher in patchers) {
