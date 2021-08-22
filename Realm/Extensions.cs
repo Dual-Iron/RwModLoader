@@ -38,7 +38,7 @@ namespace Realm
             HashSet<TNode> sorted = new();
 
             foreach (TNode input in nodes) {
-                Stack<TNode> currentStack = new Stack<TNode>();
+                Stack<TNode> currentStack = new();
                 if (!Visit(input, currentStack)) {
                     throw new Exception($"Cyclic Dependency:\r\n{currentStack.Select(x => $" - {x}").Aggregate((a, b) => $"{a}\r\n{b}")}");
                 }
