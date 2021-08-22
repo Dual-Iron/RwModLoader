@@ -29,22 +29,22 @@ namespace Realm.ModLoading
 
         public RwmodFile[] RwmodFiles { get; }
 
-        private ProcessResult ExecAll(string arg, int timeout)
+        private Execution ExecAll(string arg, int timeout)
         {
             StringBuilder args = new("--parallel");
             foreach (RwmodFile rwmodFile in RwmodFiles) {
                 args.Append($" --{arg} \"{rwmodFile.Path}\"");
             }
-            return ProcessResult.From(Extensions.MutatorPath, args.ToString(), timeout);
+            return Execution.From(Extensions.MutatorPath, args.ToString(), timeout);
         }
 
-        public ProcessResult UnwrapAll(int timeout = -1) => ExecAll("unwrap", timeout);
+        public Execution UnwrapAll(int timeout = -1) => ExecAll("unwrap", timeout);
 
-        public ProcessResult RestoreAll(int timeout = -1) => ExecAll("restore", timeout);
+        public Execution RestoreAll(int timeout = -1) => ExecAll("restore", timeout);
 
-        public ProcessResult Restore(int index, int timeout = -1)
+        public Execution Restore(int index, int timeout = -1)
         {
-            return ProcessResult.From(Extensions.MutatorPath, $"--restore \"{RwmodFiles[index]}\"", timeout);
+            return Execution.From(Extensions.MutatorPath, $"--restore \"{RwmodFiles[index]}\"", timeout);
         }
     }
 }

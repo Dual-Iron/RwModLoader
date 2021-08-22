@@ -10,26 +10,13 @@ namespace Mutator
         {
             await InstallerApi.VerifyInternetConnection();
 
-            using var stdout = new MemoryStream();
+            Stream stdout = Console.OpenStandardOutput();
+            
+            using BinaryWriter writer = new(stdout, InstallerApi.UseEncoding, true);
 
             foreach (var mod in await ModList.GetMods()) {
-                var order = new[]
-                {
-                    mod.Repo,
-                    mod.Author,
-                    mod.Name,
-                    mod.Description,
-                    mod.IconUrl,
-                    mod.VideoUrl,
-                    mod.ModDependencies
-                };
-
-                for (int i = 0; i < order.Length; i++) {
-                    await stdout.WriteAsync(InstallerApi.UseEncoding.GetBytes(order[i] ?? ""));
-                }
+                mod.Write(writer);
             }
-
-            await stdout.CopyToAsync(Console.OpenStandardOutput());
         }
     }
 }

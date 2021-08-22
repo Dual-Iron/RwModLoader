@@ -18,7 +18,7 @@ namespace Realm.ModLoading
                 args.Append($" --patchup \"{file}\"");
             }
 
-            ProcessResult result = ProcessResult.From(Extensions.MutatorPath, args.ToString());
+            Execution result = Execution.From(Extensions.MutatorPath, args.ToString());
 
             if (result.ExitCode != 0) {
                 progressable.Message(MessageType.Diagnostic, result.Error);
@@ -56,7 +56,7 @@ namespace Realm.ModLoading
 
             progressable.Message(MessageType.Info, "Unwrapping mods");
 
-            ProcessResult pr = rwmods!.UnwrapAll();
+            Execution pr = rwmods!.UnwrapAll();
 
             if (pr.ExitCode != 0) {
                 progressable.Message(MessageType.Diagnostic, pr.Error);

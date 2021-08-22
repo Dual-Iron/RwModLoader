@@ -9,6 +9,7 @@ using Partiality.Modloader;
 using System.Diagnostics;
 using System.IO;
 using Realm.ModLoading;
+using Realm.Remote;
 
 namespace Realm
 {
@@ -42,13 +43,13 @@ namespace Realm
                 return;
             }
 
-            ProcessResult result = ProcessResult.From(Extensions.MutatorPath, "--needs-self-update", 1000);
+            Execution result = Execution.From(Extensions.MutatorPath, "--needs-self-update", 1000);
 
             if (result.ExitCode == 0) {
                 bool needsToUpdate = result.Output == "y";
                 if (needsToUpdate) {
                     using var self = Process.GetCurrentProcess();
-                    ProcessResult.From(Extensions.MutatorPath, $"--kill {self.Id} --self-update --uninstall --install --run \"{Path.Combine(Paths.GameRootPath, "RainWorld.exe")}\"");
+                    Execution.From(Extensions.MutatorPath, $"--kill {self.Id} --self-update --uninstall --install --run \"{Path.Combine(Paths.GameRootPath, "RainWorld.exe")}\"");
                     return;
                 }
                 Logger.LogInfo("Realm is up to date!");
