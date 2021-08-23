@@ -8,16 +8,13 @@ namespace Realm
 {
     internal static class Extensions
     {
-#pragma warning disable IDE0029 // Use coalesce expression; Do not use because the == operator must be called.
+#pragma warning disable IDE0029 // Do not use ??= because the == operator must be called.
         private static RainWorld? rw;
         public static RainWorld? RainWorld => rw == null ? rw = UnityEngine.Object.FindObjectOfType<RainWorld>() : rw;
-#pragma warning restore IDE0029 // Use coalesce expression
+#pragma warning restore IDE0029
 
         public static string MutatorPath => Path.Combine(UserFolder, "Mutator.exe");
-
-        // See RwModMutator.InstallerAPI
         public static string UserFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".rw");
-
         public static string RwDepFolder => Path.Combine(Paths.BepInExRootPath, "rw");
 
         public static void CopyTo(this Stream from, Stream to)
