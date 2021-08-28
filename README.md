@@ -1,8 +1,3 @@
-## What get?
-A modloader for Rain World: RwModLoader, or RWML. Or Realm, because that sounds cool.
-
-https://user-images.githubusercontent.com/31146412/131228787-764c1723-7dca-46e6-894d-bd4472321428.mp4
-
 ## Where get?
 Go [here](https://github.com/Dual-Iron/RwModLoader/releases/latest).
 
@@ -11,6 +6,11 @@ Go [here](https://github.com/Dual-Iron/RwModLoader/releases/latest).
 - Use newer versions of BepInEx and MonoMod that are less prone to spontaneous combustion.
 - Hot reload assemblies from the in-game pause menu. (This feature is enabled through Realm's BepInEx config.)
 - Download fewer dependencies (EnumExtender and PublicityStunt).
+
+## What get?
+A modloader for Rain World: RwModLoader, or RWML. Or Realm, because that sounds cool.
+
+https://user-images.githubusercontent.com/31146412/131228787-764c1723-7dca-46e6-894d-bd4472321428.mp4
 
 ## Future plans
 - Download mods from https://raindb.net
