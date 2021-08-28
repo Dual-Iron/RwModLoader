@@ -1,8 +1,8 @@
-## Where get?
-Go [here](https://github.com/Dual-Iron/RwModLoader/releases/latest).
-
 ## What get?
 A modloader for Rain World: RwModLoader, or RWML. Or Realm, because that sounds cool.
+
+## Where get?
+Go [here](https://github.com/Dual-Iron/RwModLoader/releases/latest).
 
 ## Why get?
 - Enable, disable, and delete mods without closing the game.
