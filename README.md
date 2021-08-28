@@ -16,6 +16,7 @@ Go [here](https://github.com/Dual-Iron/RwModLoader/releases/latest).
 - Download mods from https://raindb.net
 - Autoupdating for GitHub mods
 - Integrate a form of ConfigMachine (still iffy about this one)
+- Mod templates
 
 ## Known issues
 - Dependencies simply aren't checked. If your logs get spammed by TypeLoadExceptions or similar, it's either because you're missing a dependency for the mod that's throwing or because the patcher is bugged. In either case, [make an issue](https://github.com/Dual-Iron/RwModLoader/issues/new/choose).
