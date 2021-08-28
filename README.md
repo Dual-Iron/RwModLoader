@@ -9,7 +9,7 @@ Go [here](https://github.com/Dual-Iron/RwModLoader/releases/latest).
 ## Why get?
 - Enable, disable, and delete mods without closing the game.
 - Use newer versions of BepInEx and MonoMod that are less prone to spontaneous combustion.
-- Hot reload assemblies while in-game.
+- Hot reload assemblies from the in-game pause menu. (This feature is enabled through Realm's BepInEx config.)
 - Download fewer dependencies (EnumExtender and PublicityStunt).
 
 ## Future plans
