@@ -1,6 +1,7 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System.Linq;
+using System.Runtime.Loader;
 using static Mono.Cecil.Cil.Instruction;
 
 namespace Mutator.Patching
@@ -27,12 +28,12 @@ namespace Mutator.Patching
 
         private static void PatchModType(TypeDefinition modType, bool bepInExMod)
         {
-            string unloadMethodName = bepInExMod ? "OnDestroy" : "OnDisable";
+            const string disable = "OnDisable";
 
-            MethodDefinition? unload = modType.Methods.FirstOrDefault(m => m.Name == unloadMethodName && m.Parameters.Count == 0);
+            MethodDefinition? unload = modType.Methods.FirstOrDefault(m => m.Name == disable && m.Parameters.Count == 0);
 
             if (unload == null) {
-                unload = new(unloadMethodName, MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual, modType.Module.TypeSystem.Void);
+                unload = new(disable, MethodAttributes.Public | MethodAttributes.HideBySig | (bepInExMod ? 0 : MethodAttributes.Virtual), modType.Module.TypeSystem.Void);
                 unload.Body = new(unload);
                 unload.Body.Instructions.Add(Create(OpCodes.Ret));
 
@@ -52,13 +53,13 @@ namespace Mutator.Patching
                 TypeDefinition type = unload.Module.Types[i];
 
                 // Ignore user-forbidden code, it can handle itself.
-                if (!type.Name.Contains("<")) {
+                if (!type.Name.Contains('<')) {
                     var cctor = type.Methods.FirstOrDefault(m => m.IsConstructor && m.IsStatic);
                     if (cctor != null || type.Fields.Any(f => f.IsStatic)) {
                         if (type.HasGenericParameters) {
                             GenericUnload(unload, type, cctor);
                         } else {
-                            GenerateUnloadForType(unload, unload, type);
+                            GenerateUnloadForType(unload, unload, type, type);
                         }
                     }
                 }
@@ -67,10 +68,16 @@ namespace Mutator.Patching
 
         private static void GenericUnload(MethodDefinition unload, TypeDefinition type, MethodDefinition? cctor)
         {
+            GenericInstanceType typeGeneric = new(type);
+
+            foreach (GenericParameter genericParam in type.GenericParameters) {
+                typeGeneric.GenericArguments.Add(genericParam);
+            }
+
             MethodDefinition localUnload = new("<Unload>", MethodAttributes.Assembly | MethodAttributes.Static, unload.Module.TypeSystem.Void);
-
-            GenerateUnloadForType(unload, localUnload, type);
-
+            localUnload.Body = new(localUnload);
+            GenerateUnloadForType(unload, localUnload, type, typeGeneric);
+            localUnload.Body.Instructions.Add(Create(OpCodes.Ret));
             type.Methods.Add(localUnload);
 
             if (cctor == null) {
@@ -83,12 +90,6 @@ namespace Mutator.Patching
                 cctor.Body.Instructions.Add(Create(OpCodes.Ret));
 
                 type.Methods.Add(cctor);
-            }
-
-            GenericInstanceType typeGeneric = new(type);
-
-            foreach (GenericParameter genericParam in type.GenericParameters) {
-                typeGeneric.GenericArguments.Add(genericParam);
             }
 
             MethodReference genericLocalUnloadRef = new(localUnload.Name, localUnload.ReturnType) {
@@ -109,6 +110,10 @@ namespace Mutator.Patching
             TypeReference delegateRef = unload.Module.ImportTypeFromCoreLib("System", "Delegate");
             MethodReference combine = delegateRef.ImportMethod(true, "Combine", delegateRef, delegateRef, delegateRef);
 
+            // Remove ret
+            il.RemoveAt(il.Body.Instructions.Count - 1);
+
+            // <unload> = (Action)Delegate.Combine(<unload>, new Action(<Unload>));
             il.Emit(OpCodes.Ldsfld, unloadDelegate);
             il.Emit(OpCodes.Ldnull);
             il.Emit(OpCodes.Ldftn, genericLocalUnloadRef);
@@ -116,9 +121,12 @@ namespace Mutator.Patching
             il.Emit(OpCodes.Call, combine);
             il.Emit(OpCodes.Castclass, actionRef);
             il.Emit(OpCodes.Stsfld, unloadDelegate);
+
+            // Re-add ret
+            il.Emit(OpCodes.Ret);
         }
 
-        private static void GenerateUnloadForType(MethodDefinition unload, MethodDefinition localUnload, TypeDefinition type)
+        private static void GenerateUnloadForType(MethodDefinition unload, MethodDefinition localUnload, TypeDefinition type, TypeReference arguedTypeRef)
         {
             if (type.IsInterface) {
                 return;
@@ -127,7 +135,7 @@ namespace Mutator.Patching
             ILProcessor il = localUnload.Body.GetILProcessor();
 
             // Unload mono behaviours aggressively
-            if (type.SeekTree("UnityEngine.MonoBehaviour", out var baseType)) {
+            if (unload.DeclaringType != type && type.SeekTree("UnityEngine.MonoBehaviour", out var baseType)) {
                 BasicILCursor ilCursor = new(localUnload.Body);
 
                 TypeReference objectType = new("UnityEngine", "Object", unload.Module, baseType.Scope);
@@ -138,7 +146,7 @@ namespace Mutator.Patching
                 findObjectOfType.ReturnType = genericParam;
 
                 GenericInstanceMethod findObjectOfTypeGeneric = new(findObjectOfType);
-                findObjectOfTypeGeneric.GenericArguments.Add(type);
+                findObjectOfTypeGeneric.GenericArguments.Add(arguedTypeRef);
 
                 MethodReference destroyImmediate = new("DestroyImmediate", unload.Module.TypeSystem.Void, objectType);
                 destroyImmediate.Parameters.Add(new(objectType));
@@ -156,22 +164,39 @@ namespace Mutator.Patching
                     continue;
                 }
 
-                // Call IDisposable.Dispose() on any fields that are disposable
+                FieldReference fRef = new(field.Name, field.FieldType, arguedTypeRef);
+
+                // Prepare jump beforehand.
+                Instruction jmp = field.FieldType.IsValueType 
+                    ? Create(OpCodes.Ldsflda, fRef) 
+                    : Create(OpCodes.Ldnull);
+
+                // Call IDisposable.Dispose() on any fields that are disposable.
                 if (field.FieldType.SeekTree(t => t.Resolve().Interfaces.Any(n => n.InterfaceType.FullName == "System.IDisposable"), out var disposableImplementor)) {
-                    il.Emit(OpCodes.Ldsfld, field);
+                    il.Emit(OpCodes.Ldsfld, fRef);
 
-                    if (disposableImplementor.IsValueType)
-                        il.Emit(OpCodes.Box, unload.Module.ImportReference(disposableImplementor));
+                    // If it's a reference type, make sure the reference isn't null.
+                    if (!disposableImplementor.IsValueType) {
+                        il.Emit(OpCodes.Brfalse, jmp);
+                        il.Emit(OpCodes.Ldsfld, fRef);
+                    }
+                    // Otherwise, it's a value type, so it must be boxed to call Dispose on the existing copy.
+                    else il.Emit(OpCodes.Box, unload.Module.ImportReference(disposableImplementor));
 
-                    il.Emit(OpCodes.Callvirt, unload.Module.ImportReference(new MethodReference("Dispose", unload.Module.TypeSystem.Void, unload.Module.ImportTypeFromCoreLib("System", "IDisposable"))));
+                    TypeReference disposable = unload.Module.ImportTypeFromCoreLib("System", "IDisposable");
+                    MethodReference dispose = new("Dispose", unload.Module.TypeSystem.Void, disposable) { 
+                        HasThis = true
+                    };
+
+                    il.Emit(OpCodes.Callvirt, unload.Module.ImportReference(dispose));
                 }
 
                 if (field.FieldType.IsValueType) {
-                    il.Emit(OpCodes.Ldsflda, field);
+                    il.Append(jmp);
                     il.Emit(OpCodes.Initobj, field.FieldType);
                 } else {
-                    il.Emit(OpCodes.Ldnull);
-                    il.Emit(OpCodes.Stsfld, field);
+                    il.Append(jmp);
+                    il.Emit(OpCodes.Stsfld, fRef);
                 }
             }
 

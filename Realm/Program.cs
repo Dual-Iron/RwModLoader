@@ -1,5 +1,4 @@
-﻿using Realm.Logging;
-using System;
+﻿using System;
 using BepInEx;
 using BepInEx.Logging;
 using MonoMod.RuntimeDetour;
@@ -8,7 +7,10 @@ using Mono.Cecil.Cil;
 using Partiality.Modloader;
 using System.Diagnostics;
 using System.IO;
-using Realm.ModLoading;
+using Realm.Gui;
+using Realm.Logging;
+using Realm.AssemblyLoading;
+using BepInEx.Configuration;
 
 namespace Realm
 {
@@ -20,20 +22,32 @@ namespace Realm
         // Perfect place to load plugins and add hooks
         internal static void Main()
         {
-            TrySelfUpdate();
-
-            try {
-                LoadEmbeddedAssemblies();
-            } catch (MissingMethodException) {
-                Logger.LogWarning("EnumExtender in plugins folder.");
-                // TODO LOW: overwrite BepInEx's assembly resolving with our own to prevent old built-in dependencies (like EnumExtender.dll in the plugins folder) from even being loaded
-                // To do so, we would unsubscribe https://github.com/BepInEx/BepInEx/blob/v5-lts/BepInEx.Preloader/Entrypoint.cs#L68 this method and subscribe our own
+            if (!File.Exists(Extensions.MutatorPath)) {
+                throw new InvalidOperationException("MUTATOR NOT PRESENT. REINSTALL REALM!");
             }
 
-            NeuterPartiality();
+            ConfigFile file = new(configPath: Path.Combine(Paths.ConfigPath, "Realm.cfg"), saveOnInit: true);
 
-            // TODO NEXT: GUI rwmod listing
-            new ModLoader().Load(new ProgressMessagingProgressable());
+            var skip = file.Bind("General", "SkipLoading", false, "If enabled, Realm won't reload mods when starting the game.").Value;
+            var reset = file.Bind("General", "ResetMods", false, "If enabled, Realm will reset all mods and user preferences when starting the game.").Value;
+            ProgramState.Current.DeveloperMode = file.Bind("General", "HotReloading", false, "If enabled, Realm will allow hot reloading assemblies in-game. This feature is volatile.").Value;
+
+            if (!skip) TrySelfUpdate();
+            LoadEmbeddedAssemblies();
+            NeuterPartiality();
+            StaticFixes.Hook();
+
+            if (reset) {
+                ProgramState.Current.Prefs.Save();
+                ProgramState.Current.Mods.Unload(new ProgressMessagingProgressable());
+                File.Delete(Path.Combine(Paths.GameRootPath, "reset"));
+            } else {
+                ProgramState.Current.Prefs.Load();
+            }
+
+            if (!skip) ProgramState.Current.Mods.Reload(new ProgressMessagingProgressable());
+
+            GuiHandler.Hook(ProgramState.Current);
         }
 
         private static void TrySelfUpdate()
@@ -42,13 +56,13 @@ namespace Realm
                 return;
             }
 
-            Execution result = Execution.From(Extensions.MutatorPath, "--needs-self-update", 1000);
+            Execution result = Execution.Run(Extensions.MutatorPath, "--needs-self-update", 1000);
 
             if (result.ExitCode == 0) {
                 bool needsToUpdate = result.Output == "y";
                 if (needsToUpdate) {
                     using var self = Process.GetCurrentProcess();
-                    Execution.From(Extensions.MutatorPath, $"--kill {self.Id} --self-update --uninstall --install --run \"{Path.Combine(Paths.GameRootPath, "RainWorld.exe")}\"");
+                    Execution.Run(Extensions.MutatorPath, $"--kill {self.Id} --self-update --uninstall --install --run \"{Path.Combine(Paths.GameRootPath, "RainWorld.exe")}\"");
                     return;
                 }
                 Logger.LogInfo("Realm is up to date!");
@@ -71,7 +85,7 @@ namespace Realm
 
         private static void LoadEmbeddedAssemblies()
         {
-            // For now, the only embedded assemblies are EnumExtender
+            // Eagerly load these assemblies because it can't hurt
             PastebinMachine.EnumExtender.EnumExtender.DoNothing();
         }
     }

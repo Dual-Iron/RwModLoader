@@ -16,7 +16,6 @@ namespace Mutator.Patching
             resolver.AddSearchDirectory(Path.Combine(RwDir, "RainWorld_Data", "Managed"));
             resolver.AddSearchDirectory(Path.Combine(RwDir, "BepInEx", "core"));
             resolver.AddSearchDirectory(Path.Combine(RwDir, "BepInEx", "plugins"));
-            resolver.AddSearchDirectory(Path.Combine(RwDir, "BepInEx", "rw"));
 
             return AssemblyDefinition.ReadAssembly(filePath, new() { AssemblyResolver = resolver, MetadataResolver = new RwMetadataResolver(resolver) });
         }
@@ -128,10 +127,11 @@ namespace Mutator.Patching
 
         private static void DoPatch(AssemblyDefinition asm)
         {
-            string hooksAsmPath = Path.Combine(RwDir, "BepInEx", "rw", "HOOKS-Assembly-CSharp.dll");
+            string hooksAsmPath = Path.Combine(RwDir, "BepInEx", "core", "HOOKS-Assembly-CSharp.dll");
 
             if (!File.Exists(hooksAsmPath)) {
-                throw new("The file `HOOKS-Assembly-CSharp.dll` does not exist in `Rain World/BepInEx/rw`.");
+                // TODO LOW: cringe hardcoding filepaths
+                throw new("The file `HOOKS-Assembly-CSharp.dll` does not exist in `Rain World/BepInEx/core`.");
             }
 
             LegacyReferenceTransformer? typeScanner = null;

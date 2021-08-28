@@ -32,7 +32,7 @@ namespace Realm
             return true;
         }
 
-        public static Execution From(string file, string args, int timeout = -1)
+        public static Execution Run(string file, string args, int timeout = -1)
         {
             using Process p = Begin(file, args);
 

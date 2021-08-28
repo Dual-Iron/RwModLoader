@@ -35,11 +35,6 @@ namespace Mutator
 
         private static void Run(string[] args)
         {
-            if (args.Length == 0) {
-                Installer.UserRun();
-                return;
-            }
-
             bool parallel = false;
 
             List<Task> tasks = new();
@@ -76,6 +71,8 @@ namespace Mutator
                         task = Task.Run(() => Installer.Kill(arg1));
                     else if (arg0 == "--run")
                         task = Task.Run(() => Installer.Run(arg1));
+                    else if (arg0 == "--debug-header")
+                        task = Task.Run(() => Packager.PrintHeader(arg1));
                     else if (arg0 == "--patch")
                         task = AssemblyPatcher.Patch(arg1, false);
                     else if (arg0 == "--patchup")
@@ -85,7 +82,7 @@ namespace Mutator
                     else if (arg0 == "--include")
                         task = Task.Run(() => Packager.Include(arg1));
                     else if (arg0 == "--wrap")
-                        task = Task.Run(() => Packager.Wrap(arg1));
+                        task = Packager.Wrap(arg1);
                     else if (arg0 == "--unwrap")
                         task = Packager.Unwrap(arg1);
                     else if (arg0 == "--extract")
@@ -98,9 +95,9 @@ namespace Mutator
                         if (arg0 == "--update")
                             task = Packager.Update(arg1, arg2);
                         else
-                            throw new($"Unknown command: {arg0}");
-                    }
-                }
+                            Console.Error.WriteLine($"Unknown command '{arg0}'. Use --help for a list of commands.");
+                    } else Console.Error.WriteLine($"Unknown command '{arg0}'. Use --help for a list of commands.");
+                } else Console.Error.WriteLine($"Unknown command '{arg0}'. Use --help for a list of commands.");
 
                 if (parallel) {
                     if (task != null)

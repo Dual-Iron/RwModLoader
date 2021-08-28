@@ -120,7 +120,7 @@ namespace Realm.AssemblyLoading
 
             setTaskProgress(1 / 3f);
 
-            var assembliesByFile = Pool.Assemblies.ToDictionary(asm => asm.FileName);
+            var assembliesByFile = Pool.Assemblies.ToDictionary(asm => Path.GetFileName(asm.Path));
 
             // Patch(ref AssemblyDefinition)
             foreach (var patcher in patchers) {
@@ -158,7 +158,7 @@ namespace Realm.AssemblyLoading
 
             setTaskProgress(3 / 3f);
 
-            // TODO MEDIUM: dump assemblies
+            // TODO LOW: dump assemblies
         }
 
         private void LoadAssemblies(IProgressable progressable, Action<float> setTaskProgress)
@@ -182,7 +182,7 @@ namespace Realm.AssemblyLoading
                 // Update assembly references
                 foreach (var module in asm.AsmDef.Modules)
                     foreach (var reference in module.AssemblyReferences)
-                        if (Pool.TryGetAssembly(reference.FullName, out var asmRefAsm)) {
+                        if (Pool.TryGetAssembly(reference.Name, out var asmRefAsm)) {
                             reference.Name = asmRefAsm.AsmDef.Name.Name;
                         }
 
@@ -192,7 +192,7 @@ namespace Realm.AssemblyLoading
                 asm.AsmDef.Dispose();
 
                 try {
-                    loadedAssemblies.Add(new(Assembly.Load(ms.ToArray()), asm.AsmName));
+                    loadedAssemblies.Add(new(Assembly.Load(ms.ToArray()), asm.AsmName, asm.Path));
                 } catch (Exception e) {
                     progressable.Message(MessageType.Fatal, $"Assembly {asm.AsmName} failed to load: {e}");
                 }

@@ -128,7 +128,7 @@ namespace Mutator
                         if (reqMatch.Success && reqMatch.Groups[1].Success) {
                             var split = reqMatch.Groups[1].Value.Split(new[] { ", ", "and ", " and " }, 100, StringSplitOptions.RemoveEmptyEntries);
                             foreach (var modReq in split)
-                                if (modReq != "EnumExtender")
+                                if (modReq != "EnumExtender" && modReq != "PublicityStunt")
                                     mod.ModDependencies += modReq + ";";
                         }
                     }

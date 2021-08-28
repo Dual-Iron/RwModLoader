@@ -73,21 +73,11 @@ namespace Realm
 
         private static void HookChainloader()
         {
-            static Assembly? Resolve(object sender, ResolveEventArgs args)
-            {
-                try {
-                    string shortname = args.Name.Substring(0, args.Name.IndexOf(','));
-                    string path = Path.Combine(Extensions.RwDepFolder, Path.ChangeExtension(shortname, ".dll"));
-                    return File.Exists(path) ? Assembly.LoadFile(path) : null;
-                } catch (Exception e) {
-                    Program.Logger.LogFatal("Assembly resolution exception: " + e);
-                    return null;
-                }
-            }
+            Assembly preloaderAssembly = typeof(AssemblyPatcher).Assembly;
+            Type preloaderRunnerType = preloaderAssembly.GetType("BepInEx.Preloader.PreloaderRunner");
 
-            // When a method is called, the runtime checks to see if any of its opcodes refer to unresolved types and tries to resolve them,
-            // so you have to provide assembly resolvers before even touching Main, in case you accidentally refer to an unresolved assembly.
-            AppDomain.CurrentDomain.AssemblyResolve += Resolve;
+            // Hook BepInEx's resolver so we can run before it.
+            new Hook(preloaderRunnerType.GetMethod("LocalResolve", BindingFlags.NonPublic | BindingFlags.Static), (hook_LocalResolve)PreResolve);
 
             try {
                 Program.Main();
@@ -95,5 +85,36 @@ namespace Realm
                 Program.Logger.LogFatal(e);
             }
         }
+
+        private static Assembly? PreResolve(Func<object, ResolveEventArgs, Assembly> orig, object sender, ResolveEventArgs args)
+        {
+            static Assembly? TryGet(string fullName)
+            {
+                AssemblyName name = new(fullName);
+
+                using Stream? asmStream = typeof(EntryPoint).Assembly.GetManifestResourceStream($"ASMS.{name.Name}");
+
+                if (asmStream == null) {
+                    return null;
+                }
+
+                byte[] buffer = new byte[asmStream.Length];
+
+                using MemoryStream ms = new(buffer);
+
+                asmStream.CopyTo(ms);
+
+                return Assembly.Load(buffer);
+            }
+
+            try {
+                return TryGet(args.Name) ?? orig(sender, args);
+            } catch (Exception e) {
+                Program.Logger.LogError(e);
+                return orig(sender, args);
+            }
+        }
+
+        delegate Assembly? hook_LocalResolve(Func<object, ResolveEventArgs, Assembly> orig, object sender, ResolveEventArgs args);
     }
 }

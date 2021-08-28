@@ -12,36 +12,38 @@ namespace Mutator.Packaging
             IsUnwrapped = 1
         }
 
-        public RwmodFileHeader(RwmodFlags flags, RwmodVersion modVersion, string repositoryName, string repositoryAuthor, string displayName, ModDependencyCollection modDependencies)
+        public RwmodFileHeader(RwmodFlags flags, RwmodVersion modVersion, string repositoryName, string author, string displayName, ModDependencyCollection modDependencies)
         {
             Flags = flags;
             ModVersion = modVersion;
             RepositoryName = repositoryName;
-            RepositoryAuthor = repositoryAuthor;
+            Author = author;
             DisplayName = displayName;
             ModDependencies = modDependencies;
         }
 
-        public static RwmodFileHeader ReadFrom(Stream stream)
+        public static RwmodFileHeader Read(Stream stream)
         {
             using BinaryReader reader = new(stream, InstallerApi.UseEncoding, true);
             return new(flags: (RwmodFlags)reader.ReadInt32(),
                        modVersion: new(reader.ReadByte(), reader.ReadByte(), reader.ReadByte()),
                        repositoryName: reader.ReadString(),
-                       repositoryAuthor: reader.ReadString(),
+                       author: reader.ReadString(),
                        displayName: reader.ReadString(),
                        modDependencies: new(reader.ReadString()));
         }
 
-        // Null if created and not read from
         public RwmodFlags Flags { get; set; }
         public RwmodVersion ModVersion { get; set; }
         public string RepositoryName { get; }
-        public string RepositoryAuthor { get; }
+        public string Author { get; }
         public string DisplayName { get; }
         public ModDependencyCollection ModDependencies { get; }
 
-        public void WriteTo(Stream stream)
+        // TODO MEDIUM: more well-defined dependencies. e.g. write 3 version bytes then the mod's name.
+        // TODO MEDIUM: store mod names inside the file, separate from filename
+
+        public void Write(Stream stream)
         {
             using BinaryWriter writer = new(stream, InstallerApi.UseEncoding, true);
 
@@ -50,7 +52,7 @@ namespace Mutator.Packaging
             writer.Write(ModVersion.Minor);
             writer.Write(ModVersion.Patch);
             writer.Write(RepositoryName);
-            writer.Write(RepositoryAuthor);
+            writer.Write(Author);
             writer.Write(DisplayName);
             writer.Write(ModDependencies.ToString());
         }
@@ -65,9 +67,10 @@ namespace Mutator.Packaging
 
         public void WriteFlags(Stream stream)
         {
+            int flags = (int)Flags;
             long pos = stream.Position;
             stream.Position = 0;
-            stream.Write(BitConverter.GetBytes((int)Flags));
+            stream.Write(new[] { (byte)flags, (byte)(flags >> 8), (byte)(flags >> 16), (byte)(flags >> 24) });
             stream.Position = pos;
         }
     }

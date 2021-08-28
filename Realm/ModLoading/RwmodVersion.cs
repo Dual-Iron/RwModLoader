@@ -17,7 +17,5 @@ namespace Realm.ModLoading
         public byte Major { get; }
         public byte Minor { get; }
         public byte Patch { get; }
-
-        public Version ToVersion() => new(Major, Minor, Patch);
     }
 }

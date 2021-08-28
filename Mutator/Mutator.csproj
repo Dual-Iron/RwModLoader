@@ -7,6 +7,11 @@
     <Nullable>enable</Nullable>
     <WarningsAsErrors>nullable</WarningsAsErrors>
     <AlsoPublish>true</AlsoPublish>
+    <DefineConstants></DefineConstants> <!--INSTALL_ONLY-->
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <LangVersion>preview</LangVersion>
+    <DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,9 +21,18 @@
       <Visible>false</Visible>
       <LogicalName>RwBep</LogicalName>
     </EmbeddedResource>
+    <Compile Remove="Program.UserInstaller.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(DefineConstants.Contains('INSTALL_ONLY'))">
+    <Compile Remove="**/*.cs" />
+    <Compile Include="Program.UserInstaller.cs" />
+    <Compile Include="Installer.cs" />
+    <Compile Include="InstallerAPI.cs" />
+    <Compile Include="RepoFiles.cs" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition=" '$(BuildingInsideVisualStudio)' == 'true' And '$(AlsoPublish)' == 'true' ">
-    <Exec Command="dotnet publish $(ProjectDir)$(ProjectName).csproj -f net6.0 -r win-x64 --no-self-contained -p:PublishReadyToRun=true -p:PublishSingleFile=true -o %appdata%\.rw" />
+    <Exec Command="dotnet publish $(ProjectDir)$(ProjectName).csproj -f net6.0 -r win-x64 --no-self-contained -o %appdata%\.rw" />
   </Target>
 </Project>

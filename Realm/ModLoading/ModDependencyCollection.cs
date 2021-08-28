@@ -2,23 +2,17 @@
 
 namespace Realm.ModLoading
 {
-    public sealed class ModDependencyCollection
+    public struct ModDependencyCollection
     {
-        private readonly string dependencies;
+        private readonly string? dependencies;
 
         public ModDependencyCollection(string dependencyString)
         {
             dependencies = dependencyString;
         }
 
-        public ModDependencyCollection(string[] dependencies) : this(string.Join(";", dependencies) + ";")
-        { }
+        public string[] Dependencies => dependencies == null ? new string[0] : dependencies.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
 
-        public ModDependencyCollection() : this("")
-        { }
-
-        public string[] Dependencies => dependencies.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
-
-        public override string ToString() => dependencies;
+        public override string ToString() => dependencies ?? "";
     }
 }

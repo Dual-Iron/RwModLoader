@@ -13,7 +13,6 @@ namespace Realm.Jobs
             return ret;
         }
 
-        public static void WaitAll(params Job[] jobs) => WaitAll((IEnumerable<Job>)jobs);
         public static void WaitAll(IEnumerable<Job> jobs)
         {
             foreach (var job in jobs) {
@@ -21,9 +20,12 @@ namespace Realm.Jobs
             }
         }
 
-        public JobState State { get; } = new();
-
+        private readonly object o = new();
         private Action? action;
+
+        public JobStatus Status { get; private set; }
+        public Exception? Exception { get; private set; }
+        public bool Ok => Exception == null;
 
         public Job(Action callback)
         {
@@ -32,13 +34,16 @@ namespace Realm.Jobs
 
         public void Start()
         {
-            State.Start();
+            if (Status != JobStatus.Unstarted) {
+                throw new InvalidOperationException("Already started");
+            }
+            Status = JobStatus.InProgress;
             ThreadPool.QueueUserWorkItem(Work);
         }
 
         public void Wait()
         {
-            while (State.Progress != JobProgress.Finished) {
+            while (Status != JobStatus.Finished) {
                 Thread.Sleep(0);
             }
         }
@@ -47,11 +52,19 @@ namespace Realm.Jobs
         {
             try {
                 action!();
-                State.Finish(null);
+                Finish(null);
             } catch (Exception e) {
-                State.Finish(e);
+                Finish(e);
             }
             action = null;
+        }
+
+        private void Finish(Exception? e)
+        {
+            lock (o) {
+                Status = JobStatus.Finished;
+                Exception = e;
+            }
         }
     }
 }

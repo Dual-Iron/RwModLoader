@@ -1,5 +1,4 @@
-﻿using BepInEx;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -15,7 +14,6 @@ namespace Realm
 
         public static string MutatorPath => Path.Combine(UserFolder, "Mutator.exe");
         public static string UserFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".rw");
-        public static string RwDepFolder => Path.Combine(Paths.BepInExRootPath, "rw");
 
         public static void CopyTo(this Stream from, Stream to)
         {

@@ -2,39 +2,55 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using static Mutator.InstallerApi;
+#if !INSTALL_ONLY
+using System.IO.Compression;
+using System.Reflection;
+#endif
 
 namespace Mutator
 {
     public static class Installer
     {
-        public static void UserRun()
+        public static async Task SelfUpdate(IEnumerator<string> args)
         {
-            InstallSelf();
+            await VerifyInternetConnection();
 
-            if (IsPartialityInstalled()) {
-                Console.WriteLine("Partiality is installed. Uninstalling.");
-                UninstallPartiality();
+            RepoFiles files = await GetFilesFromGitHubRepository("Dual-Iron", "RwModLoader");
+            FileVersionInfo myVersion = FileVersionInfo.GetVersionInfo(Environment.ProcessPath ?? throw new("No process path."));
+
+#if !INSTALL_ONLY
+            // Abort if there's nothing to update
+            if (files.Version <= new Version(myVersion.ProductMajorPart, myVersion.ProductMinorPart, myVersion.ProductBuildPart)) {
+                return;
+            }
+#endif
+
+            // Provide the new process with this process's arguments
+            StringBuilder processArgs = new();
+
+            while (args.MoveNext()) {
+                processArgs.Append($" \"{args.Current}\"");
             }
 
-            if (!IsBepInExInstalled()) {
-                Console.WriteLine("RwBepInEx is not installed. Installing.");
-                InstallBepInEx();
-                Console.WriteLine("Success!");
-            } else {
-                Console.Write("RwBepInEx is installed. Do you want to uninstall? (y/n) ");
+            // Get a safe temp file name
+            string tempFileName = Path.Combine(Path.GetTempPath(), "~rwtemp");
 
-                if (Console.ReadKey(true).Key == ConsoleKey.Y) {
-                    UninstallBepInEx();
-                    Console.WriteLine("Successfully uninstalled.");
-                }
-            }
+            // Download to that file
+            using (Stream download = await files.GetOnlineFileStream(0))
+            using (Stream tempFile = File.Create(tempFileName))
+                await download.CopyToAsync(tempFile);
+
+            // Run the file
+            using Process p = Process.Start(new ProcessStartInfo(tempFileName, processArgs.ToString()) {
+                UseShellExecute = false
+            }) ?? throw new("No process created.");
         }
 
+
+#if !INSTALL_ONLY
         public static void Install()
         {
             InstallSelf();
@@ -138,39 +154,6 @@ namespace Mutator
             Console.WriteLine(needs ? "y" : "n");
         }
 
-        public static async Task SelfUpdate(IEnumerator<string> args)
-        {
-            await VerifyInternetConnection();
-
-            RepoFiles files = await GetFilesFromGitHubRepository("Dual-Iron", "RwModLoader");
-            FileVersionInfo myVersion = FileVersionInfo.GetVersionInfo(Environment.ProcessPath ?? throw new("No process path."));
-
-            // Abort if there's nothing to update
-            if (files.Version <= new Version(myVersion.ProductMajorPart, myVersion.ProductMinorPart, myVersion.ProductBuildPart)) {
-                return;
-            }
-
-            // Provide the new process with this process's arguments
-            StringBuilder processArgs = new($"--replace {Environment.ProcessId}");
-
-            while (args.MoveNext()) {
-                processArgs.Append($" \"{args.Current}\"");
-            }
-
-            // Get a safe temp file name
-            string tempFileName = Path.Combine(Path.GetTempPath(), "~rwtemp");
-
-            // Download to that file
-            using (Stream download = await files.GetOnlineFileStream(0))
-            using (Stream tempFile = File.Create(tempFileName))
-                await download.CopyToAsync(tempFile);
-
-            // Run the file
-            using Process p = Process.Start(new ProcessStartInfo(tempFileName, processArgs.ToString()) {
-                UseShellExecute = false
-            }) ?? throw new("No process created.");
-        }
-
         public static void UninstallBepInEx()
         {
             if (!IsBepInExInstalled()) {
@@ -216,5 +199,6 @@ namespace Mutator
                 throw e.Flatten();
             }
         }
+#endif
     }
 }

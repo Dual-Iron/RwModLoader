@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Mono.Cecil;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using static Mutator.InstallerApi;
 
@@ -11,15 +11,15 @@ namespace Mutator.Packaging
 {
     public static class Packager
     {
-        private const CompressionLevel RwmodCompressionLevel = CompressionLevel.Optimal;
+        private const CompressionLevel RwmodCompressionLevel = CompressionLevel.NoCompression;
 
         private static void VerifyRwmodFile(string filePath)
         {
             if (Path.GetExtension(filePath) != ".rwmod") {
-                throw new("File is not a RWMOD file.");
+                throw new($"The file {filePath} is not a RWMOD file.");
             }
             if (!File.Exists(filePath)) {
-                throw new("No such file exists.");
+                throw new($"The file {filePath} does not exist.");
             }
         }
 
@@ -30,7 +30,7 @@ namespace Mutator.Packaging
                 var existingFile = FileVersionInfo.GetVersionInfo(outPath);
                 if (existingFile?.ProductVersion == null) return false;
 
-                entry.ExtractToFile(temp);
+                entry.ExtractToFile(temp, true);
 
                 var newFile = FileVersionInfo.GetVersionInfo(temp);
                 if (newFile?.ProductVersion == null) return true;
@@ -49,13 +49,27 @@ namespace Mutator.Packaging
             }
         }
 
+        public static void PrintHeader(string filePath)
+        {
+            VerifyRwmodFile(filePath);
+
+            using Stream fs = File.OpenRead(filePath);
+
+            var header = RwmodFileHeader.Read(fs);
+
+            string authorName = string.IsNullOrEmpty(header.Author) ? "" : ": " + header.Author;
+            string repoName = string.IsNullOrEmpty(header.RepositoryName) ? "" : "/" + header.RepositoryName;
+
+            Console.WriteLine($"Flags={Convert.ToString((int)header.Flags, 2)} \"{header.DisplayName}\" v{header.ModVersion.Major}.{header.ModVersion.Minor}.{header.ModVersion.Patch}{authorName}{repoName}");
+        }
+
         public static async Task Download(string filePath)
         {
             VerifyRwmodFile(filePath);
 
             using var input = File.Open(filePath, FileMode.Open, FileAccess.ReadWrite);
 
-            RwmodFileHeader header = RwmodFileHeader.ReadFrom(input);
+            RwmodFileHeader header = RwmodFileHeader.Read(input);
 
             if (string.IsNullOrEmpty(header.RepositoryName)) {
                 throw new("Mod lacks a repository to fetch from.");
@@ -63,7 +77,8 @@ namespace Mutator.Packaging
 
             await VerifyInternetConnection();
 
-            RepoFiles files = await GetFilesFromGitHubRepository(header.RepositoryAuthor, header.RepositoryName);
+            // TODO HIGH: get dependencies from repository, not from RainDB
+            RepoFiles files = await GetFilesFromGitHubRepository(header.Author, header.RepositoryName);
 
             if (files.Version > header.ModVersion.ToVersion()) {
                 // Download new version of mod
@@ -71,10 +86,10 @@ namespace Mutator.Packaging
                 if (files.RwRoot) {
                     await DownloadWithProgress(await files.GetOnlineFileStream(0), input, Console.WriteLine);
                 } else {
-                    using var archive = new ZipArchive(input, ZipArchiveMode.Create, true, UseEncoding);
+                    using ZipArchive archive = new(input, ZipArchiveMode.Create, true, UseEncoding);
 
                     for (int i = 0; i < files.Count; i++) {
-                        var entry = archive.CreateEntry(files.GetName(i));
+                        var entry = archive.CreateEntry(files.GetName(i), RwmodCompressionLevel);
                         using var entryStream = entry.Open();
                         var stream = await files.GetOnlineFileStream(i);
 
@@ -97,29 +112,41 @@ namespace Mutator.Packaging
             string rwmodPath = GetModPath(rwmodName);
 
             if (File.Exists(rwmodPath)) {
+                // Advance rwmod stream to zip file
                 using FileStream rwmodStream = File.Open(rwmodPath, FileMode.Open, FileAccess.ReadWrite);
 
-                RwmodFileHeader.ReadFrom(rwmodStream);
+                using MemoryStream ms = new();
 
-                using ZipArchive archive = new(rwmodStream, ZipArchiveMode.Update, true, UseEncoding);
+                await rwmodStream.CopyToAsync(ms);
 
-                string entryName = Path.GetFileName(filePath);
+                ms.Position = 0;
 
-                ZipArchiveEntry? entry = archive.Entries.SingleOrDefault(e => e.Name == entryName);
+                // Get that stream as an archive, modify it, and update it
+                using (ZipArchive archive = new(ms, ZipArchiveMode.Update, true, UseEncoding)) {
 
-                string? entryFullName = entry?.FullName;
+                    string fileName = Path.GetFileName(filePath);
 
-                if (entry != null) {
-                    entry.Delete();
+                    ZipArchiveEntry? entry = archive.Entries.SingleOrDefault(e => e.Name == fileName);
+
+                    if (entry != null) {
+                        entry.Delete();
+                    }
+
+                    using var entryStream = archive.CreateEntry(entry?.FullName ?? fileName, RwmodCompressionLevel).Open();
+                    using var fileStream = File.OpenRead(filePath);
+
+                    await fileStream.CopyToAsync(entryStream);
                 }
 
-                entry = archive.CreateEntry(entryFullName ?? entryName, RwmodCompressionLevel);
+                // Copy ms back to original rwmod stream
+                rwmodStream.Position = 0;
+                ms.Position = 0;
 
-                using Stream entryStream = entry.Open();
-                using FileStream fs = File.OpenRead(filePath);
-                await fs.CopyToAsync(entryStream);
+                RwmodFileHeader.Read(rwmodStream);
+
+                await ms.CopyToAsync(rwmodStream);
             } else {
-                Wrap(filePath);
+                await Wrap(filePath);
                 Include(Path.ChangeExtension(filePath, ".rwmod"));
             }
         }
@@ -135,57 +162,78 @@ namespace Mutator.Packaging
             string rwmodsListingFolder = ModsFolder.FullName;
             string newPath = Path.Combine(rwmodsListingFolder, Path.GetFileName(path));
 
-            File.Move(path, newPath);
+            File.Move(path, newPath, true);
         }
 
-        public static void Wrap(string filePath)
+        public static async Task Wrap(string filePath)
         {
             try {
-                AssemblyName asm = AssemblyName.GetAssemblyName(filePath);
+                using AssemblyDefinition asmdef = AssemblyDefinition.ReadAssembly(filePath);
                 using FileStream fs = File.Create(Path.ChangeExtension(filePath, ".rwmod"));
 
-                WrapAssembly(filePath, asm, fs);
+                await WrapAssembly(filePath, asmdef, fs);
             } catch (BadImageFormatException) {
                 try {
                     using ZipArchive archive = ZipFile.OpenRead(filePath);
                     using FileStream fs = File.Create(Path.ChangeExtension(filePath, ".rwmod"));
 
-                    WrapZip(filePath, archive, fs);
+                    await WrapZip(filePath, archive, fs);
                 } catch (InvalidDataException) {
                     throw new("File is not a .NET assembly or a ZIP file.");
                 }
             }
         }
 
-        private static void WrapAssembly(string filePath, AssemblyName asm, FileStream fs)
+        private static async Task WrapAssembly(string filePath, AssemblyDefinition asm, FileStream rwmod)
         {
-            new RwmodFileHeader(RwmodFileHeader.RwmodFlags.IsUnwrapped,
-                                modVersion: new(asm.Version ?? new(0, 0, 1)),
-                                repositoryName: "",
-                                repositoryAuthor: "wrapper",
-                                displayName: asm.Name ?? Path.GetFileNameWithoutExtension(filePath),
-                                modDependencies: new())
-                .WriteTo(fs);
+            string GetAuthor()
+            {
+                foreach (var attribute in asm.CustomAttributes) {
+                    if (attribute.AttributeType.FullName == "System.Reflection.AssemblyCompanyAttribute"
+                        && attribute.ConstructorArguments.Count == 1
+                        && attribute.ConstructorArguments[0].Value is string author &&
+                        author != asm.Name.Name) {
+                        return author;
+                    }
+                }
+                return "";
+            }
 
-            using var archive = new ZipArchive(fs, ZipArchiveMode.Create, true);
-            archive.CreateEntryFromFile(filePath, Path.GetFileName(filePath), RwmodCompressionLevel);
+            new RwmodFileHeader(RwmodFileHeader.RwmodFlags.IsUnwrapped,
+                                modVersion: new(asm.Name.Version ?? new(0, 0, 1)),
+                                repositoryName: "",
+                                author: GetAuthor(),
+                                displayName: asm.Name.Name,
+                                modDependencies: new())
+                .Write(rwmod);
+
+            asm.Dispose();
+
+            using ZipArchive archive = new(rwmod, ZipArchiveMode.Create, true);
+            using Stream entryStream = archive.CreateEntry(Path.GetFileName(filePath), RwmodCompressionLevel).Open();
+            using Stream fileStream = File.OpenRead(filePath);
+
+            await fileStream.CopyToAsync(entryStream);
         }
 
-        private static void WrapZip(string filePath, ZipArchive inputArchive, FileStream fs)
+        private static async Task WrapZip(string filePath, ZipArchive inputArchive, FileStream rwmod)
         {
             FileVersionInfo versionInfo = FileVersionInfo.GetVersionInfo(filePath);
 
             new RwmodFileHeader(RwmodFileHeader.RwmodFlags.IsUnwrapped,
                                 modVersion: new((byte)versionInfo.ProductMajorPart, (byte)versionInfo.ProductMinorPart, (byte)versionInfo.ProductBuildPart),
                                 repositoryName: "",
-                                repositoryAuthor: "wrapper",
+                                author: "",
                                 displayName: Path.GetFileNameWithoutExtension(filePath),
                                 modDependencies: new())
-                .WriteTo(fs);
+                .Write(rwmod);
 
-            using var archive = new ZipArchive(fs, ZipArchiveMode.Create, true);
-            foreach (var entry in inputArchive.Entries) {
-                archive.CreateEntry(entry.Name, RwmodCompressionLevel);
+            using ZipArchive archive = new(rwmod, ZipArchiveMode.Create, true);
+            foreach (ZipArchiveEntry entry in inputArchive.Entries) {
+                using Stream existingStream = entry.Open();
+                using Stream newEntryStream = archive.CreateEntry(entry.Name, RwmodCompressionLevel).Open();
+
+                await existingStream.CopyToAsync(newEntryStream);
             }
         }
 
@@ -195,16 +243,12 @@ namespace Mutator.Packaging
 
             using var rwmodFile = File.Open(filePath, FileMode.Open, FileAccess.ReadWrite);
 
-            RwmodFileHeader header = RwmodFileHeader.ReadFrom(rwmodFile);
-
-            using var archive = new ZipArchive(rwmodFile, ZipArchiveMode.Read, true, UseEncoding);
-
-            if (archive.Entries.Count == 0) {
-                return;
-            }
+            RwmodFileHeader header = RwmodFileHeader.Read(rwmodFile);
 
             header.Flags |= RwmodFileHeader.RwmodFlags.IsUnwrapped;
             header.WriteFlags(rwmodFile);
+
+            using var archive = new ZipArchive(rwmodFile, ZipArchiveMode.Read, true, UseEncoding);
 
             string root = RwDir;
 
@@ -250,9 +294,6 @@ namespace Mutator.Packaging
             }
 
             using var rwmodFile = File.Open(filePath, FileMode.Open, FileAccess.ReadWrite);
-
-            RwmodFileHeader.ReadFrom(rwmodFile);
-
             using var archive = new ZipArchive(rwmodFile, ZipArchiveMode.Read, true, UseEncoding);
 
             archive.ExtractToDirectory(Directory.CreateDirectory(directoryNameSafe).FullName);
@@ -266,20 +307,16 @@ namespace Mutator.Packaging
 
             using var rwmodFile = File.Open(filePath, FileMode.Open, FileAccess.ReadWrite);
 
-            RwmodFileHeader header = RwmodFileHeader.ReadFrom(rwmodFile);
+            RwmodFileHeader header = RwmodFileHeader.Read(rwmodFile);
 
             if (!header.Flags.HasFlag(RwmodFileHeader.RwmodFlags.IsUnwrapped)) {
                 return;
             }
 
-            using var archive = new ZipArchive(rwmodFile, ZipArchiveMode.Read, true, UseEncoding);
-
-            if (archive.Entries.Count == 0) {
-                return;
-            }
-
             header.Flags &= ~RwmodFileHeader.RwmodFlags.IsUnwrapped;
             header.WriteFlags(rwmodFile);
+
+            using var archive = new ZipArchive(rwmodFile, ZipArchiveMode.Read, true, UseEncoding);
 
             string root = rwDirectory;
 

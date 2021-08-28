@@ -11,7 +11,7 @@ namespace Mutator
             await InstallerApi.VerifyInternetConnection();
 
             Stream stdout = Console.OpenStandardOutput();
-            
+
             using BinaryWriter writer = new(stdout, InstallerApi.UseEncoding, true);
 
             foreach (var mod in await ModList.GetMods()) {

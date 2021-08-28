@@ -14,19 +14,23 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../VirtualEnums/VirtualEnums.csproj" />
     <Reference Include="$(BepPath)core\BepInEx.dll" />
     <Reference Include="$(BepPath)core\BepInEx.Preloader.dll" />
     <Reference Include="$(BepPath)core\Mono.Cecil.dll" />
-    <Reference Include="$(BepPath)rw\MonoMod.dll" />
+    <Reference Include="$(BepPath)core\MonoMod.dll" />
     <Reference Include="$(BepPath)core\MonoMod.Utils.dll" />
     <Reference Include="$(BepPath)core\MonoMod.RuntimeDetour.dll" />
-    <Reference Include="$(BepPath)rw\HOOKS-Assembly-CSharp.dll" />
-    <Reference Include="$(BepPath)rw\Partiality.dll" />
+    <Reference Include="$(BepPath)core\HOOKS-Assembly-CSharp.dll" />
+    <Reference Include="$(BepPath)core\Partiality.dll" />
     <Reference Include="$(SteamPath)RainWorld_Data\Managed\UnityEngine.dll" />
     <Reference Include="Assembly-CSharp">
       <HintPath>$(SteamPath)RainWorld_Data\Managed\Assembly-CSharp-refstub.dll</HintPath>
     </Reference>
-    <ProjectReference Include="../VirtualEnums/VirtualEnums.csproj" />
+    <EmbeddedResource Include="..\VirtualEnums\bin\Debug\net35\EnumExtender.dll">
+      <Visible>false</Visible>
+      <LogicalName>ASMS.EnumExtender</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
   
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

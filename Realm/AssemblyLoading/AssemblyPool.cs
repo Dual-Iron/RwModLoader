@@ -30,7 +30,6 @@ namespace Realm.AssemblyLoading
             resolver.AddSearchDirectory(Paths.ManagedPath);
             resolver.AddSearchDirectory(Paths.PluginPath);
             resolver.AddSearchDirectory(Paths.PatcherPluginPath);
-            resolver.AddSearchDirectory(Extensions.RwDepFolder);
 
             AssemblyPool ret = new();
 
