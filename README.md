@@ -22,6 +22,9 @@ https://user-images.githubusercontent.com/31146412/131228787-764c1723-7dca-46e6-
 - Dependencies simply aren't checked. If your logs get spammed by TypeLoadExceptions or similar, it's either because you're missing a dependency for the mod that's throwing or because the patcher is bugged. In either case, [make an issue](https://github.com/Dual-Iron/RwModLoader/issues/new/choose).
 - The mutator can easily corrupt RWMOD files if it throws an exception while updating them. In the case that logs are spammed with `Process exited with code 2: Number of entries expected in End Of Central Directory does not correspond to number of entries in Central Directory` or something similar, close Rain World and run `rd /s /q "%appdata%\.rw\mods"` in CMD.
 
-## Credit
-`Dual`        Hi, that's me.
-`Thrithralas` The MODS and RAINDB headers.
+## Credits
+- Dual, for being such an awesome person.
+- Thrithralas, for the MODS and RAINDB headers.
+- Pastebee, for [this monstrosity](https://github.com/Dual-Iron/RwModLoader/blob/5e13a516436f7c7e75403f383e6ec34570a07eec/Mutator/Patching/AccessViolationPrevention.cs#L8).
+- [BepInEx](https://github.com/BepInEx/BepInEx/tree/v5-lts) and its dependencies, for making this possible.
+- [Rain World](https://rainworldgame.com/) and [its community](https://discord.gg/rainworld), for making this worthwhile.
