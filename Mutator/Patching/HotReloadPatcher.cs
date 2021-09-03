@@ -1,7 +1,6 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System.Linq;
-using System.Runtime.Loader;
 using static Mono.Cecil.Cil.Instruction;
 
 namespace Mutator.Patching

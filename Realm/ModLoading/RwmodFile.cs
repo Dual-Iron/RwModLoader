@@ -7,7 +7,7 @@ namespace Realm.ModLoading
     {
         public static RwmodFile[] FetchAll()
         {
-            string[] files = Directory.GetFiles(Path.Combine(Extensions.UserFolder, "mods"), "*.rwmod", SearchOption.TopDirectoryOnly);
+            string[] files = Directory.GetFiles(Extensions.ModsFolder, "*.rwmod", SearchOption.TopDirectoryOnly);
 
             RwmodFile[] rwmodFiles = new RwmodFile[files.Length];
 
@@ -24,7 +24,8 @@ namespace Realm.ModLoading
             FilePath = path;
             Name = name;
 
-            using BinaryReader reader = new(File.OpenRead(FilePath), Encoding.ASCII);
+            using FileStream input = File.OpenRead(FilePath);
+            using BinaryReader reader = new(input, Encoding.ASCII);
 
             Flags = reader.ReadByte() | (reader.ReadByte() << 8) | (reader.ReadByte() << 16) | (reader.ReadByte() << 24);
             ModVersion = new(reader.ReadByte(), reader.ReadByte(), reader.ReadByte());

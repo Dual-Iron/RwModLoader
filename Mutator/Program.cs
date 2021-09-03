@@ -71,18 +71,12 @@ namespace Mutator
                         task = Task.Run(() => Installer.Kill(arg1));
                     else if (arg0 == "--run")
                         task = Task.Run(() => Installer.Run(arg1));
-                    else if (arg0 == "--debug-header")
-                        task = Task.Run(() => Packager.PrintHeader(arg1));
                     else if (arg0 == "--patch")
-                        task = AssemblyPatcher.Patch(arg1, false);
+                        task = AssemblyPatcher.Patch(null, arg1, false);
                     else if (arg0 == "--patchup")
-                        task = AssemblyPatcher.Patch(arg1, true);
+                        task = AssemblyPatcher.Patch(null, arg1, true);
                     else if (arg0 == "--download")
                         task = Packager.Download(arg1);
-                    else if (arg0 == "--include")
-                        task = Task.Run(() => Packager.Include(arg1));
-                    else if (arg0 == "--wrap")
-                        task = Packager.Wrap(arg1);
                     else if (arg0 == "--unwrap")
                         task = Packager.Unwrap(arg1);
                     else if (arg0 == "--extract")
@@ -93,7 +87,7 @@ namespace Mutator
                         string arg2 = enumerator.Current;
 
                         if (arg0 == "--update")
-                            task = Packager.Update(arg1, arg2);
+                            task = Packager.Update(arg1, arg2, true);
                         else
                             Console.Error.WriteLine($"Unknown command '{arg0}'. Use --help for a list of commands.");
                     } else Console.Error.WriteLine($"Unknown command '{arg0}'. Use --help for a list of commands.");
@@ -125,13 +119,11 @@ RwModMutator v{typeof(Program).Assembly.GetName().Version} - Documentation: http
 --kill [pid]             Kills the specified process.
 --patch [path]           Patches the .NET assembly.
 --patchup [path]         Patches the .NET assembly, then updates its RWMOD.
---download [path]        Downloads the RWMOD's contents.
---include [path]         Includes the RWMOD in the user's mods folder.
---wrap [path]            Wraps the .NET assembly or ZIP into a RWMOD.
---unwrap [path]          Unwraps the RWMOD.
+--download [path]        Downloads or updates the RWMOD. The [path] argument can be a repository or a RWMOD file path.
 --extract [path]         Extracts the contents of the RWMOD to a folder in the same directory.
+--unwrap [path]          Unwraps the RWMOD.
 --restore [path]         Un-unwraps the RWMOD.
---update [rwmod] [path]  Updates or creates the file's entry in the RWMOD with the specified name.
+--update [rwmod] [path]  Updates or creates the RWMOD with the contents specified at [path].
 "
 );
         }

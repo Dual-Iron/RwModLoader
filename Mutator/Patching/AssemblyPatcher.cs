@@ -9,56 +9,59 @@ namespace Mutator.Patching
 {
     public static partial class AssemblyPatcher
     {
-        private static AssemblyDefinition GetBepAssemblyDef(string filePath)
+        private static AssemblyDefinition GetBepAssemblyDef(string filePath, bool write)
         {
             DefaultAssemblyResolver resolver = new();
 
+            resolver.AddSearchDirectory(Path.GetDirectoryName(filePath));
             resolver.AddSearchDirectory(Path.Combine(RwDir, "RainWorld_Data", "Managed"));
             resolver.AddSearchDirectory(Path.Combine(RwDir, "BepInEx", "core"));
             resolver.AddSearchDirectory(Path.Combine(RwDir, "BepInEx", "plugins"));
 
-            return AssemblyDefinition.ReadAssembly(filePath, new() { AssemblyResolver = resolver, MetadataResolver = new RwMetadataResolver(resolver) });
+            return AssemblyDefinition.ReadAssembly(filePath, new() { AssemblyResolver = resolver, MetadataResolver = new RwMetadataResolver(resolver), ReadWrite = write });
         }
 
-        public static async Task Patch(string filePath, bool shouldUpdate)
+        public static async Task Patch(string? rwmodName, string filePath, bool shouldUpdate)
         {
             if (!File.Exists(filePath)) {
                 throw new("Assembly file does not exist.");
             }
 
-            using AssemblyDefinition asm = GetBepAssemblyDef(filePath);
-
-            string? rwmodName = GetRwmodName(asm);
-            bool backUp = false;
-
-            string effectiveRwmodName = rwmodName ?? asm.Name.Name;
-
-            if (rwmodName == null) {
-                backUp = true;
-
-                // Patch the fresh assembly.
-                DoPatch(asm);
-            } else if (!File.Exists(GetModPath(effectiveRwmodName))) {
-                // Remove existing attributes if they exist.
-                for (int i = asm.CustomAttributes.Count - 1; i >= 0; i--)
-                    if (asm.CustomAttributes[i].AttributeType.Name == "RwmodAttribute")
-                        asm.CustomAttributes.RemoveAt(i);
-            } else return;
-
-            AddRwmodAttribute(asm, effectiveRwmodName);
-
-            using MemoryStream ms = new();
-            asm.Write(ms);
-            asm.Dispose();
-
-            if (backUp) {
-                File.Move(filePath, Path.Combine(PatchBackupsFolder.FullName, Path.GetFileName(filePath)), true);
+            try {
+                System.Reflection.AssemblyName.GetAssemblyName(filePath);
+            } catch {
+                return;
             }
 
-            await File.WriteAllBytesAsync(filePath, ms.ToArray());
+            using (AssemblyDefinition asm = GetBepAssemblyDef(filePath, true)) {
+                using var resolver = asm.MainModule.AssemblyResolver;
+                
+                string? rwmodNameAttribute = GetRwmodName(asm);
 
-            if (shouldUpdate)
-                await Packaging.Packager.Update(effectiveRwmodName, filePath);
+                rwmodName ??= rwmodNameAttribute ?? asm.Name.Name;
+
+                if (rwmodNameAttribute == null) {
+                    // Patch the fresh assembly.
+                    DoPatch(asm);
+                } else if (rwmodNameAttribute != rwmodName || !File.Exists(GetModPath(rwmodNameAttribute))) {
+                    // Remove existing attributes if they exist.
+                    for (int i = asm.CustomAttributes.Count - 1; i >= 0; i--)
+                        if (asm.CustomAttributes[i].AttributeType.Name == "RwmodAttribute")
+                            asm.CustomAttributes.RemoveAt(i);
+                } else return;
+
+                AddRwmodAttribute(asm, rwmodName);
+
+                if (rwmodNameAttribute == null) {
+                    File.Copy(filePath, Path.Combine(PatchBackupsFolder.FullName, Path.GetFileName(filePath)), true);
+                }
+
+                asm.Write();
+            }
+
+            if (shouldUpdate) {
+                await Packaging.Packager.Update(rwmodName, filePath, false);
+            }
         }
 
         private static string? GetRwmodName(AssemblyDefinition asm)
@@ -135,11 +138,12 @@ namespace Mutator.Patching
             }
 
             LegacyReferenceTransformer? typeScanner = null;
+            AssemblyDefinition? hooksAsm = null;
 
             try {
                 foreach (var module in asm.Modules) {
                     if (module.AssemblyReferences.Any(asmRef => asmRef.Name == "HOOKS-Assembly-CSharp")) {
-                        typeScanner ??= new(GetBepAssemblyDef(hooksAsmPath));
+                        typeScanner ??= new(hooksAsm = GetBepAssemblyDef(hooksAsmPath, false));
                         typeScanner.Transform(module);
                     }
 
@@ -147,7 +151,12 @@ namespace Mutator.Patching
 
                     AccessViolationPrevention.AddUnverifiableCodeAttribute(module);
                 }
-            } finally { typeScanner?.Dispose(); }
+            } finally { 
+                if (hooksAsm != null) {
+                    hooksAsm.Dispose();
+                    hooksAsm.MainModule.AssemblyResolver.Dispose();
+                }
+            }
 
             AccessViolationPrevention.IgnoreAccessChecksAndSkipVerification(asm);
         }

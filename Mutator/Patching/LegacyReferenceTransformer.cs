@@ -1,11 +1,10 @@
 ﻿using Mono.Cecil;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Mutator.Patching
 {
-    public sealed class LegacyReferenceTransformer : IDisposable
+    public sealed class LegacyReferenceTransformer
     {
         struct NameDetails
         {
@@ -21,7 +20,6 @@ namespace Mutator.Patching
 
         private readonly Dictionary<string, string> types = new();
         private readonly AssemblyDefinition hooksAsm;
-        private bool disposedValue;
 
         public LegacyReferenceTransformer(AssemblyDefinition hooksAsm)
         {
@@ -194,26 +192,6 @@ namespace Mutator.Patching
             }
 
             return member.Name;
-        }
-
-        private void DoDispose()
-        {
-            if (!disposedValue) {
-                hooksAsm.Dispose();
-
-                disposedValue = true;
-            }
-        }
-
-        ~LegacyReferenceTransformer()
-        {
-            DoDispose();
-        }
-
-        public void Dispose()
-        {
-            DoDispose();
-            GC.SuppressFinalize(this);
         }
     }
 }

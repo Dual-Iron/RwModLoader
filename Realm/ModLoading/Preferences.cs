@@ -5,7 +5,7 @@ namespace Realm.ModLoading
 {
     public sealed class Preferences
     {
-        private static string PreferencesPath => Path.Combine(Extensions.UserFolder, "prefs.json");
+        private static string PreferencesPath => Path.Combine(Extensions.UserFolder.FullName, "prefs.json");
 
         public void Load()
         {
@@ -31,6 +31,7 @@ namespace Realm.ModLoading
             File.WriteAllText(PreferencesPath, Json.Serialize(objects));
         }
 
+        // TODO HIGH: use hashset
         public List<string> EnabledMods { get; private set; } = new();
     }
 }

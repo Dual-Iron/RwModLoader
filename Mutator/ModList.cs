@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Mutator.Packaging;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
@@ -27,7 +29,7 @@ namespace Mutator
             request.Headers.Add("Accept", "text/plain");
             request.Headers.Add("User-Agent", "downloader-" + Environment.ProcessId);
 
-            var response = await InstallerApi.Client.SendAsync(request);
+            using var response = await InstallerApi.Client.SendAsync(request);
 
             try {
                 response.EnsureSuccessStatusCode();
@@ -101,7 +103,8 @@ namespace Mutator
                 if (fields.ContainsKey("mod") &&
                     fields.TryGetValue("type", out var type) && !type.Contains("Region") && !type.Contains("Map Edits") &&
                     fields.TryGetValue("url", out var url) &&
-                    fields.TryGetValue("name", out var name) && fields.TryGetValue("desc", out var desc)) {
+                    fields.TryGetValue("name", out var name) && !Packager.ModBlacklist.Contains(name) &&
+                    fields.TryGetValue("desc", out var desc)) {
                     var mod = new RaindbMod {
                         Url = url,
                         Name = name,
@@ -128,7 +131,7 @@ namespace Mutator
                         if (reqMatch.Success && reqMatch.Groups[1].Success) {
                             var split = reqMatch.Groups[1].Value.Split(new[] { ", ", "and ", " and " }, 100, StringSplitOptions.RemoveEmptyEntries);
                             foreach (var modReq in split)
-                                if (modReq != "EnumExtender" && modReq != "PublicityStunt")
+                                if (Packager.ModBlacklist.Contains(modReq))
                                     mod.ModDependencies += modReq + ";";
                         }
                     }

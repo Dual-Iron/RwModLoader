@@ -2,7 +2,7 @@
   "profiles": {
     "Mutator": {
       "commandName": "Project",
-      "commandLineArgs": "--update CustomRegions \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Rain World\\BepInEx\\plugins\\CustomRegions.dll\""
+      "commandLineArgs": "--download Garrakx/Custom-Regions"
     }
   }
 }

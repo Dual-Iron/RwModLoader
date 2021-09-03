@@ -1,5 +1,4 @@
-﻿using BepInEx;
-using Menu;
+﻿using Menu;
 using Realm.ModLoading;
 using System.Linq;
 using UnityEngine;
@@ -8,7 +7,10 @@ namespace Realm.Gui
 {
     public sealed class ModPanel : RectangularMenuObject, CheckBox.IOwnCheckBox, IListable, IHoverable
     {
-        public ModPanel(RwmodFile rwmodFile, MenuObject owner, Vector2 pos) : base(owner.menu, owner, pos, new(540, 36))
+        public const float Height = 36;
+        public const float Width = 540;
+
+        public ModPanel(RwmodFile rwmodFile, MenuObject owner, Vector2 pos) : base(owner.menu, owner, pos, new(Width, Height))
         {
             FContainer parent = Container;
             parent.AddChild(Container = new());
@@ -26,7 +28,7 @@ namespace Realm.Gui
             MenuLabel displayLabel = new(menu, this, display, new(posX += 34, 2), new(displayWidth, size.y), true);
             subObjects.Add(displayLabel);
 
-            if (!rwmodFile.Author.IsNullOrWhiteSpace()) {
+            if (!string.IsNullOrEmpty(rwmodFile.Author)) {
                 string author = $"by {rwmodFile.Author}";
                 float authorWidth = author.MeasureWidth("font");
                 MenuLabel authorLabel = new(menu, this, author, new(posX += displayWidth + 4, 2), new(authorWidth, size.y), false);
@@ -127,12 +129,12 @@ namespace Realm.Gui
             }
         }
 
-        string IHoverable.GetHoverInfo()
+        string IHoverable.GetHoverInfo(MenuObject selected)
         {
-            if (menu.selectedObject == enabledCheckBox) {
+            if (selected == enabledCheckBox) {
                 return $"{(IsEnabled ? "Disable" : "Enable")} mod";
             }
-            if (menu.selectedObject == deleteButton) {
+            if (selected == deleteButton) {
                 return $"{(WillDelete ? "Dequeue" : "Enqueue")} mod for deletion";
             }
             return "";

@@ -1,15 +1,9 @@
 ﻿using Music;
-using System;
 
 namespace Realm.Gui
 {
-    public sealed class ModsMenuMusic
+    public static class ModsMenuMusic
     {
-        private enum Mode : byte
-        {
-            Unstarted, Playing, Stopped
-        }
-
         private static bool startIntroMusic;
 
         public static void Hook()
@@ -27,27 +21,9 @@ namespace Realm.Gui
             orig(self);
         }
 
-        private static string Song => DateTime.Now.Hour switch {
-            < 4 => "NA_39 - Cracked Earth",
-            < 8 => "NA_04 - Silicon",
-            < 12 => "NA_30 - Distance",
-            < 16 => "NA_24 - Emotion Thread",
-            < 20 => "NA_09 - Interest Pad",
-            _ => "RW_16 - Shoreline",
-        };
+        private static bool playing;
 
-        public ModsMenuMusic(ProcessManager manager)
-        {
-            this.manager = manager;
-        }
-
-        private MusicPlayer? Music => manager.musicPlayer;
-
-        private readonly ProcessManager manager;
-
-        private Mode mode;
-
-        private void SimpleRequestSong(MusicPlayer mp, string name, float fadeInTime)
+        private static void SimpleRequestSong(MusicPlayer mp, string name, float fadeInTime)
         {
             const float priority = 1000;
 
@@ -64,23 +40,23 @@ namespace Realm.Gui
             }
         }
 
-        public void Start()
+        public static void Start(MusicPlayer music)
         {
-            if (Music != null && mode == Mode.Unstarted) {
-                Music.FadeOutAllSongs(40);
-                SimpleRequestSong(Music, Song, 10);
+            if (music != null && !playing) {
+                music.FadeOutAllSongs(40);
+                SimpleRequestSong(music, GuiHandler.TimedSong, 10);
                 startIntroMusic = false;
-                mode = Mode.Playing;
+                playing = true;
             }
         }
 
-        public void ShutDown()
+        public static void ShutDown(MusicPlayer music)
         {
-            if (Music != null && mode == Mode.Playing) {
-                Music.FadeOutAllSongs(40);
-                Music.RequestIntroRollMusic();
+            if (music != null && playing) {
+                music.FadeOutAllSongs(40);
+                music.RequestIntroRollMusic();
                 startIntroMusic = true;
-                mode = Mode.Stopped;
+                playing = false;
             }
         }
     }

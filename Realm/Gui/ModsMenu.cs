@@ -1,7 +1,6 @@
 ﻿using Menu;
 using Realm.Jobs;
 using Realm.Logging;
-using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -13,29 +12,6 @@ namespace Realm.Gui
 
         public ModsMenu(ProcessManager manager, ProgramState state) : base(manager, ModsMenuID)
         {
-            static MenuScene.SceneID GetScene()
-            {
-                if (SlugcatSelectMenu.CheckUnlockRed()) return DateTime.Now.DayOfWeek switch {
-                    DayOfWeek.Sunday => MenuScene.SceneID.Dream_Sleep,
-                    DayOfWeek.Monday => MenuScene.SceneID.Dream_Iggy_Doubt,
-                    DayOfWeek.Tuesday => MenuScene.SceneID.Dream_Pebbles,
-                    DayOfWeek.Wednesday => MenuScene.SceneID.Dream_Moon_Friend,
-                    DayOfWeek.Thursday => MenuScene.SceneID.Void_Slugcat_Upright,
-                    DayOfWeek.Friday => MenuScene.SceneID.Void_Slugcat_Down,
-                    _ => MenuScene.SceneID.Outro_2_Up_Swim,
-                };
-
-                return DateTime.Now.DayOfWeek switch {
-                    DayOfWeek.Sunday => MenuScene.SceneID.Intro_1_Tree,
-                    DayOfWeek.Monday => MenuScene.SceneID.Intro_2_Branch,
-                    DayOfWeek.Tuesday => MenuScene.SceneID.Intro_3_In_Tree,
-                    DayOfWeek.Wednesday => MenuScene.SceneID.Intro_4_Walking,
-                    DayOfWeek.Thursday => MenuScene.SceneID.Intro_5_Hunting,
-                    DayOfWeek.Friday => MenuScene.SceneID.Intro_6_7_Rain_Drop,
-                    _ => MenuScene.SceneID.SleepScreen
-                };
-            }
-
             State = state;
 
             State.Mods.Refresh(performingProgress);
@@ -43,7 +19,7 @@ namespace Realm.Gui
             pages.Add(new(this, null, "main", 0));
 
             // Big pretty background picture
-            Page.subObjects.Add(new InteractiveMenuScene(this, Page, GetScene()));
+            Page.subObjects.Add(new InteractiveMenuScene(this, Page, GuiHandler.TimedScene) { cameraRange = 0.2f });
 
             // A scaled up translucent black pixel to make the background less distracting
             Page.subObjects.Add(new MenuSprite(Page, new(-1, -1), new("pixel") {
@@ -54,17 +30,15 @@ namespace Realm.Gui
                 anchorY = 0
             }));
 
-            // Back button
+            // Buttons
+            Page.subObjects.Add(nextButton = new BigArrowButton(this, Page, "", new(1116f, 668f), 1));
             Page.subObjects.Add(cancelButton = new SimpleButton(this, Page, "CANCEL", "", new(200, 50), new(110, 30)));
             Page.subObjects.Add(saveButton = new SimpleButton(this, Page, "SAVE & EXIT", "", new(360, 50), new(110, 30)));
             Page.subObjects.Add(refresh = new SimpleButton(this, Page, "REFRESH", "", new(200, 200), new(110, 30)));
             Page.subObjects.Add(disableAll = new SimpleButton(this, Page, "DISABLE ALL", "", new(200, 250), new(110, 30)));
             Page.subObjects.Add(enableAll = new SimpleButton(this, Page, "ENABLE ALL", "", new(200, 300), new(110, 30)));
 
-            const int panelsPerScreen = 13;
-            const int padding = 5;
-
-            modListing = new(Page, new(650, 50), new(540, 36 * panelsPerScreen + 2 * padding), padding);
+            modListing = new(Page, pos: new(650, 50), elementSize: new(ModPanel.Width, ModPanel.Height), elementsPerScreen: 16, edgePadding: 5);
 
             foreach (var file in state.Mods.AllRwmods) {
                 modListing.subObjects.Add(new ModPanel(file, Page, default));
@@ -78,9 +52,9 @@ namespace Realm.Gui
             progDisplayContainer.subObjects.Add(
                 new ProgressableDisplay(performingProgress, progDisplayContainer, modListing.pos, modListing.size)
             );
-        }
 
-        private static ModsMenuMusic? music;
+            ModsMenuMusic.Start(manager.musicPlayer);
+        }
 
         public ProgramState State { get; }
 
@@ -89,15 +63,16 @@ namespace Realm.Gui
         private readonly SimpleButton enableAll;
         private readonly SimpleButton disableAll;
         private readonly SimpleButton refresh;
-        private readonly ModListing modListing;
+        private readonly Listing modListing;
 
         private readonly MenuContainer progDisplayContainer;
         private readonly LoggedProgressable performingProgress = new();
+        private readonly BigArrowButton nextButton;
 
-        public Page Page => pages[0];
+        private Page Page => pages[0];
 
-        private Job? performingJob;                          // Current job.
-        private bool shutDownMusic = true;                  // Set false to not restart music on shutdown. Useful for refreshing.
+        private Job? performingJob;     // Current job.
+        private bool shutDownMusic;     // Set false to not restart music on shutdown. Useful for refreshing.
 
         private bool PreventButtonClicks => manager.upcomingProcess != null || performingJob != null;
 
@@ -111,9 +86,8 @@ namespace Realm.Gui
 
         public override void ShutDownProcess()
         {
-            if (shutDownMusic && music != null) {
-                music.ShutDown();
-                music = null;
+            if (shutDownMusic) {
+                ModsMenuMusic.ShutDown(manager.musicPlayer);
             }
 
             base.ShutDownProcess();
@@ -121,11 +95,6 @@ namespace Realm.Gui
 
         public override void Update()
         {
-            if (music == null) {
-                music = new(manager);
-                music.Start();
-            }
-
             foreach (var mob in Page.subObjects) {
                 if (mob is ButtonTemplate button) {
                     button.GetButtonBehavior.greyedOut = PreventButtonClicks;
@@ -147,12 +116,20 @@ namespace Realm.Gui
             if (sender == cancelButton) {
                 manager.RequestMainProcessSwitch(ProcessManager.ProcessID.MainMenu);
                 PlaySound(SoundID.MENU_Switch_Page_Out);
+                shutDownMusic = true;
                 return;
             }
 
             if (sender == saveButton && performingJob == null) {
                 performingJob = Job.Start(SaveExit);
                 PlaySound(SoundID.MENU_Switch_Page_Out);
+                shutDownMusic = true;
+                return;
+            }
+
+            if (sender == nextButton) {
+                manager.RequestMainProcessSwitch(RaindbMenu.RaindbMenuID);
+                PlaySound(SoundID.MENU_Switch_Arena_Gametype);
                 return;
             }
 
@@ -165,7 +142,6 @@ namespace Realm.Gui
                     panel.SetEnabled(false);
                 }
             } else if (sender == refresh) {
-                shutDownMusic = false;
                 manager.RequestMainProcessSwitch(ID);
             }
 
@@ -200,10 +176,10 @@ namespace Realm.Gui
         public override string UpdateInfoText()
         {
             if (selectedObject is IHoverable hoverable) {
-                return hoverable.GetHoverInfo();
+                return hoverable.GetHoverInfo(selectedObject);
             }
             if (selectedObject?.owner is IHoverable ownerHoverable) {
-                return ownerHoverable.GetHoverInfo();
+                return ownerHoverable.GetHoverInfo(selectedObject);
             }
             if (selectedObject == cancelButton) return "Return to main menu";
             if (selectedObject == saveButton) return "Return to main menu, save changes, and reload mods";

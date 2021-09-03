@@ -1,7 +1,9 @@
-﻿namespace Realm.Gui
+﻿using Menu;
+
+namespace Realm.Gui
 {
     public interface IHoverable
     {
-        string GetHoverInfo();
+        string GetHoverInfo(MenuObject selected);
     }
 }

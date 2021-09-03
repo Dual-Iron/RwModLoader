@@ -11,7 +11,7 @@ using MonoMod.RuntimeDetour;
 
 namespace Realm.AssemblyLoading
 {
-    public sealed class LoadedAssemblyPool : IDisposable
+    public sealed class LoadedAssemblyPool
     {
         private static readonly DetourModManager manager = new();
 
@@ -37,6 +37,8 @@ namespace Realm.AssemblyLoading
 
             ret.LoadAssemblies(progressable, SetTaskProgress);
 
+            asmPool.Dispose();
+
             tasksComplete++;
             if (progressable.ProgressState == ProgressStateType.Failed) {
                 return ret;
@@ -48,7 +50,6 @@ namespace Realm.AssemblyLoading
         }
 
         private readonly List<LoadedModAssembly> loadedAssemblies = new();
-        private bool disposedValue;
 
         public AssemblyPool Pool { get; }
         public ReadOnlyCollection<LoadedModAssembly> LoadedAssemblies { get; }
@@ -57,15 +58,6 @@ namespace Realm.AssemblyLoading
         {
             Pool = assemblies;
             LoadedAssemblies = new(loadedAssemblies);
-        }
-
-        public void Dispose()
-        {
-            if (!disposedValue) {
-                Pool.Dispose();
-
-                disposedValue = true;
-            }
         }
 
         public void Unload(IProgressable progressable)

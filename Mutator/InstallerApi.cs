@@ -65,7 +65,7 @@ namespace Mutator
 
         public static string GetModPath(string name) => Path.Combine(ModsFolder.FullName, Path.ChangeExtension(name, ".rwmod"));
 
-        public static DirectoryInfo RestorationFolder => RwmodsUserFolder.CreateSubdirectory("restore");
+        public static DirectoryInfo RestorationFolder(string rwmod) => RwmodsUserFolder.CreateSubdirectory("restore").CreateSubdirectory(rwmod);
 
         public static DirectoryInfo PatchBackupsFolder => RwmodsUserFolder.CreateSubdirectory("patch-backups");
 

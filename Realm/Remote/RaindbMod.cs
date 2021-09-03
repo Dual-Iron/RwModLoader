@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -8,15 +7,7 @@ namespace Realm.Remote
 {
     public sealed class RaindbMod
     {
-        internal static void TEST_PrintAll()
-        {
-            foreach (var mod in Fetch()) {
-                string repo = mod.Repo == "" ? $"by {mod.Author}" : $"at {mod.Author}/{mod.Repo}";
-                Console.WriteLine($"{mod.Name,-30} {repo}");
-            }
-        }
-
-        public static IEnumerable<RaindbMod> Fetch()
+        public static List<RaindbMod> Fetch()
         {
             string err;
             using MemoryStream ms = new();
@@ -39,14 +30,16 @@ namespace Realm.Remote
             return mods;
         }
 
-        public string Name;
-        public string Description;
-        public string Author;
-        public string Repo;
-        public string Url;
-        public string IconUrl;
-        public string VideoUrl;
-        public string ModDependencies;
+        public readonly string Name;
+        public readonly string Description;
+        public readonly string Author;
+        public readonly string Repo;
+        public readonly string Url;
+        public readonly string IconUrl;
+        public readonly string VideoUrl;
+        public readonly string ModDependencies;
+
+        public string ModHomepage => string.IsNullOrEmpty(Repo) ? Url : $"https://github.com/{Author}/{Repo}#readme";
 
         public RaindbMod(BinaryReader reader)
         {

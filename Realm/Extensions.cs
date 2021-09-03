@@ -12,8 +12,9 @@ namespace Realm
         public static RainWorld? RainWorld => rw == null ? rw = UnityEngine.Object.FindObjectOfType<RainWorld>() : rw;
 #pragma warning restore IDE0029
 
-        public static string MutatorPath => Path.Combine(UserFolder, "Mutator.exe");
-        public static string UserFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".rw");
+        public static DirectoryInfo UserFolder => Directory.CreateDirectory(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).CreateSubdirectory(".rw");
+        public static string ModsFolder => UserFolder.CreateSubdirectory("mods").FullName;
+        public static string MutatorPath => Path.Combine(UserFolder.FullName, "Mutator.exe");
 
         public static void CopyTo(this Stream from, Stream to)
         {

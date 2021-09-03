@@ -26,6 +26,8 @@ namespace Realm
                 throw new InvalidOperationException("MUTATOR NOT PRESENT. REINSTALL REALM!");
             }
 
+            Logger.LogDebug("Debug logging enabled.");
+
             ConfigFile file = new(configPath: Path.Combine(Paths.ConfigPath, "Realm.cfg"), saveOnInit: true);
 
             var skip = file.Bind("General", "SkipLoading", false, "If enabled, Realm won't reload mods when starting the game.").Value;
@@ -80,7 +82,7 @@ namespace Realm
                 il.Instrs.Add(Instruction.Create(OpCodes.Ret));
             }
 
-            new ILHook(typeof(ModManager).GetMethod("LoadAllMods"), LoadAllModsIL);
+            _ = new ILHook(typeof(ModManager).GetMethod("LoadAllMods"), LoadAllModsIL);
         }
 
         private static void LoadEmbeddedAssemblies()

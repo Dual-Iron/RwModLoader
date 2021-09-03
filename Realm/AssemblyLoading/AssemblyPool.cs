@@ -103,24 +103,14 @@ namespace Realm.AssemblyLoading
 
         public void Dispose()
         {
-            DoDispose();
-            GC.SuppressFinalize(this);
-        }
-
-        private void DoDispose()
-        {
             if (!disposedValue) {
                 foreach (var modAsm in modAssemblies.Values) {
                     modAsm.AsmDef.Dispose();
+                    modAsm.AsmDef.MainModule.AssemblyResolver?.Dispose();
                 }
 
                 disposedValue = true;
             }
-        }
-
-        ~AssemblyPool()
-        {
-            DoDispose();
         }
     }
 }

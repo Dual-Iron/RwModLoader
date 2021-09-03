@@ -1,6 +1,7 @@
 ﻿using Mono.Cecil;
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 
 namespace Mutator
@@ -58,6 +59,12 @@ namespace Mutator
 
             accepted = null;
             return false;
+        }
+
+        public static string ProofDirectory(this string self)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(self)!);
+            return self;
         }
     }
 }

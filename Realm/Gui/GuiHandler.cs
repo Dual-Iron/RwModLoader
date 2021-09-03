@@ -10,6 +10,25 @@ namespace Realm.Gui
 {
     public sealed class GuiHandler
     {
+        public static MenuScene.SceneID TimedScene => DateTime.Now.DayOfWeek switch {
+            DayOfWeek.Sunday => MenuScene.SceneID.Intro_1_Tree,
+            DayOfWeek.Monday => MenuScene.SceneID.Intro_2_Branch,
+            DayOfWeek.Tuesday => MenuScene.SceneID.Intro_3_In_Tree,
+            DayOfWeek.Wednesday => MenuScene.SceneID.Intro_4_Walking,
+            DayOfWeek.Thursday => SlugcatSelectMenu.CheckUnlockRed() ? MenuScene.SceneID.Void_Slugcat_Upright : MenuScene.SceneID.Intro_5_Hunting,
+            DayOfWeek.Friday => SlugcatSelectMenu.CheckUnlockRed() ? MenuScene.SceneID.Void_Slugcat_Down : MenuScene.SceneID.Intro_6_7_Rain_Drop,
+            _ => SlugcatSelectMenu.CheckUnlockRed() ? MenuScene.SceneID.Outro_2_Up_Swim : MenuScene.SceneID.SleepScreen
+        };
+
+        public static string TimedSong => DateTime.Now.Hour switch {
+            < 4 => "NA_39 - Cracked Earth",
+            < 8 => "NA_04 - Silicon",
+            < 12 => "NA_30 - Distance",
+            < 16 => "NA_24 - Emotion Thread",
+            < 20 => "NA_09 - Interest Pad",
+            _ => "RW_16 - Shoreline",
+        };
+
         private const string MODS_BUTTON = "M";
 
         public static void Hook(ProgramState state)
@@ -135,6 +154,8 @@ namespace Realm.Gui
         {
             if (pid == ModsMenu.ModsMenuID) {
                 pm.currentMainLoop = new ModsMenu(pm, state);
+            } else if (pid == RaindbMenu.RaindbMenuID) {
+                pm.currentMainLoop = new RaindbMenu(pm, state);
             }
         }
     }
