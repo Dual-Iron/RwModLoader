@@ -168,12 +168,12 @@ namespace Mutator.Packaging
 
         private static void WrapDefault(string filePath, FileStream rwmodHeaderStream)
         {
-            new RwmodFileHeader(RwmodFileHeader.RwmodFlags.IsUnwrapped,
+            new RwmodFileHeader(RwmodFlags.IsUnwrapped,
                                 modVersion: new(0, 0, 0),
-                                repositoryName: "",
+                                name: "",
                                 author: "",
                                 displayName: Path.GetFileNameWithoutExtension(filePath),
-                                modDependencies: new())
+                                "")
                 .Write(rwmodHeaderStream);
         }
 
@@ -198,12 +198,12 @@ namespace Mutator.Packaging
             try {
                 using AssemblyDefinition asm = AssemblyDefinition.ReadAssembly(filePath);
 
-                new RwmodFileHeader(RwmodFileHeader.RwmodFlags.IsUnwrapped,
+                new RwmodFileHeader(RwmodFlags.IsUnwrapped,
                                 modVersion: new(asm.Name.Version ?? new(0, 0, 1)),
-                                repositoryName: "",
+                                name: "",
                                 author: GetAuthor(asm),
                                 displayName: asm.Name.Name,
-                                modDependencies: new())
+                                "")
                 .Write(rwmod);
 
                 return true;
@@ -247,7 +247,7 @@ namespace Mutator.Packaging
             using (Stream rwmodFile = File.Open(filePath, FileMode.Open, FileAccess.ReadWrite)) {
                 RwmodFileHeader header = RwmodFileHeader.Read(rwmodFile);
 
-                header.Flags |= RwmodFileHeader.RwmodFlags.IsUnwrapped;
+                header.Flags |= RwmodFlags.IsUnwrapped;
                 header.WriteFlags(rwmodFile);
                 
                 await rwmodFile.CopyToAsync(ms);
@@ -300,11 +300,11 @@ namespace Mutator.Packaging
             using (Stream rwmodFile = File.Open(filePath, FileMode.Open, FileAccess.ReadWrite)) {
                 RwmodFileHeader header = RwmodFileHeader.Read(rwmodFile);
 
-                if (!header.Flags.HasFlag(RwmodFileHeader.RwmodFlags.IsUnwrapped)) {
+                if (!header.Flags.HasFlag(RwmodFlags.IsUnwrapped)) {
                     return;
                 }
 
-                header.Flags &= ~RwmodFileHeader.RwmodFlags.IsUnwrapped;
+                header.Flags &= ~RwmodFlags.IsUnwrapped;
                 header.WriteFlags(rwmodFile);
 
                 await rwmodFile.CopyToAsync(ms);

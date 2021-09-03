@@ -14,7 +14,48 @@ namespace Mutator
     public static class InstallerApi
     {
         private static string? rwDir;
-        public static string RwDir => rwDir ??= GetRwDirectory();
+        public static string RwDir {
+            get {
+                if (rwDir != null) {
+                    return rwDir;
+                }
+
+                const int AppID = 312520;
+
+                // Check simple, common path
+                string samplePath = Path.GetFullPath(@"C:\Program Files (x86)\Steam\steamapps\common\Rain World");
+                if (Directory.Exists(samplePath)) {
+                    return samplePath;
+                }
+
+                // Use parent directory if it exists
+                var currentDir = new DirectoryInfo(Environment.CurrentDirectory);
+                do {
+                    if (currentDir.Name == "Rain World") {
+                        return currentDir.FullName;
+                    }
+                }
+                while ((currentDir = currentDir.Parent) != null);
+
+                // Find path rigorously
+                if (OperatingSystem.IsWindows()) {
+                    object? value =
+                        Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Valve\Steam", "InstallPath", null) ??
+                        Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Valve\Steam", "InstallPath", null);
+
+                    if (value is string steamPath) {
+                        string appState = File.ReadAllText(Path.Combine(steamPath, "steamapps", $"appmanifest_{AppID}.acf"));
+                        var installNameMatch = Regex.Match(appState, @"""installdir""\s*""(.*?)""");
+                        if (installNameMatch.Success && installNameMatch.Groups.Count == 2) {
+                            string installName = installNameMatch.Groups[1].Value;
+                            return rwDir = Path.Combine(steamPath, "steamapps", "common", installName);
+                        }
+                    }
+                }
+
+                throw new("Could not find the Rain World directory.");
+            }
+        }
 
         private static HttpClient? client;
         public static HttpClient Client => client ??= new();
@@ -24,37 +65,6 @@ namespace Mutator
         internal static void Dispose()
         {
             client?.Dispose();
-        }
-
-        private static string GetRwDirectory()
-        {
-            const int AppID = 312520;
-
-            var currentDir = new DirectoryInfo(Environment.CurrentDirectory);
-            do {
-                if (currentDir.Name == "Rain World") {
-                    return currentDir.FullName;
-                }
-                currentDir = currentDir.Parent;
-            }
-            while (currentDir != null);
-
-            if (OperatingSystem.IsWindows()) {
-                object? value =
-                    Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Valve\Steam", "InstallPath", null) ??
-                    Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Valve\Steam", "InstallPath", null);
-
-                if (value is string steamPath) {
-                    string appState = File.ReadAllText(Path.Combine(steamPath, "steamapps", $"appmanifest_{AppID}.acf"));
-                    var installNameMatch = Regex.Match(appState, @"""installdir""\s*""(.*?)""");
-                    if (installNameMatch.Success && installNameMatch.Groups.Count == 2) {
-                        string installName = installNameMatch.Groups[1].Value;
-                        return Path.Combine(steamPath, "steamapps", "common", installName);
-                    }
-                }
-            }
-
-            throw new("Could not find the Rain World directory. Move the installer into the \"Rain World\" folder.");
         }
 
         private static DirectoryInfo? rwmodUserFolder;
