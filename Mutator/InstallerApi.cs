@@ -94,13 +94,12 @@ namespace Mutator
 
             var versionMatch = Regex.Match(message, @"""tag_name"":""(.+?)""");
 
-            if (!versionMatch.Success || !Version.TryParse(versionMatch.Groups[1].Value.Trim('v', 'V'), out var version)) {
+            if (!versionMatch.Success || !Version.TryParse(versionMatch.Groups[1].Value.TrimStart('v', 'V'), out var version)) {
                 throw new("Latest release had a tag that was not a simple version.");
             }
 
             // Fetch the download link
-            var downloadUriMatch = Regex.Match(message, @"""browser_download_url"":""(.+?)""");
-
+            Match downloadUriMatch = Regex.Match(message, @"""browser_download_url"":""(.+?)""");
             List<string> uris = new();
 
             while (downloadUriMatch.Success) {
@@ -109,7 +108,10 @@ namespace Mutator
                 downloadUriMatch = downloadUriMatch.NextMatch();
             }
 
-            return new(uris, version);
+            Match descriptionMatch = Regex.Match(message, @"""body"":""(.+?)""");
+            string description = descriptionMatch.Success ? descriptionMatch.Groups[1].Value : "";
+
+            return new(uris, version, description);
 
             static async Task<string> GetMessage(HttpRequestMessage request)
             {

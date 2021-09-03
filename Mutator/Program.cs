@@ -14,23 +14,26 @@ namespace Mutator
             try {
                 Run(args);
                 return 0;
-            } catch (AssemblyResolutionException e) {
-                Console.WriteLine($"Could not resolve assembly {e.AssemblyReference.Name} v{e.AssemblyReference.Version}. Try adding it to your Rain World plugins folder.");
-                Console.Error.WriteLine(e);
-                return 1;
-            } catch (AggregateException e) {
-                foreach (var innerE in e.Flatten().InnerExceptions) {
-                    Console.WriteLine(innerE.Message);
-                    Console.Error.WriteLine(innerE);
-                }
-                return 2;
             } catch (Exception e) {
-                Console.WriteLine(e.Message);
-                Console.Error.WriteLine(e);
-                return -1;
+                return HandleError(e);
             } finally {
                 InstallerApi.Dispose();
             }
+        }
+
+        private static int HandleError(Exception e)
+        {
+            if (e is AggregateException ae) {
+                int last = -1;
+                foreach (var innerE in ae.Flatten().InnerExceptions) {
+                    last = HandleError(e);
+                }
+                return last;
+            }
+
+            Console.WriteLine(e.Message);
+            Console.Error.WriteLine(e);
+            return -1;
         }
 
         private static void Run(string[] args)

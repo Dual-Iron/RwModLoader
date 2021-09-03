@@ -10,17 +10,17 @@ namespace Mutator
     {
         private readonly IList<string> uris;
 
-        public RepoFiles(IList<string> uris, Version version)
+        public RepoFiles(IList<string> uris, Version version, string description)
         {
             this.uris = uris;
+            Description = description;
             Version = new(version.Major, version.Minor, version.Build);
         }
-
-        public bool RwRoot => uris.Count == 1 && uris[0].EndsWith("/Rain World.zip");
 
         public int Count => uris.Count;
 
         public Version Version { get; }
+        public string Description { get; }
 
         public string GetUri(int index) => uris[index];
 

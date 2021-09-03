@@ -43,7 +43,7 @@ namespace Mutator.Packaging
 
                 header = RwmodFileHeader.Read(input);
 
-                files = await GetFilesFromGitHubRepository(header.Author, header.RepositoryName);
+                files = await GetFilesFromGitHubRepository(header.Author, header.Name);
             } else {
                 // Get from repository
                 string[] args = path.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
@@ -58,12 +58,14 @@ namespace Mutator.Packaging
 
                 header = new RwmodFileHeader(default,
                                     default,
-                                    repositoryName: name,
+                                    name: name,
                                     author: args[0],
                                     displayName: name,
-                                    modDependencies: new());
+                                    $"https://github.com/{args[0]}/{args[1]}#readme");
                 header.Write(output);
             }
+
+            // TODO completely redo this lmao
 
             if (files.Version > header.ModVersion.ToVersion()) {
                 string tempDir = Path.GetTempFileName();
