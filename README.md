@@ -13,7 +13,7 @@ A modloader for Rain World: RwModLoader, or RWML. Or Realm, because that sounds 
 https://user-images.githubusercontent.com/31146412/131228787-764c1723-7dca-46e6-894d-bd4472321428.mp4
 
 ## I need help!
-[Support.](.github/SUPPORT.md)
+Look in the [support](.github/SUPPORT.md) section.
 
 ## Future plans
 - Download mods from https://raindb.net
