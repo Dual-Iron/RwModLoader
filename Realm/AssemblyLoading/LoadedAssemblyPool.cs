@@ -198,7 +198,15 @@ namespace Realm.AssemblyLoading
         private void InitializeMods(IProgressable progressable, Action<float> setTaskProgress)
         {
             // EnumExtender dependency fix
-            VirtualEnums.VirtualEnumApi.ReloadWith(loadedAssemblies.Select(lm => lm.Asm), Program.Logger.LogError);
+            VirtualEnums.VirtualEnumApi.Clear();
+
+            foreach (var loadedAsm in loadedAssemblies) {
+                VirtualEnums.VirtualEnumApi.UseAssembly(loadedAsm.Asm, out var err);
+
+                if (err != null) {
+                    Program.Logger.LogError(err);
+                }
+            }
 
             StaticFixes.PreLoad();
 
