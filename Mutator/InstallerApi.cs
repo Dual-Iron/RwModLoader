@@ -10,47 +10,49 @@ namespace Mutator;
 public static partial class InstallerApi
 {
     private static string? rwDir;
-    public static string RwDir {
-        get {
-            if (rwDir != null) {
-                return rwDir;
+    public static string RwDir => rwDir ??= GetRwDir();
+
+    private static string GetRwDir()
+    {
+        const int AppID = 312520;
+
+        // Check for explicit path override
+        if (File.Exists("path.txt") && File.ReadLines("path.txt").FirstOrDefault() is string firstLine) {
+            var path = firstLine.Trim();
+            if (path.Length > 0 && Directory.Exists(path)) {
+                return Path.GetFullPath(path);
             }
+            throw Err(ExitCodes.AbsentRoot, $"Invalid path.txt file. The first line should be the path to the Rain World directory.");
+        }
 
-            const int AppID = 312520;
+        // Check simple, common path
+        string samplePath = Path.GetFullPath(@"C:\Program Files (x86)\Steam\steamapps\common\Rain World");
+        if (Directory.Exists(samplePath)) {
+            return samplePath;
+        }
 
-            // Check simple, common path
-            string samplePath = Path.GetFullPath(@"C:\Program Files (x86)\Steam\steamapps\common\Rain World");
-            if (Directory.Exists(samplePath)) {
-                return samplePath;
-            }
+        // Find path rigorously
+        if (OperatingSystem.IsWindows()) {
+            object? value =
+                Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Valve\Steam", "InstallPath", null) ??
+                Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Valve\Steam", "InstallPath", null);
 
-            // Use parent directory if it exists
-            var currentDir = new DirectoryInfo(Environment.CurrentDirectory);
-            do {
-                if (currentDir.Name == "Rain World") {
-                    return currentDir.FullName;
-                }
-            }
-            while ((currentDir = currentDir.Parent) != null);
+            if (value is string steamPath) {
+                string appState = File.ReadAllText(Path.Combine(steamPath, "steamapps", $"appmanifest_{AppID}.acf"));
+                var installNameMatch = Regex.Match(appState, @"""installdir""\s*""(.*?)""");
+                if (installNameMatch.Success && installNameMatch.Groups.Count == 2) {
+                    string installName = installNameMatch.Groups[1].Value;
+                    string path = Path.Combine(steamPath, "steamapps", "common", installName);
 
-            // Find path rigorously
-            if (OperatingSystem.IsWindows()) {
-                object? value =
-                    Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Valve\Steam", "InstallPath", null) ??
-                    Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Valve\Steam", "InstallPath", null);
-
-                if (value is string steamPath) {
-                    string appState = File.ReadAllText(Path.Combine(steamPath, "steamapps", $"appmanifest_{AppID}.acf"));
-                    var installNameMatch = Regex.Match(appState, @"""installdir""\s*""(.*?)""");
-                    if (installNameMatch.Success && installNameMatch.Groups.Count == 2) {
-                        string installName = installNameMatch.Groups[1].Value;
-                        return rwDir = Path.Combine(steamPath, "steamapps", "common", installName);
+                    if (Directory.Exists(path)) {
+                        File.WriteAllText("path.txt", path + "\n");
+                        return path;
                     }
                 }
             }
-
-            throw Err(ExitCodes.AbsentRoot, "Could not find the Rain World directory.");
         }
+
+        throw Err(ExitCodes.AbsentRoot, $"Could not find the Rain World directory. Add a path.txt file to \"{Environment.CurrentDirectory}\" that has your Rain World directory.");
     }
 
     private static HttpClient? client;
