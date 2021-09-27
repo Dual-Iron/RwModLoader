@@ -47,10 +47,6 @@ public static class Program
             return;
         }
 
-        bool parallel = false;
-
-        List<Task> tasks = new();
-
         using IEnumerator<string> enumerator = ((IReadOnlyList<string>)args).GetEnumerator();
 
         while (enumerator.MoveNext()) {
@@ -58,13 +54,7 @@ public static class Program
 
             string arg0 = enumerator.Current;
 
-            if (arg0 == "--parallel") {
-                if (parallel) {
-                    Task.WaitAll(tasks.ToArray());
-                    tasks.Clear();
-                }
-                parallel = !parallel;
-            } else if (arg0 == "--raindb")
+            if (arg0 == "--raindb")
                 task = RaindbMod.PrintAll();
             else if (arg0 == "--install")
                 task = Task.Run(Installer.Install);
@@ -100,13 +90,8 @@ public static class Program
                 return;
             }
 
-            if (parallel)
-                tasks.Add(task);
-            else
-                task.Wait();
+            task.Wait();
         }
-
-        Task.WaitAll(tasks.ToArray());
     }
 
     private static void ListHelp()
@@ -115,7 +100,6 @@ public static class Program
 RwModMutator v{typeof(Program).Assembly.GetName().Version} - Documentation: https://tinyurl.com/rwmmd
 
 --help                You're here!
---parallel            Toggles between asynchronous and synchronous task execution.
 --raindb              Lists mods from RainDB.
 --install             Installs Realm.
 --uninstall           Uninstalls Realm.
