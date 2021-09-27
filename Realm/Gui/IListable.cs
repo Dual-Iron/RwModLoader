@@ -1,13 +1,12 @@
 ﻿using UnityEngine;
 
-namespace Realm.Gui
+namespace Realm.Gui;
+
+public interface IListable
 {
-    public interface IListable
-    {
-        bool IsBelow { set; }
-        bool BlockInteraction { set; }
-        float Visibility { set; }
-        Vector2 Pos { set; }
-        Vector2 Size { get; }
-    }
+    bool IsBelow { set; }
+    bool BlockInteraction { set; }
+    float Visibility { set; }
+    Vector2 Pos { set; }
+    Vector2 Size { get; }
 }

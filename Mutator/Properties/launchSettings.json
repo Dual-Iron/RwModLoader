@@ -2,7 +2,7 @@
   "profiles": {
     "Mutator": {
       "commandName": "Project",
-      "commandLineArgs": "--download Garrakx/Custom-Regions"
+      "commandLineArgs": "--raindb"
     }
   }
 }

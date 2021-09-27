@@ -1,14 +1,13 @@
 ﻿using System.Reflection;
 
-namespace Realm.AssemblyLoading
+namespace Realm.AssemblyLoading;
+
+public abstract partial class ModDescriptor
 {
-    public abstract partial class ModDescriptor
-    {
-        private ModDescriptor() { }
+    private ModDescriptor() { }
 
-        public abstract bool IsPartiality { get; }
+    public abstract bool IsPartiality { get; }
 
-        public abstract void Initialize(Assembly assembly);
-        public abstract void Unload();
-    }
+    public abstract void Initialize(Assembly assembly);
+    public abstract void Unload();
 }

@@ -1,146 +1,146 @@
 ﻿using Menu;
 using Realm.ModLoading;
-using System.Linq;
 using UnityEngine;
 
-namespace Realm.Gui
+namespace Realm.Gui;
+
+public sealed class ModPanel : RectangularMenuObject, CheckBox.IOwnCheckBox, IListable, IHoverable
 {
-    public sealed class ModPanel : RectangularMenuObject, CheckBox.IOwnCheckBox, IListable, IHoverable
+    public const float Height = 36;
+    public const float Width = 540;
+
+    public ModPanel(RwmodFile rwmod, MenuObject owner, Vector2 pos) : base(owner.menu, owner, pos, new(Width, Height))
     {
-        public const float Height = 36;
-        public const float Width = 540;
+        FContainer parent = Container;
+        parent.AddChild(Container = new());
 
-        public ModPanel(RwmodFile rwmodFile, MenuObject owner, Vector2 pos) : base(owner.menu, owner, pos, new(Width, Height))
-        {
-            FContainer parent = Container;
-            parent.AddChild(Container = new());
+        var header = rwmod.Header;
 
-            RwmodFile = rwmodFile;
+        RwmodFile = rwmod;
 
-            IsEnabled = rwmodFile.Enabled;
+        IsEnabled = header.Enabled;
 
-            float posX = 0;
+        float posX = 0;
 
-            subObjects.Add(enabledCheckBox = new CheckBox(menu, this, this, new(posX += 10, size.y / 2 - 12), 0, "", ""));
+        subObjects.Add(enabledCheckBox = new CheckBox(menu, this, this, new(posX += 10, size.y / 2 - 12), 0, "", ""));
 
-            string display = $"{rwmodFile.DisplayName} v{rwmodFile.ModVersion.Major}.{rwmodFile.ModVersion.Minor}";
-            float displayWidth = display.MeasureWidth("DisplayFont");
-            MenuLabel displayLabel = new(menu, this, display, new(posX += 34, 2), new(displayWidth, size.y), true);
-            subObjects.Add(displayLabel);
+        string display = $"{header.DisplayName} v{header.ModVersion.Major}.{header.ModVersion.Minor}";
+        float displayWidth = display.MeasureWidth("DisplayFont");
+        MenuLabel displayLabel = new(menu, this, display, new(posX += 34, 2), new(displayWidth, size.y), true);
+        subObjects.Add(displayLabel);
 
-            if (!string.IsNullOrEmpty(rwmodFile.Author)) {
-                string author = $"by {rwmodFile.Author}";
-                float authorWidth = author.MeasureWidth("font");
-                MenuLabel authorLabel = new(menu, this, author, new(posX += displayWidth + 4, 2), new(authorWidth, size.y), false);
-                subObjects.Add(authorLabel);
-            }
-
-            subObjects.Add(deleteButton = new(menu, this, "Menu_Symbol_Clear_All", "", new(size.x - 34, size.y / 2 - 12)));
-
-            subObjects.Add(bar = new MenuSprite(this, new(60, 0), new("pixel") {
-                scaleX = size.x - 120,
-                scaleY = 1,
-                alpha = 0.5f
-            }));
+        if (!string.IsNullOrEmpty(header.Author)) {
+            string author = $"by {header.Author}";
+            float authorWidth = author.MeasureWidth("font");
+            MenuLabel authorLabel = new(menu, this, author, new(posX += displayWidth + 4, 2), new(authorWidth, size.y), false);
+            subObjects.Add(authorLabel);
         }
 
-        public readonly RwmodFile RwmodFile;
+        subObjects.Add(deleteButton = new(menu, this, "Menu_Symbol_Clear_All", "", new(size.x - 34, size.y / 2 - 12)));
 
-        private readonly CheckBox enabledCheckBox;
-        private readonly SymbolButton deleteButton;
-        private readonly MenuSprite bar;
-
-        public bool IsBelow { get; set; }
-        public bool BlockInteraction { get; set; }
-        public float Visibility { get; set; }
-
-        public Vector2 Pos { set => pos = value; }
-        public Vector2 Size => size;
-
-        public bool IsEnabled { get; private set; }
-        public bool WillDelete { get; private set; }
-
-        public void SetEnabled(bool value)
-        {
-            IsEnabled = value;
-            if (IsEnabled) {
-                WillDelete = false;
-            }
-        }
-
-        public void SetEnabledWithDependencies(bool value)
-        {
-            if (IsEnabled == value) {
-                return;
-            }
-
-            SetEnabled(value);
-
-            if (value) {
-                foreach (var sob in owner.subObjects) {
-                    if (sob is ModPanel p && RwmodFile.ModDependencies.Dependencies.Contains(p.RwmodFile.Name)) {
-                        p.SetEnabledWithDependencies(true);
-                    }
-                }
-            } else {
-                foreach (var sob in owner.subObjects) {
-                    if (sob is ModPanel p && p.RwmodFile.ModDependencies.Dependencies.Contains(RwmodFile.Name)) {
-                        p.SetEnabledWithDependencies(false);
-                    }
-                }
-            }
-        }
-
-        public override void Update()
-        {
-            enabledCheckBox.GetButtonBehavior.greyedOut = BlockInteraction;
-            deleteButton.GetButtonBehavior.greyedOut = BlockInteraction;
-
-            base.Update();
-        }
-
-        public override void GrafUpdate(float timeStacker)
-        {
-            base.GrafUpdate(timeStacker);
-
-            Container.alpha = Visibility;
-
-            if (IsBelow) {
-                bar.sprite.isVisible = false;
-            }
-
-            if (WillDelete) {
-                Color color = deleteButton.symbolSprite.color;
-                color.r *= 4;
-                color.g *= 0.5f;
-                color.b *= 0.5f;
-                deleteButton.symbolSprite.color = color;
-            }
-        }
-
-        public override void Singal(MenuObject sender, string message)
-        {
-            if (sender == deleteButton) {
-                IsEnabled = false;
-
-                WillDelete = !WillDelete;
-
-                menu.PlaySound(WillDelete ? SoundID.MENU_Checkbox_Check : SoundID.MENU_Checkbox_Uncheck);
-            }
-        }
-
-        string IHoverable.GetHoverInfo(MenuObject selected)
-        {
-            if (selected == enabledCheckBox) {
-                return $"{(IsEnabled ? "Disable" : "Enable")} mod";
-            }
-            if (selected == deleteButton) {
-                return $"{(WillDelete ? "Dequeue" : "Enqueue")} mod for deletion";
-            }
-            return "";
-        }
-
-        bool CheckBox.IOwnCheckBox.GetChecked(CheckBox box) => IsEnabled;
-        void CheckBox.IOwnCheckBox.SetChecked(CheckBox box, bool c) => SetEnabledWithDependencies(c);
+        subObjects.Add(bar = new MenuSprite(this, new(60, 0), new("pixel") {
+            scaleX = size.x - 120,
+            scaleY = 1,
+            alpha = 0.5f
+        }));
     }
+
+    public readonly RwmodFile RwmodFile;
+
+    private readonly CheckBox enabledCheckBox;
+    private readonly SymbolButton deleteButton;
+    private readonly MenuSprite bar;
+
+    public bool IsBelow { get; set; }
+    public bool BlockInteraction { get; set; }
+    public float Visibility { get; set; }
+
+    public Vector2 Pos { set => pos = value; }
+    public Vector2 Size => size;
+
+    public bool IsEnabled { get; private set; }
+    public bool WillDelete { get; private set; }
+
+    public void SetEnabled(bool value)
+    {
+        IsEnabled = value;
+        if (IsEnabled) {
+            WillDelete = false;
+        }
+    }
+
+    public void SetEnabledWithDependencies(bool value)
+    {
+        if (IsEnabled == value) {
+            return;
+        }
+
+        SetEnabled(value);
+
+        //if (value) {
+        //    foreach (var sob in owner.subObjects) {
+        //        if (sob is ModPanel p && RwmodFile.ModDependencies.Dependencies.Contains(p.RwmodFile.Name)) {
+        //            p.SetEnabledWithDependencies(true);
+        //        }
+        //    }
+        //} else {
+        //    foreach (var sob in owner.subObjects) {
+        //        if (sob is ModPanel p && p.RwmodFile.ModDependencies.Dependencies.Contains(RwmodFile.Name)) {
+        //            p.SetEnabledWithDependencies(false);
+        //        }
+        //    }
+        //}
+    }
+
+    public override void Update()
+    {
+        enabledCheckBox.GetButtonBehavior.greyedOut = BlockInteraction;
+        deleteButton.GetButtonBehavior.greyedOut = BlockInteraction;
+
+        base.Update();
+    }
+
+    public override void GrafUpdate(float timeStacker)
+    {
+        base.GrafUpdate(timeStacker);
+
+        Container.alpha = Visibility;
+
+        if (IsBelow) {
+            bar.sprite.isVisible = false;
+        }
+
+        if (WillDelete) {
+            Color color = deleteButton.symbolSprite.color;
+            color.r *= 4;
+            color.g *= 0.5f;
+            color.b *= 0.5f;
+            deleteButton.symbolSprite.color = color;
+        }
+    }
+
+    public override void Singal(MenuObject sender, string message)
+    {
+        if (sender == deleteButton) {
+            IsEnabled = false;
+
+            WillDelete = !WillDelete;
+
+            menu.PlaySound(WillDelete ? SoundID.MENU_Checkbox_Check : SoundID.MENU_Checkbox_Uncheck);
+        }
+    }
+
+    string IHoverable.GetHoverInfo(MenuObject selected)
+    {
+        if (selected == enabledCheckBox) {
+            return $"{(IsEnabled ? "Disable" : "Enable")} mod";
+        }
+        if (selected == deleteButton) {
+            return $"{(WillDelete ? "Dequeue" : "Enqueue")} mod for deletion";
+        }
+        return "";
+    }
+
+    bool CheckBox.IOwnCheckBox.GetChecked(CheckBox box) => IsEnabled;
+    void CheckBox.IOwnCheckBox.SetChecked(CheckBox box, bool c) => SetEnabledWithDependencies(c);
 }

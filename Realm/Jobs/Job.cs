@@ -1,70 +1,67 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
+﻿using System.Threading;
 
-namespace Realm.Jobs
+namespace Realm.Jobs;
+
+public sealed class Job
 {
-    public sealed class Job
+    public static Job Start(Action callback)
     {
-        public static Job Start(Action callback)
-        {
-            Job ret = new(callback);
-            ret.Start();
-            return ret;
+        Job ret = new(callback);
+        ret.Start();
+        return ret;
+    }
+
+    public static void WaitAll(IEnumerable<Job> jobs)
+    {
+        foreach (var job in jobs) {
+            job.Wait();
         }
+    }
 
-        public static void WaitAll(IEnumerable<Job> jobs)
-        {
-            foreach (var job in jobs) {
-                job.Wait();
-            }
+    private readonly object o = new();
+    private Action? action;
+
+    public JobStatus Status { get; private set; }
+    public Exception? Exception { get; private set; }
+    public bool Ok => Exception == null;
+
+    public Job(Action callback)
+    {
+        action = callback;
+    }
+
+    public void Start()
+    {
+        if (Status != JobStatus.Unstarted) {
+            throw new InvalidOperationException("Already started");
         }
+        Status = JobStatus.InProgress;
+        ThreadPool.QueueUserWorkItem(Work);
+    }
 
-        private readonly object o = new();
-        private Action? action;
-
-        public JobStatus Status { get; private set; }
-        public Exception? Exception { get; private set; }
-        public bool Ok => Exception == null;
-
-        public Job(Action callback)
-        {
-            action = callback;
+    public void Wait()
+    {
+        while (Status != JobStatus.Finished) {
+            Thread.Sleep(0);
         }
+    }
 
-        public void Start()
-        {
-            if (Status != JobStatus.Unstarted) {
-                throw new InvalidOperationException("Already started");
-            }
-            Status = JobStatus.InProgress;
-            ThreadPool.QueueUserWorkItem(Work);
+    private void Work(object _)
+    {
+        try {
+            action!();
+            Finish(null);
+        } catch (Exception e) {
+            Finish(e);
         }
+        action = null;
+    }
 
-        public void Wait()
-        {
-            while (Status != JobStatus.Finished) {
-                Thread.Sleep(0);
-            }
-        }
-
-        private void Work(object _)
-        {
-            try {
-                action!();
-                Finish(null);
-            } catch (Exception e) {
-                Finish(e);
-            }
-            action = null;
-        }
-
-        private void Finish(Exception? e)
-        {
-            lock (o) {
-                Status = JobStatus.Finished;
-                Exception = e;
-            }
+    private void Finish(Exception? e)
+    {
+        lock (o) {
+            Status = JobStatus.Finished;
+            Exception = e;
         }
     }
 }

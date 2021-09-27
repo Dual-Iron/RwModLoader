@@ -1,7 +1,6 @@
-﻿namespace Realm.Logging
+﻿namespace Realm.Logging;
+
+public interface IMessageable
 {
-    public interface IMessageable
-    {
-        void Message(MessageType messageType, string message);
-    }
+    void Message(MessageType messageType, string message);
 }

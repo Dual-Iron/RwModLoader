@@ -10,8 +10,6 @@
     <DefineConstants></DefineConstants> <!--INSTALL_ONLY-->
     <PublishSingleFile>true</PublishSingleFile>
     <PublishReadyToRun>true</PublishReadyToRun>
-    <LangVersion>preview</LangVersion>
-    <DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
   </PropertyGroup>
 
   <ItemGroup>
