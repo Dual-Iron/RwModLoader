@@ -32,13 +32,15 @@ public class Downloading
 
         Match typeMatch = GetModType(release.Body);
 
-        if (!typeMatch.Success) {
-            throw Err(ExitCodes.RepoNotCompliant);
-        }
-
         RwmodFlags flags;
 
-        if (typeMatch.Groups[1].Value == "mod" || typeMatch.Groups[1].Value == "plugin")
+        if (!typeMatch.Success)
+#if IGNORE_COMPLIANCE
+            flags = RwmodFlags.Mod;
+#else
+            throw Err(ExitCodes.RepoNotCompliant);
+#endif
+        else if (typeMatch.Groups[1].Value == "mod" || typeMatch.Groups[1].Value == "plugin")
             flags = RwmodFlags.Mod;
         else
             flags = RwmodFlags.Patcher;

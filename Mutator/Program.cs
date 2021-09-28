@@ -29,9 +29,13 @@ public static class Program
             return last;
         }
 
+        if (e is IOException) {
+            Console.WriteLine(e.Message);
+            return ExitCodes.IOError;
+        }
+
         if (e is BadExecutionException bee) {
             Console.WriteLine(e.Message);
-            Console.Error.WriteLine(e);
             return bee.ExitCode;
         }
 

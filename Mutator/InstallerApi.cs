@@ -139,25 +139,6 @@ public static partial class InstallerApi
         }
     }
 
-    /// <summary>
-    /// Downloads a file with progress reporting.
-    /// </summary>
-    /// <param name="download">The stream to download from.</param>
-    /// <param name="progressCopying">Fired every time progress updates, with a parameter ranging from 0-1 representing download progress.</param>
-    /// <returns>The path to the downloaded file.</returns>
-    public static async Task DownloadWithProgress(Stream download, Stream output, Action<float>? progressCopying)
-    {
-        byte[] buffer = new byte[81920];
-        int totalRead = 0;
-        int read;
-        while ((read = await download.ReadAsync(buffer.AsMemory(0, buffer.Length))) > 0) {
-            await output.WriteAsync(buffer.AsMemory(0, read));
-
-            totalRead += read;
-            progressCopying?.Invoke(totalRead / (float)download.Length);
-        }
-    }
-
     public static async Task<string> FetchFromCache(string key, Func<Task<string>> getValue)
     {
         // TODO LOW: speed this up using hash checks and Span<char>

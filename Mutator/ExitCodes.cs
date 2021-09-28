@@ -16,4 +16,5 @@ public enum ExitCodes
     CorruptRwmod = 10,
     AbsentDependency = 11,
     RepoNotCompliant = 12,
+    IOError = 13,
 }
