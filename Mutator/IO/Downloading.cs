@@ -7,7 +7,7 @@ public class Downloading
 {
     public static Match GetModType(string body)
     {
-        return Regex.Match(body, @"(mod|plugin|patcher)\s+for\s+realm", RegexOptions.IgnoreCase);
+        return Regex.Match(body, @"(mod|plugin|patcher)\s+(?:is\s+)?(?:for|with|compatible\s+with)\s+(?:realm|rwml|rwmodloader)", RegexOptions.IgnoreCase);
     }
 
     public static async Task Download(string url)
@@ -32,18 +32,10 @@ public class Downloading
 
         Match typeMatch = GetModType(release.Body);
 
-        RwmodFlags flags;
-
+#if !IGNORE_COMPLIANCE
         if (!typeMatch.Success)
-#if IGNORE_COMPLIANCE
-            flags = RwmodFlags.Mod;
-#else
             throw Err(ExitCodes.RepoNotCompliant);
 #endif
-        else if (typeMatch.Groups[1].Value == "mod" || typeMatch.Groups[1].Value == "plugin")
-            flags = RwmodFlags.Mod;
-        else
-            flags = RwmodFlags.Patcher;
 
         string localModPath = GetModPath(args[1]);
 
@@ -90,7 +82,6 @@ public class Downloading
 
             using (Stream output = File.Create(localModPath)) {
                 new RwmodFileHeader(args[1], args[0]) {
-                    Flags = flags,
                     DisplayName = args[1],
                     ModVersion = release.Version
                 }.Write(output);

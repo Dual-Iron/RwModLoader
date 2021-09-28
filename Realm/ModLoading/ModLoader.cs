@@ -24,7 +24,7 @@ public sealed class ModLoader
         List<RwmodFile> plugins = new();
 
         foreach (var rwmod in rwmods) {
-            if ((rwmod.Header.Flags & RwmodFlags.Mod) != 0 && ProgramState.Instance.Prefs.EnabledMods.Contains(rwmod.Header.Name)) {
+            if (ProgramState.Instance.Prefs.EnabledMods.Contains(rwmod.Header.Name)) {
                 plugins.Add(rwmod);
             }
         }
