@@ -2,6 +2,7 @@
 using MonoMod.RuntimeDetour;
 using Partiality;
 using Partiality.Modloader;
+using System.Diagnostics;
 using System.Reflection;
 
 namespace Realm.AssemblyLoading;
@@ -36,6 +37,8 @@ internal static class StaticFixes
 
                 foreach (var lasm in lasmPool.LoadedAssemblies) {
                     if (lasm.AsmName == name) {
+                        Program.Logger.LogWarning($"Tried to get the location of a RWMOD assembly ({name}). Using a fake location instead. Do not use Assembly.Location on mod assemblies!");
+                        Program.Logger.LogWarning(new StackTrace(2));
                         // TODO MEDIUM: don't assume it's a plugin
                         return Path.Combine(Paths.PluginPath, lasm.FileName);
                     }
