@@ -26,18 +26,18 @@ internal static class StaticFixes
     private static string HookGetLocation(Func<Assembly, string> orig, Assembly self)
     {
         var ret = orig(self);
+        var lasmPool = ProgramState.Instance.Mods.LoadedAssemblyPool;
 
-        var asmPool = ProgramState.Instance.Mods.LoadedAssemblyPool?.Pool;
-
-        if (asmPool != null && string.IsNullOrEmpty(ret)) {
+        if (lasmPool != null && ret.IsNullOrWhiteSpace()) {
             string name = self.GetName().Name;
             int index = name.IndexOf(AssemblyPool.IterationSeparator);
             if (index != -1) {
                 name = name.Substring(0, index);
 
-                foreach (var asmName in asmPool.Names) {
-                    if (asmName == name) {
-                        return Path.Combine(Paths.PluginPath, asmPool[asmName].FileName);
+                foreach (var lasm in lasmPool.LoadedAssemblies) {
+                    if (lasm.AsmName == name) {
+                        // TODO MEDIUM: don't assume it's a plugin
+                        return Path.Combine(Paths.PluginPath, lasm.FileName);
                     }
                 }
             }

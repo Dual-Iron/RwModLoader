@@ -13,7 +13,7 @@ public sealed class LoadedAssemblyPool
     private static readonly DetourModManager manager = new();
 
     /// <summary>
-    /// Loads the assemblies and initializes them if they are mods. Never calls <see cref="IDisposable.Dispose"/> on the assembly streams.
+    /// Loads the assemblies in <paramref name="asmPool"/>. Call <see cref="InitializeMods(IProgressable, Action{float})"/> to initialize them. Never calls <see cref="IDisposable.Dispose"/> on the assembly streams.
     /// </summary>
     public static LoadedAssemblyPool Load(IProgressable progressable, AssemblyPool asmPool)
     {
@@ -36,13 +36,6 @@ public sealed class LoadedAssemblyPool
         }
 
         ret.LoadAssemblies(progressable, SetTaskProgress);
-
-        tasksComplete++;
-        if (progressable.ProgressState == ProgressStateType.Failed) {
-            return ret;
-        }
-
-        ret.InitializeMods(progressable, SetTaskProgress);
 
         return ret;
     }
@@ -192,7 +185,7 @@ public sealed class LoadedAssemblyPool
         }
     }
 
-    private void InitializeMods(IProgressable progressable, Action<float> setTaskProgress)
+    public void InitializeMods(IProgressable progressable)
     {
         // EnumExtender dependency fix
         VirtualEnums.VirtualEnumApi.ReloadWith(loadedAssemblies.Select(lm => lm.Asm), Program.Logger.LogError);
@@ -213,7 +206,7 @@ public sealed class LoadedAssemblyPool
                 progressable.Message(MessageType.Fatal, $"Mod {lasm.AsmName} failed to initialize: {e}");
             }
 
-            setTaskProgress(++finished / (float)total);
+            progressable.Progress = ++finished / (float)total;
         }
 
         StaticFixes.PostLoad();

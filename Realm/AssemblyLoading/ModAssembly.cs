@@ -19,5 +19,5 @@ public sealed class ModAssembly
     public AssemblyDefinition AsmDef;
 
     public string FileName => Rwmod.Entries[EntryIndex].FileName;
-    public string OriginalAssemblyName => AsmDef.Name.Name.Split(new[] { AssemblyPool.IterationSeparator }, 0)[0];
+    public string OriginalAssemblyName => AsmDef.Name.Name.Substring(0, AsmDef.Name.Name.IndexOf(AssemblyPool.IterationSeparator));
 }

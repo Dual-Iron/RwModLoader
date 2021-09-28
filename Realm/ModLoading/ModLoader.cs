@@ -30,11 +30,22 @@ public sealed class ModLoader
         }
 
         progressable.Message(MessageType.Info, "Reading assemblies");
+        
         AssemblyPool assemblyPool = AssemblyPool.Read(progressable, plugins);
 
+        if (progressable.ProgressState == ProgressStateType.Failed) goto Ret;
         progressable.Message(MessageType.Info, "Loading assemblies");
+        progressable.Progress = 0;
+
         LoadedAssemblyPool = LoadedAssemblyPool.Load(progressable, assemblyPool);
 
+        if (progressable.ProgressState == ProgressStateType.Failed) goto Ret;
+        progressable.Message(MessageType.Info, "Initializing mods");
+        progressable.Progress = 0;
+
+        LoadedAssemblyPool.InitializeMods(progressable);
+
+        Ret:
         foreach (var rwmod in rwmods) {
             rwmod.Stream.Dispose();
         }
