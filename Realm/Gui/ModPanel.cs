@@ -9,28 +9,26 @@ public sealed class ModPanel : RectangularMenuObject, CheckBox.IOwnCheckBox, ILi
     public const float Height = 36;
     public const float Width = 540;
 
-    public ModPanel(RwmodFile rwmod, MenuObject owner, Vector2 pos) : base(owner.menu, owner, pos, new(Width, Height))
+    public ModPanel(RwmodFileHeader rwmod, MenuObject owner, Vector2 pos) : base(owner.menu, owner, pos, new(Width, Height))
     {
+        Rwmod = rwmod;
+
         FContainer parent = Container;
         parent.AddChild(Container = new());
 
-        var header = rwmod.Header;
-
-        RwmodFile = rwmod;
-
-        IsEnabled = header.Enabled;
+        IsEnabled = rwmod.Enabled;
 
         float posX = 0;
 
         subObjects.Add(enabledCheckBox = new CheckBox(menu, this, this, new(posX += 10, size.y / 2 - 12), 0, "", ""));
 
-        string display = $"{header.DisplayName} v{header.ModVersion.Major}.{header.ModVersion.Minor}";
+        string display = $"{rwmod.DisplayName} v{rwmod.ModVersion.Major}.{rwmod.ModVersion.Minor}";
         float displayWidth = display.MeasureWidth("DisplayFont");
         MenuLabel displayLabel = new(menu, this, display, new(posX += 34, 2), new(displayWidth, size.y), true);
         subObjects.Add(displayLabel);
 
-        if (!string.IsNullOrEmpty(header.Author)) {
-            string author = $"by {header.Author}";
+        if (!string.IsNullOrEmpty(rwmod.Author)) {
+            string author = $"by {rwmod.Author}";
             float authorWidth = author.MeasureWidth("font");
             MenuLabel authorLabel = new(menu, this, author, new(posX += displayWidth + 4, 2), new(authorWidth, size.y), false);
             subObjects.Add(authorLabel);
@@ -45,8 +43,7 @@ public sealed class ModPanel : RectangularMenuObject, CheckBox.IOwnCheckBox, ILi
         }));
     }
 
-    public readonly RwmodFile RwmodFile;
-
+    public readonly RwmodFileHeader Rwmod;
     private readonly CheckBox enabledCheckBox;
     private readonly SymbolButton deleteButton;
     private readonly MenuSprite bar;

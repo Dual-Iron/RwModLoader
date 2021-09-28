@@ -27,7 +27,7 @@ internal static class StaticFixes
     {
         var ret = orig(self);
 
-        var asmPool = ProgramState.Current.Mods.AssemblyPool;
+        var asmPool = ProgramState.Instance.Mods.LoadedAssemblyPool?.Pool;
 
         if (asmPool != null && string.IsNullOrEmpty(ret)) {
             string name = self.GetName().Name;

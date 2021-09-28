@@ -12,6 +12,9 @@ public sealed class LoadedAssemblyPool
 {
     private static readonly DetourModManager manager = new();
 
+    /// <summary>
+    /// Loads the assemblies and initializes them if they are mods. Never calls <see cref="IDisposable.Dispose"/> on the assembly streams.
+    /// </summary>
     public static LoadedAssemblyPool Load(IProgressable progressable, AssemblyPool asmPool)
     {
         LoadedAssemblyPool ret = new(asmPool);
@@ -33,8 +36,6 @@ public sealed class LoadedAssemblyPool
         }
 
         ret.LoadAssemblies(progressable, SetTaskProgress);
-
-        asmPool.Dispose();
 
         tasksComplete++;
         if (progressable.ProgressState == ProgressStateType.Failed) {
@@ -175,12 +176,11 @@ public sealed class LoadedAssemblyPool
                         reference.Name = asmRefAsm.AsmDef.Name.Name;
                     }
 
-            string name = asm.AsmDef.Name.Name;
+            string name = asm.OriginalAssemblyName;
 
             // Load assemblies
             using MemoryStream ms = new();
             asm.AsmDef.Write(ms);
-            asm.AsmDef.Dispose();
 
             try {
                 loadedAssemblies.Add(new(Assembly.Load(ms.ToArray()), name, asm.FileName));

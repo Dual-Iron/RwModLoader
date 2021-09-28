@@ -12,7 +12,7 @@ public sealed class FileEntry
             long size = reader.ReadInt64();
             string name = reader.ReadString();
 
-            entries[i] = new(name, rwmodStream.Position, size);
+            entries[i] = new(i, name, rwmodStream.Position, size);
 
             rwmodStream.Position += size;
         }
@@ -20,12 +20,14 @@ public sealed class FileEntry
         return entries;
     }
 
+    public readonly int Index;
     public readonly string FileName;
     public readonly long Offset;
     public readonly long Length;
 
-    public FileEntry(string fileName, long offset, long length)
+    public FileEntry(int index, string fileName, long offset, long length)
     {
+        Index = index;
         FileName = fileName;
         Offset = offset;
         Length = length;

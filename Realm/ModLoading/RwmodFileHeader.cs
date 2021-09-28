@@ -2,8 +2,20 @@
 
 public sealed class RwmodFileHeader
 {
+    public static IEnumerable<RwmodFileHeader> GetRwmodHeaders()
+    {
+        foreach (var file in RwmodFile.GetRwmodFilePaths()) {
+            RwmodFileHeader ret;
+
+            using (Stream s = File.Open(file, FileMode.Open, FileAccess.Read))
+                ret = new(file, s);
+
+            yield return ret;
+        }
+    }
+
     // rwmod file format: https://gist.github.com/Dual-Iron/35b71cdd5ffad8b5ad65a3f7214af390
-    public RwmodFileHeader(Stream input)
+    public RwmodFileHeader(string filePath, Stream input)
     {
         BinaryReader reader = new(input, Encoding.ASCII);
 
@@ -14,6 +26,7 @@ public sealed class RwmodFileHeader
         Author = reader.ReadString();
         Homepage = reader.ReadString();
         DisplayName = reader.ReadString();
+        FilePath = filePath;
     }
 
     public readonly RwmodFlags Flags;
@@ -23,6 +36,7 @@ public sealed class RwmodFileHeader
     public readonly string Author;
     public readonly string Homepage;
     public readonly string DisplayName;
+    public readonly string FilePath;
 
-    public bool Enabled => ProgramState.Current.Prefs.EnabledMods.Contains(Name);
+    public bool Enabled => ProgramState.Instance.Prefs.EnabledMods.Contains(Name);
 }

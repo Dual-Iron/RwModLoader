@@ -30,7 +30,7 @@ public static class Program
 
         var skip = file.Bind("General", "SkipLoading", false, "If enabled, Realm won't reload mods when starting the game.").Value;
         var reset = file.Bind("General", "ResetMods", false, "If enabled, Realm will reset all mods and user preferences when starting the game.").Value;
-        ProgramState.Current.DeveloperMode = file.Bind("General", "HotReloading", false, "If enabled, Realm will allow hot reloading assemblies in-game. This feature is volatile.").Value;
+        ProgramState.Instance.DeveloperMode = file.Bind("General", "HotReloading", false, "If enabled, Realm will allow hot reloading assemblies in-game. This feature is volatile.").Value;
 
         if (!skip) TrySelfUpdate();
         LoadEmbeddedAssemblies();
@@ -38,16 +38,16 @@ public static class Program
         StaticFixes.Hook();
 
         if (reset) {
-            ProgramState.Current.Prefs.Save();
-            ProgramState.Current.Mods.Unload(new ProgressMessagingProgressable());
+            ProgramState.Instance.Prefs.Save();
+            ProgramState.Instance.Mods.Unload(new ProgressMessagingProgressable());
             File.Delete(Path.Combine(Paths.GameRootPath, "reset"));
         } else {
-            ProgramState.Current.Prefs.Load();
+            ProgramState.Instance.Prefs.Load();
         }
 
-        if (!skip) ProgramState.Current.Mods.Reload(new ProgressMessagingProgressable());
+        if (!skip) ProgramState.Instance.Mods.Reload(new ProgressMessagingProgressable());
 
-        GuiHandler.Hook(ProgramState.Current);
+        GuiHandler.Hook(ProgramState.Instance);
     }
 
     private static void TrySelfUpdate()

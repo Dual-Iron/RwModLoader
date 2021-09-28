@@ -1,6 +1,7 @@
 ﻿using Menu;
 using Realm.Jobs;
 using Realm.Logging;
+using Realm.ModLoading;
 
 namespace Realm.Gui;
 
@@ -11,8 +12,6 @@ public sealed class ModsMenu : Menu.Menu
     public ModsMenu(ProcessManager manager, ProgramState state) : base(manager, ModsMenuID)
     {
         State = state;
-
-        State.Mods.Refresh(performingProgress);
 
         pages.Add(new(this, null, "main", 0));
 
@@ -38,8 +37,10 @@ public sealed class ModsMenu : Menu.Menu
 
         modListing = new(Page, pos: new(650, 50), elementSize: new(ModPanel.Width, ModPanel.Height), elementsPerScreen: 16, edgePadding: 5);
 
-        foreach (var file in state.Mods.AllRwmods) {
-            modListing.subObjects.Add(new ModPanel(file, Page, default));
+        state.CurrentRwmodHeaderCache.Refresh();
+
+        foreach (var header in state.CurrentRwmodHeaderCache.Headers) {
+            modListing.subObjects.Add(new ModPanel(header, Page, default));
         }
 
         Page.subObjects.Add(modListing);
@@ -154,9 +155,9 @@ public sealed class ModsMenu : Menu.Menu
 
         foreach (var panel in Panels) {
             if (panel.WillDelete) {
-                delete.Add(panel.RwmodFile.FilePath);
+                delete.Add(panel.Rwmod.FilePath);
             } else if (panel.IsEnabled) {
-                State.Prefs.EnabledMods.Add(panel.RwmodFile.Header.Name);
+                State.Prefs.EnabledMods.Add(panel.Rwmod.Name);
             }
         }
 

@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace Realm.AssemblyLoading;
 
-public sealed class AssemblyPool : IDisposable
+public sealed class AssemblyPool
 {
     public const string IterationSeparator = ";;";
 
@@ -16,7 +16,7 @@ public sealed class AssemblyPool : IDisposable
     private static int id;
 
     /// <summary>
-    /// Reads assemblies. Ignores assemblies that are not patched.
+    /// Reads assemblies and stores their assembly definitions. Never calls <see cref="IDisposable.Dispose"/> on the assembly streams.
     /// </summary>
     public static AssemblyPool Read(IProgressable progressable, IList<RwmodFile> rwmods)
     {
@@ -49,7 +49,7 @@ public sealed class AssemblyPool : IDisposable
 
                 // If the assembly is blacklisted or not a mod assembly, skip.
                 if (ignore.Contains(name) || !IsPatched(asm, out var modType))
-                    goto Skip;
+                    continue;
 
                 // If an assembly with this name already exists,
                 if (ret.modAssemblies.TryGetValue(name, out ModAssembly conflicting)) {
@@ -57,24 +57,18 @@ public sealed class AssemblyPool : IDisposable
                     if (asm.Name.Version.Major != conflicting.AsmDef.Name.Version.Major) {
                         progressable.Message(
                             messageType: MessageType.Fatal,
-                            message: $"Two assemblies named {name} are incompatible: {asm.Name.Version} from {rwmod.Header.Name} and {conflicting.AsmDef.Name.Name} from {conflicting.Rwmod}."
+                            message: $"Two assemblies named {name} are incompatible: {asm.Name.Version} from {rwmod.Header.Name} and {conflicting.AsmDef.Name.Version} from {conflicting.Rwmod}."
                             );
-                        goto Skip;
+                        continue;
                     }
                     // If it's a more recent version, skip.
                     else if (conflicting.AsmDef.Name.Version > asm.Name.Version)
-                        goto Skip;
+                        continue;
                     // Otherwise, replace the existing one.
-                    else
-                        conflicting.AsmDef.Dispose();
                 }
 
-                ret.modAssemblies[name] = new(rwmod.Header.Name, rwmod.FileName, GetDescriptor(asm, modType), asm);
-                name += IterationSeparator + ret.ID;
-
-                continue;
-
-            Skip: asm.Dispose();
+                ret.modAssemblies[name] = new(rwmod, fileEntry.Index, GetDescriptor(asm, modType), asm);
+                asm.Name.Name += IterationSeparator + ret.ID;
             }
         }
 
@@ -115,8 +109,6 @@ public sealed class AssemblyPool : IDisposable
 
     private readonly Dictionary<string, ModAssembly> modAssemblies = new();
 
-    private bool disposedValue;
-
     public int ID { get; } = unchecked(id++);
     public int Count => modAssemblies.Count;
     public IEnumerable<string> Names => modAssemblies.Keys;
@@ -128,17 +120,5 @@ public sealed class AssemblyPool : IDisposable
     public bool TryGetAssembly(string name, [MaybeNullWhen(false)] out ModAssembly modAssembly)
     {
         return modAssemblies.TryGetValue(name, out modAssembly);
-    }
-
-    public void Dispose()
-    {
-        if (!disposedValue) {
-            foreach (var modAsm in modAssemblies.Values) {
-                modAsm.AsmDef.Dispose();
-                modAsm.AsmDef.MainModule.AssemblyResolver?.Dispose();
-            }
-
-            disposedValue = true;
-        }
     }
 }
