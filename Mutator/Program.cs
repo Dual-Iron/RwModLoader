@@ -46,7 +46,7 @@ public static class Program
 
     private static void Run(string[] args)
     {
-        if (args.Length == 1 && (args[0] == "?" || args[0] == "--help")) {
+        if (args.Length == 1 && (args[0] == "?" || args[0] == "--help" || args[0] == "help")) {
             ListHelp();
             return;
         }
@@ -90,7 +90,7 @@ public static class Program
             }
 
             if (task == null) {
-                Console.Error.WriteLine($"Unknown command '{arg0}'. Use --help for a list of commands.");
+                Console.Error.WriteLine($"Unknown command '{arg0}'. Use 'help' for a list of commands.");
                 return;
             }
 

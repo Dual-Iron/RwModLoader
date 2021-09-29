@@ -63,8 +63,9 @@ public sealed class GuiHandler
 
     private void PauseMenuSingal(On.Menu.PauseMenu.orig_Singal orig, PauseMenu self, MenuObject sender, string message)
     {
-        if (message == MODS_BUTTON) {
-            reloadingJob ??= Job.Start(() => state.Mods.Reload(new ProgressMessagingProgressable()));
+        if (reloadingJob == null && message == MODS_BUTTON) {
+            reloadingJob = Job.Start(() => state.Mods.Reload(new ProgressMessagingProgressable())); 
+            DisableButtons(self);
             self.PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
             return;
         }
@@ -77,11 +78,7 @@ public sealed class GuiHandler
         orig(self);
 
         if (reloadingJob != null) {
-            foreach (var sob in self.pages[0].subObjects) {
-                if (sob is ButtonTemplate button) {
-                    button.GetButtonBehavior.greyedOut = true;
-                }
-            }
+            DisableButtons(self);
 
             if (reloadingJob.Status == JobStatus.Finished) {
                 reloadingJob = null;
@@ -92,6 +89,15 @@ public sealed class GuiHandler
                     button.GetButtonBehavior.greyedOut = false;
                     break;
                 }
+            }
+        }
+    }
+
+    private static void DisableButtons(PauseMenu self)
+    {
+        foreach (var sob in self.pages[0].subObjects) {
+            if (sob is ButtonTemplate button) {
+                button.GetButtonBehavior.greyedOut = true;
             }
         }
     }
