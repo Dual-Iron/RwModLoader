@@ -12,38 +12,8 @@ To enable hot reloading:
 
 To hot reload:
 1. Enter the pause menu in-game.
-2. Overwrite RWMOD files in the `%appdata%/.rw/mods` folder. This can be done by wrapping your mod (see below).
+2. Modify RWMOD files. You can drop the necessary DLL files in `Rain World/BepInEx/plugins` where they'll get wrapped automatically. Alternatively, you can wrap them through a shell using the mutator's `--wrap` command. Run `"%appdata%/.rw/mutator" --help` for more information.
 3. Click HOT RELOAD in-game. It's to the left of the EXIT button.
-
-### Wrapping mods as RWMOD files
-Add this to your csproj file just above `</Project>` (works with SDK-style projects). This lets you build your project then immediately hot reload it in-game. Make sure to replace "MyMod" with your mod's name.
-```csproj
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="&quot;%appdata%/.rw/mutator&quot; --wrap MyMod &quot;$(TargetDir)$(TargetName).dll&quot;" />
-  </Target>
-```
-
-<details>
-  <summary>YourProject.csproj example</summary>
-
-  ```csproj
-  <Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-      <TargetFramework>net35</TargetFramework>
-    </PropertyGroup>
-
-    <ItemGroup>
-      <!--Whatever references-->
-    </ItemGroup>
-
-    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-      <Exec Command="&quot;%appdata%/.rw/mutator&quot; --wrap MyMod &quot;$(TargetDir)$(TargetName).dll&quot;" />
-    </Target>
-  </Project>
-  ```
-</details>
-
-You can learn more about the --wrap command by running `"%appdata%/.rw/mutator" --help`.
 
 # Interfacing with Realm via GitHub
 For a mod to interface with Realm, its homepage on raindb.net must be a GitHub repository, and:
