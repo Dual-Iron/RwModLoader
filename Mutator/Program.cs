@@ -90,8 +90,7 @@ public static class Program
             }
 
             if (task == null) {
-                Console.Error.WriteLine($"Unknown command '{arg0}'. Use '--help' for a list of commands.");
-                return;
+                throw Err(ExitCodes.InvalidArgs, $"Unknown command '{arg0}' with those parameters. Use '--help' for a list of commands.");
             }
 
             task.Wait();
