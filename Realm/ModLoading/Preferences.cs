@@ -10,14 +10,22 @@ public sealed class Preferences
     {
         if (!File.Exists(PreferencesPath)) {
             Save();
+            return;
         }
 
-        string pref = File.ReadAllText(PreferencesPath);
+        EnabledMods.Clear();
 
-        var data = (Dictionary<string, object>)Json.Deserialize(pref);
+        try {
+            string pref = File.ReadAllText(PreferencesPath);
 
-        foreach (var name in (List<object>)data["enabled"]) {
-            EnabledMods.Add((string)name);
+            var data = (Dictionary<string, object>)Json.Deserialize(pref);
+
+            foreach (var name in (List<object>)data["enabled"]) {
+                EnabledMods.Add((string)name);
+            }
+        } catch (Exception e) {
+            Program.Logger.LogError("Error while loading: " + e);
+            EnabledMods.Clear();
         }
     }
 
@@ -27,8 +35,12 @@ public sealed class Preferences
 
         objects["enabled"] = EnabledMods.ToList();
 
-        File.WriteAllText(PreferencesPath, Json.Serialize(objects));
+        try {
+            File.WriteAllText(PreferencesPath, Json.Serialize(objects));
+        } catch (Exception e) {
+            Program.Logger.LogError("Error while saving: " + e);
+        }
     }
 
-    public HashSet<string> EnabledMods { get; private set; } = new();
+    public HashSet<string> EnabledMods { get; } = new();
 }

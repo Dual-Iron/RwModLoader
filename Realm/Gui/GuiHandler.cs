@@ -64,7 +64,10 @@ public sealed class GuiHandler
     private void PauseMenuSingal(On.Menu.PauseMenu.orig_Singal orig, PauseMenu self, MenuObject sender, string message)
     {
         if (reloadingJob == null && message == MODS_BUTTON) {
-            reloadingJob = Job.Start(() => state.Mods.Reload(new ProgressMessagingProgressable())); 
+            reloadingJob = Job.Start(() => {
+                state.Prefs.Load();
+                state.Mods.Reload(new ProgressMessagingProgressable());
+            }); 
             DisableButtons(self);
             self.PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
             return;

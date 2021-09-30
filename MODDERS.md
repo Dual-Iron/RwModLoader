@@ -31,7 +31,7 @@ To enable hot reloading:
 
 To hot reload:
 1. Enter the pause menu in-game.
-2. Modify/overwrite RWMOD files as you please in the `%appdata%/.rw/mods` folder. This can be done by wrapping your mod (see below).
+2. Overwrite RWMOD files in the `%appdata%/.rw/mods` folder. This can be done by wrapping your mod (see below). You can also modify `%appdata%/.rw/prefs.json`.
 3. Click HOT RELOAD in-game. It's to the left of the EXIT button.
 
 ### Wrapping mods as RWMOD files
