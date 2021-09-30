@@ -124,7 +124,7 @@ public static partial class AssemblyPatcher
                     typeScanner.Transform(module);
                 }
 
-                HotReloadPatcher.Patch(module, ref modType);
+                modType = HotReloadPatcher.GetModType(module, out _)?.FullName ?? "";
 
                 AccessViolationPrevention.AddUnverifiableCodeAttribute(module);
             }

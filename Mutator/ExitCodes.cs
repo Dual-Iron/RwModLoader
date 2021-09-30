@@ -10,7 +10,7 @@ public enum ExitCodes
     AbsentBinaries = 4,
     InvalidReleaseTag = 5,
     AbsentFile = 6,
-    AbsentRoot = 7,
+    AbsentRainWorldFolder = 7,
     InvalidRwmodType = 8,
     EmptyRwmod = 9,
     CorruptRwmod = 10,

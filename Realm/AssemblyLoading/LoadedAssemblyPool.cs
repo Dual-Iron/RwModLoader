@@ -10,7 +10,7 @@ namespace Realm.AssemblyLoading;
 
 public sealed class LoadedAssemblyPool
 {
-    private static readonly DetourModManager manager = new();
+    private static readonly DetourModManager monomod = new();
 
     /// <summary>
     /// Loads the assemblies in <paramref name="asmPool"/>. Call <see cref="InitializeMods(IProgressable, Action{float})"/> to initialize them. Never calls <see cref="IDisposable.Dispose"/> on the assembly streams.
@@ -57,7 +57,7 @@ public sealed class LoadedAssemblyPool
         int count = loadedAssemblies.Count;
 
         foreach (var loadedAsmKvp in loadedAssemblies) {
-            manager.Unload(loadedAsmKvp.Asm);
+            monomod.Unload(loadedAsmKvp.Asm);
 
             try {
                 Pool[loadedAsmKvp.AsmName].Descriptor.Unload();

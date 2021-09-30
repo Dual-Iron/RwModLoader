@@ -7,13 +7,14 @@ public class Wrapper
 {
     public static async Task Wrap(string rwmodName, string filePath, bool shouldPatch)
     {
-        string[] files;
+        string[] files = Array.Empty<string>();
 
         if (File.Exists(filePath))
             files = new[] { filePath };
         else if (Directory.Exists(filePath))
             files = Directory.GetFiles(filePath, "*", SearchOption.AllDirectories);
-        else
+        
+        if (files.Length == 0)
             throw ErrFileNotFound(filePath);
 
         string rwmodPath = GetModPath(rwmodName);
@@ -21,8 +22,15 @@ public class Wrapper
         if (!File.Exists(rwmodPath)) {
             using FileStream rwmodHeaderStream = File.Create(rwmodPath);
 
-            if (!WrapAssembly(filePath, rwmodHeaderStream) && (files.Length != 1 || !WrapAssembly(files[0], rwmodHeaderStream))) {
-                throw Err(ExitCodes.InvalidRwmodType);
+            if (files.Length > 1) {
+                string name = Path.GetFileNameWithoutExtension(filePath);
+                new RwmodFileHeader(name, "") {
+                    DisplayName = name,
+                    Homepage = ""
+                }
+                .Write(rwmodHeaderStream);
+            } else if (!WrapAssembly(filePath, rwmodHeaderStream)) {
+                throw Err(ExitCodes.InvalidRwmodType, "Expected a DLL file or a directory.");
             }
         }
 
@@ -83,10 +91,6 @@ public class Wrapper
         }
 
         try {
-            if (!File.Exists(filePath)) {
-                return false;
-            }
-
             using AssemblyDefinition asm = AssemblyDefinition.ReadAssembly(filePath);
 
             new RwmodFileHeader(asm.Name.Name, GetAuthor(asm)) {

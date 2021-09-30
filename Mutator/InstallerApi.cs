@@ -22,7 +22,7 @@ public static partial class InstallerApi
             if (path.Length > 0 && Directory.Exists(path)) {
                 return Path.GetFullPath(path);
             }
-            throw Err(ExitCodes.AbsentRoot, $"Invalid path.txt file. The first line should be the path to the Rain World directory.");
+            throw Err(ExitCodes.AbsentRainWorldFolder, $"Invalid path.txt file. The first line should be the path to the Rain World directory.");
         }
 
         // Check simple, common path
@@ -52,7 +52,7 @@ public static partial class InstallerApi
             }
         }
 
-        throw Err(ExitCodes.AbsentRoot, $"Could not find the Rain World directory. Add a path.txt file to \"{Environment.CurrentDirectory}\" that has your Rain World directory.");
+        throw Err(ExitCodes.AbsentRainWorldFolder, $"Could not find the Rain World directory. Add a path.txt file to \"{Environment.CurrentDirectory}\" that has your Rain World directory.");
     }
 
     private static HttpClient? client;

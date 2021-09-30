@@ -90,7 +90,7 @@ public static class Program
             }
 
             if (task == null) {
-                Console.Error.WriteLine($"Unknown command '{arg0}'. Use 'help' for a list of commands.");
+                Console.Error.WriteLine($"Unknown command '{arg0}'. Use '--help' for a list of commands.");
                 return;
             }
 
@@ -113,7 +113,7 @@ RwModMutator v{typeof(Program).Assembly.GetName().Version} - Documentation: http
 --patch [path]        Patches the .NET assembly.
 --download [repo]     Downloads the most recent version of a RWMOD from a GitHub [repo] if need be.
 --extract [rwmod]     Extracts the contents of the RWMOD to a folder in the same directory.
---wrap [rwmod] [path] Wraps the contents specified at [path] into a RWMOD.
+--wrap [rwmod] [path] Wraps the DLL or directory specified at [path] into a RWMOD.
 "
 );
     }

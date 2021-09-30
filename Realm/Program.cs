@@ -30,7 +30,7 @@ public static class Program
 
         var skip = file.Bind("General", "SkipLoading", false, "If enabled, Realm won't reload mods when starting the game.").Value;
         var reset = file.Bind("General", "ResetMods", false, "If enabled, Realm will reset all mods and user preferences when starting the game.").Value;
-        ProgramState.Instance.DeveloperMode = file.Bind("General", "HotReloading", false, "If enabled, Realm will allow hot reloading assemblies in-game. This feature is volatile.").Value;
+        ProgramState.Instance.DeveloperMode = file.Bind("General", "HotReloading", false, "If enabled, Realm will allow hot reloading assemblies in-game. This feature is unstable.").Value;
 
         if (!skip) TrySelfUpdate();
         LoadEmbeddedAssemblies();
