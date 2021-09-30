@@ -13,25 +13,31 @@ public class Wrapper
             files = new[] { filePath };
         else if (Directory.Exists(filePath))
             files = Directory.GetFiles(filePath, "*", SearchOption.AllDirectories);
-        
+
         if (files.Length == 0)
             throw ErrFileNotFound(filePath);
 
-        string rwmodPath = GetModPath(rwmodName);
+        string? rwmodPath = null;
 
-        if (!File.Exists(rwmodPath)) {
-            using FileStream rwmodHeaderStream = File.Create(rwmodPath);
+        if (string.IsNullOrWhiteSpace(rwmodName)) {
+            RwmodFileHeader header;
 
-            if (files.Length > 1) {
+            if (files.Length == 1) {
+                header = WrapAssembly(filePath) ?? throw Err(ExitCodes.InvalidRwmodType, "Expected a .NET assembly.");
+                rwmodPath = GetModPath(header.Name);
+            } else {
                 string name = Path.GetFileNameWithoutExtension(filePath);
-                new RwmodFileHeader(name, "") {
+                header = new(name, "") {
                     DisplayName = name,
                     Homepage = ""
-                }
-                .Write(rwmodHeaderStream);
-            } else if (!WrapAssembly(filePath, rwmodHeaderStream)) {
-                throw Err(ExitCodes.InvalidRwmodType, "Expected a DLL file or a directory.");
+                };
+                rwmodPath = GetModPath(name);
             }
+
+            using FileStream file = File.Create(rwmodPath);
+            header.Write(file);
+        } else {
+            rwmodPath = GetModPath(rwmodName);
         }
 
         using MemoryStream ms = new();
@@ -53,9 +59,9 @@ public class Wrapper
 
             using Stream fileStream = File.OpenRead(file);
 
-            await RwmodOperations.WriteRwmodEntry(ms, new() { 
-                FileName = Path.GetFileName(file), 
-                Contents = fileStream 
+            await RwmodOperations.WriteRwmodEntry(ms, new() {
+                FileName = Path.GetFileName(file),
+                Contents = fileStream
             });
 
             count++;
@@ -76,15 +82,15 @@ public class Wrapper
         rwmodStream.Write(BitConverter.GetBytes(count));
     }
 
-    private static bool WrapAssembly(string filePath, FileStream rwmod)
+    private static RwmodFileHeader? WrapAssembly(string filePath)
     {
         static string GetAuthor(AssemblyDefinition asm)
         {
             foreach (var attribute in asm.CustomAttributes)
                 if (attribute.AttributeType.FullName == "System.Reflection.AssemblyCompanyAttribute"
                     && attribute.ConstructorArguments.Count == 1
-                    && attribute.ConstructorArguments[0].Value is string author &&
-                    author != asm.Name.Name) {
+                    && attribute.ConstructorArguments[0].Value is string author
+                    && author != asm.Name.Name) {
                     return author;
                 }
             return "";
@@ -93,14 +99,12 @@ public class Wrapper
         try {
             using AssemblyDefinition asm = AssemblyDefinition.ReadAssembly(filePath);
 
-            new RwmodFileHeader(asm.Name.Name, GetAuthor(asm)) {
+            return new RwmodFileHeader(asm.Name.Name, GetAuthor(asm)) {
                 ModVersion = new(asm.Name.Version ?? new(0, 0, 1)),
                 DisplayName = asm.Name.Name
-            }.Write(rwmod);
-
-            return true;
-        } catch { }
-
-        return false;
+            };
+        } catch {
+            return null;
+        }
     }
 }

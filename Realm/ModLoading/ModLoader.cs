@@ -1,4 +1,5 @@
-﻿using Realm.AssemblyLoading;
+﻿using BepInEx;
+using Realm.AssemblyLoading;
 using Realm.Logging;
 
 namespace Realm.ModLoading;
@@ -18,6 +19,21 @@ public sealed class ModLoader
     public void Reload(IProgressable progressable)
     {
         Unload(progressable);
+
+        if (Directory.Exists(Paths.PluginPath)) {
+            foreach (string pluginFile in Directory.GetFiles(Paths.PluginPath, "*.dll", SearchOption.TopDirectoryOnly)) {
+                Execution exec = Execution.Run(Extensions.MutatorPath, $"--wrap \"\" \"{pluginFile}\"");
+
+                if (exec.ExitCode == 0) {
+                    File.Delete(pluginFile);
+                    progressable.Message(MessageType.Info, $"Wrapped plugin: {Path.GetFileName(pluginFile)}.");
+                } else {
+                    progressable.Message(MessageType.Fatal, $"Failed to wrap {Path.GetFileName(pluginFile)}: {exec.ExitMessage}: {exec.Error}.");
+                }
+            }
+
+            if (progressable.ProgressState == ProgressStateType.Failed) return;
+        }
 
         RwmodFile[] rwmods = RwmodFile.GetRwmodFiles();
 
