@@ -1,18 +1,21 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using System.Linq;
 
-namespace Realm.ModLoading
+namespace Realm.ModLoading;
+
+public sealed class Preferences
 {
-    public sealed class Preferences
+    private static string PreferencesPath => Path.Combine(Extensions.UserFolder.FullName, "prefs.json");
+
+    public void Load()
     {
-        private static string PreferencesPath => Path.Combine(Extensions.UserFolder.FullName, "prefs.json");
+        if (!File.Exists(PreferencesPath)) {
+            Save();
+            return;
+        }
 
-        public void Load()
-        {
-            if (!File.Exists(PreferencesPath)) {
-                Save();
-            }
+        EnabledMods.Clear();
 
+        try {
             string pref = File.ReadAllText(PreferencesPath);
 
             var data = (Dictionary<string, object>)Json.Deserialize(pref);
@@ -20,18 +23,24 @@ namespace Realm.ModLoading
             foreach (var name in (List<object>)data["enabled"]) {
                 EnabledMods.Add((string)name);
             }
+        } catch (Exception e) {
+            Program.Logger.LogError("Error while loading: " + e);
+            EnabledMods.Clear();
         }
-
-        public void Save()
-        {
-            Dictionary<string, object> objects = new();
-
-            objects["enabled"] = EnabledMods;
-
-            File.WriteAllText(PreferencesPath, Json.Serialize(objects));
-        }
-
-        // TODO HIGH: use hashset
-        public List<string> EnabledMods { get; private set; } = new();
     }
+
+    public void Save()
+    {
+        Dictionary<string, object> objects = new();
+
+        objects["enabled"] = EnabledMods.ToList();
+
+        try {
+            File.WriteAllText(PreferencesPath, Json.Serialize(objects));
+        } catch (Exception e) {
+            Program.Logger.LogError("Error while saving: " + e);
+        }
+    }
+
+    public HashSet<string> EnabledMods { get; } = new();
 }

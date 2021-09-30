@@ -1,18 +1,17 @@
 ﻿using System.Reflection;
 
-namespace Realm.AssemblyLoading
-{
-    public class LoadedModAssembly
-    {
-        public readonly Assembly Asm;
-        public readonly string AsmName;
-        public readonly string Path;
+namespace Realm.AssemblyLoading;
 
-        public LoadedModAssembly(Assembly asm, string asmName, string path)
-        {
-            Asm = asm;
-            AsmName = asmName;
-            Path = path;
-        }
+public class LoadedModAssembly
+{
+    public readonly Assembly Asm;
+    public readonly string AsmName;
+    public readonly string FileName;
+
+    public LoadedModAssembly(Assembly asm, string asmName, string fileName)
+    {
+        Asm = asm;
+        AsmName = asmName;
+        FileName = fileName;
     }
 }

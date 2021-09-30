@@ -1,24 +1,22 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 
-namespace Realm.Logging
+namespace Realm.Logging;
+
+public class LoggedProgressable : Progressable
 {
-    public class LoggedProgressable : Progressable
+    public ReadOnlyCollection<MessageInfo> Messages { get; }
+
+    private readonly List<MessageInfo> messages = new();
+
+    public LoggedProgressable()
     {
-        public ReadOnlyCollection<MessageInfo> Messages { get; }
+        Messages = new(messages);
+    }
 
-        private readonly List<MessageInfo> messages = new();
+    public override void Message(MessageType messageType, string message)
+    {
+        messages.Add(new(messageType, message));
 
-        public LoggedProgressable()
-        {
-            Messages = new(messages);
-        }
-
-        public override void Message(MessageType messageType, string message)
-        {
-            messages.Add(new(messageType, message));
-
-            base.Message(messageType, message);
-        }
+        base.Message(messageType, message);
     }
 }

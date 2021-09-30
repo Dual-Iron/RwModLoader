@@ -1,7 +1,6 @@
-﻿namespace Realm.Logging
+﻿namespace Realm.Logging;
+
+public enum ProgressStateType
 {
-    public enum ProgressStateType
-    {
-        Succeeded, Failed
-    }
+    Succeeded, Failed
 }

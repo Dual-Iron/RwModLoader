@@ -1,22 +1,23 @@
 ﻿using Mono.Cecil;
-namespace Realm.AssemblyLoading
+using Realm.ModLoading;
+
+namespace Realm.AssemblyLoading;
+
+public sealed class ModAssembly
 {
-    public sealed class ModAssembly
+    public ModAssembly(RwmodFile rwmod, int entryIndex, ModDescriptor descriptor, AssemblyDefinition asmDef)
     {
-        public ModAssembly(string asmName, string path, string rwmodName, ModDescriptor descriptor, AssemblyDefinition asmDef)
-        {
-            Descriptor = descriptor;
-            AsmName = asmName;
-            Path = path;
-            RwmodName = rwmodName;
-            AsmDef = asmDef;
-        }
-
-        public readonly string AsmName;
-        public readonly string Path;
-        public readonly string RwmodName;
-        public readonly ModDescriptor Descriptor;
-
-        public AssemblyDefinition AsmDef;
+        Descriptor = descriptor;
+        Rwmod = rwmod;
+        EntryIndex = entryIndex;
+        AsmDef = asmDef;
     }
+
+    public readonly RwmodFile Rwmod;
+    public readonly int EntryIndex;
+    public readonly ModDescriptor Descriptor;
+    public AssemblyDefinition AsmDef;
+
+    public string FileName => Rwmod.Entries[EntryIndex].FileName;
+    public string OriginalAssemblyName => AsmDef.Name.Name.Substring(0, AsmDef.Name.Name.IndexOf(AssemblyPool.IterationSeparator));
 }

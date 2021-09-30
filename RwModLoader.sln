@@ -5,12 +5,6 @@ VisualStudioVersion = 17.0.31423.177
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Realm", "Realm\Realm.csproj", "{11996870-9E20-4921-A273-8C779576FD6C}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2A9DFD80-2D8B-4473-BED0-FC3EB0A5E55A}"
-	ProjectSection(SolutionItems) = preProject
-		.editorconfig = .editorconfig
-		global.targets = global.targets
-	EndProjectSection
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VirtualEnums", "VirtualEnums\VirtualEnums.csproj", "{6BF516EF-38B7-429A-A76F-F9B066F61942}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mutator", "Mutator\Mutator.csproj", "{2281A839-CF11-407E-8E43-DC4367D97FEC}"

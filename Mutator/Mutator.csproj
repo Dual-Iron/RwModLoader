@@ -7,11 +7,9 @@
     <Nullable>enable</Nullable>
     <WarningsAsErrors>nullable</WarningsAsErrors>
     <AlsoPublish>true</AlsoPublish>
-    <DefineConstants></DefineConstants> <!--INSTALL_ONLY-->
+    <DefineConstants>IGNORE_COMPLIANCE</DefineConstants> <!--INSTALL_ONLY--> <!--IGNORE_COMPLIANCE-->
     <PublishSingleFile>true</PublishSingleFile>
     <PublishReadyToRun>true</PublishReadyToRun>
-    <LangVersion>preview</LangVersion>
-    <DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
   </PropertyGroup>
 
   <ItemGroup>

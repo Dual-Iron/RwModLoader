@@ -1,49 +1,36 @@
-﻿using System.IO;
-using System.Text;
+﻿using System.Collections.ObjectModel;
 
-namespace Realm.ModLoading
+namespace Realm.ModLoading;
+
+public sealed class RwmodFile
 {
-    public sealed class RwmodFile
+    public static string[] GetRwmodFilePaths() => Directory.GetFiles(Extensions.ModsFolder, "*.rwmod", SearchOption.TopDirectoryOnly);
+
+    public static RwmodFile[] GetRwmodFiles()
     {
-        public static RwmodFile[] FetchAll()
-        {
-            string[] files = Directory.GetFiles(Extensions.ModsFolder, "*.rwmod", SearchOption.TopDirectoryOnly);
+        string[] files = GetRwmodFilePaths();
 
-            RwmodFile[] rwmodFiles = new RwmodFile[files.Length];
+        RwmodFile[] ret = new RwmodFile[files.Length];
 
-            for (int i = 0; i < files.Length; i++) {
-                rwmodFiles[i] = new(files[i], Path.GetFileNameWithoutExtension(files[i]));
-            }
-
-            return rwmodFiles;
+        for (int i = 0; i < ret.Length; i++) {
+            ret[i] = new(files[i]);
         }
 
-        // rwmod file format: https://gist.github.com/Dual-Iron/35b71cdd5ffad8b5ad65a3f7214af390
-        public RwmodFile(string path, string name)
-        {
-            FilePath = path;
-            Name = name;
-
-            using FileStream input = File.OpenRead(FilePath);
-            using BinaryReader reader = new(input, Encoding.ASCII);
-
-            Flags = reader.ReadByte() | (reader.ReadByte() << 8) | (reader.ReadByte() << 16) | (reader.ReadByte() << 24);
-            ModVersion = new(reader.ReadByte(), reader.ReadByte(), reader.ReadByte());
-            RepositoryName = reader.ReadString();
-            Author = reader.ReadString();
-            DisplayName = reader.ReadString();
-            ModDependencies = new(reader.ReadString());
-        }
-
-        public int Flags { get; }
-        public RwmodVersion ModVersion { get; }
-        public string RepositoryName { get; }
-        public string Author { get; }
-        public string DisplayName { get; }
-        public ModDependencyCollection ModDependencies { get; }
-        public string FilePath { get; }
-        public string Name { get; }
-
-        public bool Enabled => ProgramState.Current.Prefs.EnabledMods.Contains(Name);
+        return ret;
     }
+
+    public RwmodFile(string path)
+    {
+        FileName = Path.GetFileName(path);
+        FilePath = path;
+        Stream = File.Open(path, FileMode.Open, FileAccess.Read);
+        Header = new(path, Stream);
+        Entries = new(FileEntry.GetFileEntries(Header, Stream));
+    }
+
+    public readonly string FileName;
+    public readonly string FilePath;
+    public readonly Stream Stream;
+    public readonly RwmodFileHeader Header;
+    public readonly ReadOnlyCollection<FileEntry> Entries;
 }

@@ -1,8 +1,7 @@
-﻿namespace Realm.Logging
+﻿namespace Realm.Logging;
+
+public interface IProgressable : IMessageable
 {
-    public interface IProgressable : IMessageable
-    {
-        float Progress { get; set; }
-        ProgressStateType ProgressState { get; }
-    }
+    float Progress { get; set; }
+    ProgressStateType ProgressState { get; }
 }
