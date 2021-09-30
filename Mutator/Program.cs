@@ -2,6 +2,7 @@
 using Mutator.IO;
 using Mutator.ModListing;
 using Mutator.Patching;
+using System.Diagnostics;
 
 namespace Mutator;
 
@@ -46,6 +47,23 @@ public static class Program
 
     private static void Run(string[] args)
     {
+        if (args.Length == 0 && Path.GetDirectoryName(Environment.ProcessPath) != RwmodsUserFolder.FullName) {
+            Console.WriteLine("Working...");
+
+            Installer.Install();
+
+            Console.Write("Installed the newest release of Realm. Press ENTER to start Rain World or ESC to exit. ");
+
+            if (Console.ReadKey(true).Key == ConsoleKey.Enter) {
+                using var p = Process.Start(new ProcessStartInfo {
+                    FileName = "steam://run/312520",
+                    UseShellExecute = true,
+                    Verb = "open"
+                });
+            }
+            return;
+        }
+
         if (args.Length == 1 && (args[0] == "?" || args[0] == "--help" || args[0] == "help")) {
             ListHelp();
             return;
@@ -108,7 +126,6 @@ RwModMutator v{typeof(Program).Assembly.GetName().Version} - Documentation: http
 --uninstall           Uninstalls Realm.
 --needs-self-update   Prints 'y' if Realm needs an update or 'n' if not.
 --self-update         Updates Realm.
---kill [pid]          Kills the specified process.
 --patch [path]        Patches the .NET assembly.
 --download [repo]     Downloads the most recent version of a RWMOD from a GitHub [repo] if need be.
 --extract [rwmod]     Extracts the contents of the RWMOD to a folder in the same directory.

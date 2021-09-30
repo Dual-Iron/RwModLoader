@@ -1,9 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Text;
-#if !INSTALL_ONLY
 using System.IO.Compression;
 using System.Reflection;
-#endif
 
 namespace Mutator;
 
@@ -16,12 +14,10 @@ public static class Installer
         GitHubRelease files = await GetRelease("Dual-Iron", "RwModLoader");
         FileVersionInfo myVersion = FileVersionInfo.GetVersionInfo(Environment.ProcessPath ?? throw new("No process path."));
 
-#if !INSTALL_ONLY
         // Abort if there's nothing to update
         if (files.Version.ToVersion() <= new Version(myVersion.ProductMajorPart, myVersion.ProductMinorPart, myVersion.ProductBuildPart)) {
             return;
         }
-#endif
 
         // Provide the new process with this process's arguments
         StringBuilder processArgs = new();
@@ -45,7 +41,6 @@ public static class Installer
     }
 
 
-#if !INSTALL_ONLY
     public static void Install()
     {
         InstallSelf();
@@ -67,8 +62,18 @@ public static class Installer
         string copyToDirectory = RwmodsUserFolder.FullName;
         string destFileName = Path.Combine(copyToDirectory, "Mutator.exe");
 
-        if (processPath != destFileName)
+        if (processPath != destFileName) {
+            // Make sure we're not installing an older version
+            if (File.Exists(destFileName)) {
+                var versionInfo = FileVersionInfo.GetVersionInfo(destFileName);
+                var version = new Version(versionInfo.ProductMajorPart, versionInfo.ProductMinorPart, versionInfo.ProductBuildPart, versionInfo.ProductPrivatePart);
+                if (version >= typeof(Program).Assembly.GetName().Version) {
+                    return;
+                }
+            }
+
             File.Copy(processPath, destFileName, true);
+        }
     }
 
     private static bool IsPartialityInstalled()
@@ -196,5 +201,4 @@ public static class Installer
             throw e.Flatten();
         }
     }
-#endif
 }

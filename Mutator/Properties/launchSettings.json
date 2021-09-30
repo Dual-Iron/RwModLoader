@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "Mutator": {
-      "commandName": "Project",
-      "commandLineArgs": "--raindb"
-    }
-  }
-}
