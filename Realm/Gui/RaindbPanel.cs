@@ -70,16 +70,16 @@ public sealed class RaindbPanel : RectangularMenuObject, IHoverable, IListable
             lineNumber++;
         }
 
-        subObjects.Add(linkButton = new SymbolButton(menu, this, "Menu_Symbol_Clear_All", "", new(size.x - 29, size.y - 24)));
+        //subObjects.Add(linkButton = new SymbolButton(menu, this, "Menu_Symbol_Clear_All", "", new(size.x - 29, size.y - 53)));
 
-        subObjects.Add(dnldButton = new SymbolButton(menu, this, "Menu_Symbol_Clear_All", "", new(size.x - 29, size.y - 53)));
+        subObjects.Add(dnldButton = new SymbolButton(menu, this, "Menu_Symbol_Clear_All", "", new(size.x - 29, size.y - 24)));
         downloaded = ProgramState.Instance.CurrentRwmodHeaderCache.Headers.Any(rwmf => rwmf.Name == raindbMod.Name);
 
         subObjects.Add(progDisplayContainer = new(this));
         progDisplayContainer.subObjects.Add(new ProgressableDisplay(performingProgress, progDisplayContainer, default, size, true));
     }
 
-    private readonly SymbolButton linkButton;
+    private readonly SymbolButton? linkButton;
     private readonly SymbolButton dnldButton;
 
     private readonly MenuContainer progDisplayContainer;
