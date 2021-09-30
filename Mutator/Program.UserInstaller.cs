@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿global using static Mutator.InstallerApi;
 using System.Diagnostics;
 
 namespace Mutator
@@ -9,13 +8,8 @@ namespace Mutator
         private static int Main(string[] args)
         {
             if (args.Length > 0) {
-                if (args.Length == 1 && args[0] == "help") {
-                    Console.WriteLine("https://gist.github.com/Dual-Iron/35b71cdd5ffad8b5ad65a3f7214af390");
-                    return 0;
-                } else {
-                    Console.WriteLine("Unexpected args.");
-                    return 1;
-                }
+                Console.WriteLine("Unexpected args.");
+                return 1;
             }
 
             try {

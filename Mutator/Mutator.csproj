@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <WarningsAsErrors>nullable</WarningsAsErrors>
     <AlsoPublish>true</AlsoPublish>
-    <DefineConstants>IGNORE_COMPLIANCE</DefineConstants> <!--INSTALL_ONLY--> <!--IGNORE_COMPLIANCE-->
+    <DefineConstants>IGNORE_COMPLIANCE;</DefineConstants> <!--INSTALL_ONLY--> <!--IGNORE_COMPLIANCE-->
     <PublishSingleFile>true</PublishSingleFile>
     <PublishReadyToRun>true</PublishReadyToRun>
   </PropertyGroup>
@@ -27,7 +27,11 @@
     <Compile Include="Program.UserInstaller.cs" />
     <Compile Include="Installer.cs" />
     <Compile Include="InstallerAPI.cs" />
-    <Compile Include="RepoFiles.cs" />
+    <Compile Include="InstallerAPI.Errors.cs" />
+    <Compile Include="GitHubRelease.cs" />
+    <Compile Include="ExitCodes.cs" />
+    <Compile Include="IO/RwmodVersion.cs" />
+    <Compile Include="BadExecutionException.cs" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition=" '$(BuildingInsideVisualStudio)' == 'true' And '$(AlsoPublish)' == 'true' ">
