@@ -48,15 +48,15 @@ Add this to your csproj file just above `</Project>` (works with SDK-style proje
   ```csproj
   <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-    <TargetFramework>net35</TargetFramework>
+      <TargetFramework>net35</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
-    <!--Whatever references-->
+      <!--Whatever references-->
     </ItemGroup>
 
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="&quot;%appdata%/.rw/mutator&quot; --wrap MyMod &quot;$(TargetDir)$(TargetName).dll&quot;" />
+      <Exec Command="&quot;%appdata%/.rw/mutator&quot; --wrap MyMod &quot;$(TargetDir)$(TargetName).dll&quot;" />
     </Target>
   </Project>
   ```
