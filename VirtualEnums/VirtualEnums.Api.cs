@@ -9,24 +9,37 @@ namespace VirtualEnums;
 /// </summary>
 public static partial class VirtualEnumApi
 {
+    private static readonly HashSet<Assembly> cache = new();
     private static readonly Dictionary<Type, VirtualEnumData> virtualEnums = new();
 
-    public static void ReloadWith(IEnumerable<Assembly> assemblies, Action<Exception> errorHandler)
+    /// <summary>
+    /// Clears all enum extensions.
+    /// </summary>
+    public static void Clear()
     {
+        cache.Clear();
         virtualEnums.Clear();
+    }
 
-        foreach (var asm in assemblies) {
-            var types = GetTypesSafely(asm);
-            foreach (var type in types)
-                if (type.Name.StartsWith("EnumExt_"))
-                    try {
-                        UseType(type);
-                    } catch (Exception e) {
-                        errorHandler(e);
-                    }
+    /// <summary>
+    /// Calls <see cref="UseType(Type)"/> on all types that start with "EnumExt_" in the assembly.
+    /// </summary>
+    /// <param name="asm">The assembly to search.</param>
+    /// <param name="reflError">If a <see cref="ReflectionTypeLoadException"/> is thrown while iterating the assembly's types, it is stored here.</param>
+    public static void UseAssembly(Assembly asm, out ReflectionTypeLoadException? reflError)
+    {
+        reflError = null;
+
+        if (!cache.Add(asm)) {
+            return;
         }
 
-        static IList<Type> GetTypesSafely(Assembly asm)
+        var types = GetTypesSafely(ref reflError);
+        foreach (var type in types)
+            if (type.Name.StartsWith("EnumExt_"))
+                UseType(type);
+
+        IList<Type> GetTypesSafely(ref ReflectionTypeLoadException? reflError)
         {
             try {
                 return asm.GetTypes();
@@ -39,6 +52,8 @@ public static partial class VirtualEnumApi
 
                 ret.TrimExcess();
 
+                reflError = e;
+
                 return ret;
             }
         }
@@ -46,26 +61,17 @@ public static partial class VirtualEnumApi
 
     /// <summary>
     /// For all public static fields with an enum type in <paramref name="type"/>, the field's enum type will be extended using the field's name through <see cref="AddDeclaration{T}(string)"/>.
-    /// <para/> Example field declaration: <para/> <c>public static <see cref="AbstractPhysicalObject.AbstractObjectType"/> MyObjType;</c>
+    /// <para/> Example field declaration: <para/> <c>public static <see cref="BindingFlags"/> MyCustomFlag;</c>
     /// </summary>
     /// <param name="type">The type.</param>
-    /// <exception cref="ArgumentException">The type did not have any public static fields with enum types.</exception>
     public static void UseType(Type type)
     {
-        bool used = false;
-
         foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.Static)) {
             if (field.FieldType.IsEnum) {
-                used = true;
-
                 long declared = AddDeclaration(field.FieldType, field.Name);
                 object declaredAsEnumType = AsEnum(field.FieldType, declared);
                 field.SetValue(null, declaredAsEnumType);
             }
-        }
-
-        if (!used) {
-            throw new ArgumentException($"Type {type.FullName} should have one or more static fields whose types are enums.");
         }
     }
 

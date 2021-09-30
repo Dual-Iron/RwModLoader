@@ -187,8 +187,16 @@ public sealed class LoadedAssemblyPool
 
     public void InitializeMods(IProgressable progressable)
     {
-        // EnumExtender dependency fix
-        VirtualEnums.VirtualEnumApi.ReloadWith(loadedAssemblies.Select(lm => lm.Asm), Program.Logger.LogError);
+        // EnumExtender dependency replacement
+        VirtualEnums.VirtualEnumApi.Clear();
+
+        foreach (var loadedAsm in loadedAssemblies) {
+            VirtualEnums.VirtualEnumApi.UseAssembly(loadedAsm.Asm, out var err);
+
+            if (err != null) {
+                Program.Logger.LogError(err);
+            }
+        }
 
         StaticFixes.PreLoad();
 
