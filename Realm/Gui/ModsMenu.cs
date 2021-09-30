@@ -9,10 +9,8 @@ public sealed class ModsMenu : Menu.Menu
 {
     public const ProcessManager.ProcessID ModsMenuID = (ProcessManager.ProcessID)(-666);
 
-    public ModsMenu(ProcessManager manager, ProgramState state) : base(manager, ModsMenuID)
+    public ModsMenu(ProcessManager manager) : base(manager, ModsMenuID)
     {
-        State = state;
-
         pages.Add(new(this, null, "main", 0));
 
         // Big pretty background picture
@@ -37,9 +35,9 @@ public sealed class ModsMenu : Menu.Menu
 
         modListing = new(Page, pos: new(650, 50), elementSize: new(ModPanel.Width, ModPanel.Height), elementsPerScreen: 16, edgePadding: 5);
 
-        state.CurrentRwmodHeaderCache.Refresh();
+        ProgramState.Instance.CurrentRwmodHeaderCache.Refresh();
 
-        foreach (var header in state.CurrentRwmodHeaderCache.Headers) {
+        foreach (var header in ProgramState.Instance.CurrentRwmodHeaderCache.Headers) {
             modListing.subObjects.Add(new ModPanel(header, Page, default));
         }
 
@@ -54,8 +52,6 @@ public sealed class ModsMenu : Menu.Menu
 
         ModsMenuMusic.Start(manager.musicPlayer);
     }
-
-    public ProgramState State { get; }
 
     private readonly SimpleButton cancelButton;
     private readonly SimpleButton saveButton;
@@ -149,7 +145,7 @@ public sealed class ModsMenu : Menu.Menu
 
     private void SaveExit()
     {
-        State.Prefs.EnabledMods.Clear();
+        ProgramState.Instance.Prefs.EnabledMods.Clear();
 
         List<string> delete = new();
 
@@ -157,13 +153,13 @@ public sealed class ModsMenu : Menu.Menu
             if (panel.WillDelete) {
                 delete.Add(panel.Rwmod.FilePath);
             } else if (panel.IsEnabled) {
-                State.Prefs.EnabledMods.Add(panel.Rwmod.Name);
+                ProgramState.Instance.Prefs.EnabledMods.Add(panel.Rwmod.Name);
             }
         }
 
-        State.Prefs.Save();
+        ProgramState.Instance.Prefs.Save();
 
-        State.Mods.Reload(performingProgress);
+        ProgramState.Instance.Mods.Reload(performingProgress);
 
         foreach (var file in delete) {
             File.Delete(file);

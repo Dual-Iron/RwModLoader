@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Realm.Gui;
 
-public sealed class GuiHandler
+public static class GuiHandler
 {
     public static MenuScene.SceneID TimedScene => DateTime.Now.DayOfWeek switch {
         DayOfWeek.Sunday => MenuScene.SceneID.Intro_1_Tree,
@@ -30,29 +30,23 @@ public sealed class GuiHandler
 
     private const string MODS_BUTTON = "M";
 
-    public static void Hook(ProgramState state)
+    private static Job? reloadingJob;
+
+    public static void Hook()
     {
         ModsMenuMusic.Hook();
 
-        GuiHandler handler = new(state);
-
-        if (state.DeveloperMode) {
-            On.Menu.PauseMenu.ctor += handler.AddReloadAsmsButtonToPauseMenu;
-            On.Menu.PauseMenu.Singal += handler.PauseMenuSingal;
-            On.Menu.PauseMenu.Update += handler.UpdatePauseMenu;
+        if (ProgramState.Instance.DeveloperMode) {
+            On.Menu.PauseMenu.ctor += AddReloadAsmsButtonToPauseMenu;
+            On.Menu.PauseMenu.Singal += PauseMenuSingal;
+            On.Menu.PauseMenu.Update += UpdatePauseMenu;
         }
-        On.Menu.MainMenu.ctor += handler.AddModsButtonToMainMenu;
-        On.Menu.MainMenu.Singal += handler.MainMenuSingal;
-        IL.ProcessManager.SwitchMainProcess += handler.CheckForModMenu;
+        On.Menu.MainMenu.ctor += AddModsButtonToMainMenu;
+        On.Menu.MainMenu.Singal += MainMenuSingal;
+        IL.ProcessManager.SwitchMainProcess += CheckForModMenu;
     }
 
-    private readonly ProgramState state;
-
-    private Job? reloadingJob;
-
-    private GuiHandler(ProgramState state) => this.state = state;
-
-    private void AddReloadAsmsButtonToPauseMenu(On.Menu.PauseMenu.orig_ctor orig, PauseMenu self, ProcessManager manager, RainWorldGame game)
+    private static void AddReloadAsmsButtonToPauseMenu(On.Menu.PauseMenu.orig_ctor orig, PauseMenu self, ProcessManager manager, RainWorldGame game)
     {
         orig(self, manager, game);
 
@@ -61,12 +55,12 @@ public sealed class GuiHandler
         self.pages[0].subObjects.Add(modsButton);
     }
 
-    private void PauseMenuSingal(On.Menu.PauseMenu.orig_Singal orig, PauseMenu self, MenuObject sender, string message)
+    private static void PauseMenuSingal(On.Menu.PauseMenu.orig_Singal orig, PauseMenu self, MenuObject sender, string message)
     {
         if (reloadingJob == null && message == MODS_BUTTON) {
             reloadingJob = Job.Start(() => {
-                state.Prefs.Load();
-                state.Mods.Reload(new ProgressMessagingProgressable());
+                ProgramState.Instance.Prefs.Load();
+                ProgramState.Instance.Mods.Reload(new ProgressMessagingProgressable());
             }); 
             DisableButtons(self);
             self.PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
@@ -76,7 +70,7 @@ public sealed class GuiHandler
         orig(self, sender, message);
     }
 
-    private void UpdatePauseMenu(On.Menu.PauseMenu.orig_Update orig, PauseMenu self)
+    private static void UpdatePauseMenu(On.Menu.PauseMenu.orig_Update orig, PauseMenu self)
     {
         orig(self);
 
@@ -104,8 +98,8 @@ public sealed class GuiHandler
             }
         }
     }
-
-    private void AddModsButtonToMainMenu(On.Menu.MainMenu.orig_ctor orig, MainMenu self, ProcessManager manager, bool showRegionSpecificBkg)
+    
+    private static void AddModsButtonToMainMenu(On.Menu.MainMenu.orig_ctor orig, MainMenu self, ProcessManager manager, bool showRegionSpecificBkg)
     {
         orig(self, manager, showRegionSpecificBkg);
 
@@ -132,7 +126,7 @@ public sealed class GuiHandler
             Program.Logger.LogError("MODS button not added to main menu!");
     }
 
-    private void MainMenuSingal(On.Menu.MainMenu.orig_Singal orig, MainMenu self, MenuObject sender, string message)
+    private static void MainMenuSingal(On.Menu.MainMenu.orig_Singal orig, MainMenu self, MenuObject sender, string message)
     {
         if (message == MODS_BUTTON) {
             self.manager.RequestMainProcessSwitch(ModsMenu.ModsMenuID);
@@ -143,7 +137,7 @@ public sealed class GuiHandler
         orig(self, sender, message);
     }
 
-    private void CheckForModMenu(ILContext il)
+    private static void CheckForModMenu(ILContext il)
     {
         ILCursor cursor = new(il);
 
@@ -158,12 +152,12 @@ public sealed class GuiHandler
         cursor.EmitDelegate<Action<ProcessManager, ProcessManager.ProcessID>>(TrySwitchToCustomProcess);
     }
 
-    private void TrySwitchToCustomProcess(ProcessManager pm, ProcessManager.ProcessID pid)
+    private static void TrySwitchToCustomProcess(ProcessManager pm, ProcessManager.ProcessID pid)
     {
         if (pid == ModsMenu.ModsMenuID) {
-            pm.currentMainLoop = new ModsMenu(pm, state);
+            pm.currentMainLoop = new ModsMenu(pm);
         } else if (pid == RaindbMenu.RaindbMenuID) {
-            pm.currentMainLoop = new RaindbMenu(pm, state);
+            pm.currentMainLoop = new RaindbMenu(pm);
         }
     }
 }

@@ -8,10 +8,8 @@ public sealed class RaindbMenu : Menu.Menu
 {
     public const ProcessManager.ProcessID RaindbMenuID = (ProcessManager.ProcessID)(-667);
 
-    public RaindbMenu(ProcessManager manager, ProgramState state) : base(manager, RaindbMenuID)
+    public RaindbMenu(ProcessManager manager) : base(manager, RaindbMenuID)
     {
-        State = state;
-
         pages.Add(new(this, null, "main", 0));
 
         // Big pretty background picture
@@ -38,8 +36,6 @@ public sealed class RaindbMenu : Menu.Menu
 
         Page.subObjects.Add(modListing);
     }
-
-    public ProgramState State { get; }
 
     private readonly BigArrowButton backButton;
     private readonly Listing modListing;

@@ -47,7 +47,8 @@ public static class Program
 
         if (!skip) ProgramState.Instance.Mods.Reload(new ProgressMessagingProgressable());
 
-        GuiHandler.Hook(ProgramState.Instance);
+        GuiHandler.Hook();
+        DebugHandler.Hook();
     }
 
     private static void TrySelfUpdate()
