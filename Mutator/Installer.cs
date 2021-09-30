@@ -54,6 +54,8 @@ public static class Installer
             UninstallPartiality();
         }
 
+        // TODO HIGH: allow mutator to overwrite Realm.dll even if BepInEx *is* installed
+        // preferably without deleting the user's config
         if (!IsBepInExInstalled()) {
             InstallBepInEx();
         }
