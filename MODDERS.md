@@ -42,4 +42,24 @@ Add this to your csproj file just above `</Project>` (works with SDK-style proje
   </Target>
 ```
 
+<details>
+  <summary>YourProject.csproj example</summary>
+
+  ```csproj
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net35</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--Whatever references-->
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="&quot;%appdata%/.rw/mutator&quot; --wrap MyMod &quot;$(TargetDir)$(TargetName).dll&quot;" />
+  </Target>
+</Project>
+  ```
+</details>
+
 You can learn more about the --wrap command by running `"%appdata%/.rw/mutator" --help`.
