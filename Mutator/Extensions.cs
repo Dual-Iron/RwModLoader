@@ -51,7 +51,11 @@ public static class Extensions
                 return true;
             }
 
-            type = type.Resolve().BaseType;
+            try {
+                type = type.Resolve().BaseType;
+            } catch (AssemblyResolutionException) {
+                break;
+            }
         }
 
         accepted = null;

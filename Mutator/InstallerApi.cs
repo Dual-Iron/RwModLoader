@@ -61,7 +61,7 @@ public static partial class InstallerApi
     public static Encoding UseEncoding => Encoding.ASCII;
     public const CompressionLevel RwmodCompressionLevel = CompressionLevel.NoCompression;
 
-    public static readonly IEnumerable<string> ModBlacklist = new[] { "EnumExtender", "PublicityStunt", "AutoUpdate" };
+    public static readonly IEnumerable<string> ModBlacklist = new[] { "EnumExtender", "PublicityStunt", "AutoUpdate", "LogFix" };
 
     internal static void Dispose()
     {

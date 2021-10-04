@@ -1,6 +1,7 @@
 ﻿using BepInEx;
 using Realm.AssemblyLoading;
 using Realm.Logging;
+using System.Reflection;
 
 namespace Realm.ModLoading;
 
@@ -21,18 +22,34 @@ public sealed class ModLoader
         Unload(progressable);
 
         if (Directory.Exists(Paths.PluginPath)) {
-            foreach (string pluginFile in Directory.GetFiles(Paths.PluginPath, "*.dll", SearchOption.TopDirectoryOnly)) {
-                Execution exec = Execution.Run(Extensions.MutatorPath, $"--wrap \"\" \"{pluginFile}\"");
+            bool wrapped = false;
 
-                if (exec.ExitCode == 0) {
-                    File.Delete(pluginFile);
-                    progressable.Message(MessageType.Info, $"Wrapped plugin: {Path.GetFileName(pluginFile)}.");
-                } else {
-                    progressable.Message(MessageType.Fatal, $"Failed to wrap {Path.GetFileName(pluginFile)}: {exec.ExitMessage}: {exec.Error}.");
-                }
+            string[] pluginFiles = Directory.GetFiles(Paths.PluginPath, "*.dll", SearchOption.TopDirectoryOnly);
+
+            foreach (string pluginFile in pluginFiles) {
+                try {
+                    AssemblyName asmName = AssemblyName.GetAssemblyName(pluginFile);
+                    Execution exec = Execution.Run(Extensions.MutatorPath, $"--wrap \"\" \"{pluginFile}\"");
+
+                    if (exec.ExitCode == 0) {
+                        wrapped = true;
+                        ProgramState.Instance.Prefs.EnabledMods.Add(asmName.Name);
+                        progressable.Message(MessageType.Info, $"Wrapped {Path.GetFileName(pluginFile)}.");
+                    } else {
+                        progressable.Message(MessageType.Fatal, $"Failed to wrap {Path.GetFileName(pluginFile)}. {exec.ExitMessage}: {exec.Error}.");
+                    }
+                } catch { }
             }
 
             if (progressable.ProgressState == ProgressStateType.Failed) return;
+
+            if (wrapped) {
+                ProgramState.Instance.Prefs.Save();
+
+                foreach (var pluginFile in pluginFiles) {
+                    File.Delete(pluginFile);
+                }
+            }
         }
 
         RwmodFile[] rwmods = RwmodFile.GetRwmodFiles();

@@ -27,25 +27,18 @@ public static class Program
         Logger.LogDebug("Debug logging enabled.");
 
         ConfigFile file = new(configPath: Path.Combine(Paths.ConfigPath, "Realm.cfg"), saveOnInit: true);
-
-        var skip = file.Bind("General", "SkipLoading", false, "If enabled, Realm won't reload mods when starting the game.").Value;
-        var reset = file.Bind("General", "ResetMods", false, "If enabled, Realm will reset all mods and user preferences when starting the game.").Value;
         ProgramState.Instance.DeveloperMode = file.Bind("General", "HotReloading", false, "If enabled, Realm will allow hot reloading assemblies in-game. This feature is unstable.").Value;
+        bool skip = file.Bind("General", "SkipLoading", false, "If enabled, Realm won't load mods when starting the game.").Value;
 
         if (!skip) TrySelfUpdate();
         LoadEmbeddedAssemblies();
         NeuterPartiality();
         StaticFixes.Hook();
 
-        if (reset) {
-            ProgramState.Instance.Prefs.Save();
-            ProgramState.Instance.Mods.Unload(new ProgressMessagingProgressable());
-            File.Delete(Path.Combine(Paths.GameRootPath, "reset"));
-        } else {
+        if (!skip) {
             ProgramState.Instance.Prefs.Load();
+            ProgramState.Instance.Mods.Reload(new ProgressMessagingProgressable());
         }
-
-        if (!skip) ProgramState.Instance.Mods.Reload(new ProgressMessagingProgressable());
 
         GuiHandler.Hook();
         DebugHandler.Hook();

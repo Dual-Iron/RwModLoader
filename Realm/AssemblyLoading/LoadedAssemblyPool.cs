@@ -69,6 +69,7 @@ public sealed class LoadedAssemblyPool
         }
 
         loadedAssemblies.Clear();
+        VirtualEnums.VirtualEnumApi.Clear();
     }
 
     private void RunPatchers(IProgressable progressable, Action<float> setTaskProgress)
@@ -187,9 +188,6 @@ public sealed class LoadedAssemblyPool
 
     public void InitializeMods(IProgressable progressable)
     {
-        // EnumExtender dependency replacement
-        VirtualEnums.VirtualEnumApi.Clear();
-
         foreach (var loadedAsm in loadedAssemblies) {
             VirtualEnums.VirtualEnumApi.UseAssembly(loadedAsm.Asm, out var err);
 

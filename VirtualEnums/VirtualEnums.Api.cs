@@ -160,6 +160,6 @@ public static partial class VirtualEnumApi
     private class VirtualEnumData
     {
         public long MaxValue = long.MinValue;
-        public Map<string, long> EnumValues { get; } = new();
+        public readonly Map<string, long> EnumValues = new();
     }
 }

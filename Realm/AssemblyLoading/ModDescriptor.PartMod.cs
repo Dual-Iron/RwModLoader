@@ -23,23 +23,21 @@ public abstract partial class ModDescriptor
         {
             instance = (PartialityMod)Activator.CreateInstance(assembly.GetType(typeName));
 
-            PartialityManager.Instance.modManager.loadedMods.Add(instance);
-
             if (!instance.isEnabled) {
                 instance.isEnabled = true;
                 instance.Init();
                 instance.OnLoad();
                 instance.OnEnable();
             }
-        }
 
+            // Add mod after custom code. Forces the mod to catch its own exceptions.
+            PartialityManager.Instance.modManager.loadedMods.Add(instance);
+        }
+        
         public override void Unload()
         {
             if (instance != null) {
-                // Disable mod
-                instance.OnDisable();
-
-                // Remove from mod list
+                // Remove mod before custom code. Ensures the mod is removed even if it fails to unload.
                 var loadedMods = PartialityManager.Instance.modManager.loadedMods;
 
                 for (int i = loadedMods.Count - 1; i >= 0; i--) {
@@ -47,6 +45,9 @@ public abstract partial class ModDescriptor
                         loadedMods.RemoveAt(i);
                     }
                 }
+
+                // Disable mod
+                instance.OnDisable();
             }
         }
     }

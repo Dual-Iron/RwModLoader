@@ -36,7 +36,7 @@ public static class Program
         }
 
         if (e is BadExecutionException bee) {
-            Console.WriteLine(e.Message);
+            Console.Error.WriteLine(e.Message);
             return bee.ExitCode;
         }
 
