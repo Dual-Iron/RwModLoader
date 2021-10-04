@@ -37,18 +37,13 @@ public sealed class AssemblyPool
 
                 AssemblyDefinition asm = AssemblyDefinition.ReadAssembly(
                     stream: fileEntry.GetStreamSplice(rwmod.Stream),
-                    parameters: new() {
-                        ReadSymbols = false,
-                        ThrowIfSymbolsAreNotMatching = false,
-                        AssemblyResolver = resolver,
-                        InMemory = false,
-                        ReadingMode = ReadingMode.Deferred
+                    parameters: new() { ReadSymbols = false, AssemblyResolver = resolver
                     });
 
                 string name = asm.Name.Name;
 
                 // If the assembly is blacklisted or not a mod assembly, skip.
-                if (ignore.Contains(name) || !IsPatched(asm, out var modType))
+                if (ignore.Contains(name) || !IsPatched(asm, out var modTypes))
                     continue;
 
                 // If an assembly with this name already exists,
@@ -67,44 +62,30 @@ public sealed class AssemblyPool
                     // Otherwise, replace the existing one.
                 }
 
-                ret.modAssemblies[name] = new(rwmod, fileEntry.Index, GetDescriptor(asm, modType), asm);
+                ret.modAssemblies[name] = new(rwmod, fileEntry.Index, new AssemblyDescriptor(asm, modTypes), asm);
                 asm.Name.Name += IterationSeparator + ret.ID;
             }
         }
 
         return ret;
 
-        static bool IsPatched(AssemblyDefinition definition, [MaybeNullWhen(false)] out string typeName)
+        static bool IsPatched(AssemblyDefinition definition, [MaybeNullWhen(false)] out IList<string> typeNames)
         {
+            Console.WriteLine(definition.FullName);
             foreach (var customAttribute in definition.CustomAttributes)
                 if (customAttribute.AttributeType.Name == "RwmodAttribute"
                     && customAttribute.ConstructorArguments.Count == 2
-                    && customAttribute.ConstructorArguments[1].Value is string n) {
-                    typeName = n;
+                    && customAttribute.ConstructorArguments[1].Value is CustomAttributeArgument[] typeNamesArr) {
+                    typeNames = new List<string>();
+                    foreach (var typeName in typeNamesArr) {
+                        if (typeName.Value is string s)
+                            typeNames.Add(s);
+                    }
                     return true;
                 }
-            typeName = null;
+            typeNames = null;
             return false;
         }
-    }
-
-    private static ModDescriptor GetDescriptor(AssemblyDefinition definition, string modType)
-    {
-        if (string.IsNullOrEmpty(modType)) {
-            return new ModDescriptor.Lib();
-        }
-
-        TypeDefinition type = definition.MainModule.GetType(modType);
-
-        if (type is not null && !type.IsAbstract && !type.IsInterface && !type.IsValueType) {
-            if (type.IsSubtypeOf(typeof(BaseUnityPlugin)))
-                return new ModDescriptor.BepMod(type);
-            if (type.IsSubtypeOf(typeof(PartialityMod)))
-                return new ModDescriptor.PartMod(type.FullName);
-        }
-
-        Program.Logger.LogError($"Mutator's patcher provided a type name that wasn't a plugin or a partmod. {modType} from {definition.Name}");
-        return new ModDescriptor.Lib();
     }
 
     private readonly Dictionary<string, ModAssembly> modAssemblies = new();

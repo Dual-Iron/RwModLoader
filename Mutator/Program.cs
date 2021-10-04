@@ -86,6 +86,8 @@ public static class Program
                 task = Installer.NeedsSelfUpdate();
             else if (arg0 == "--self-update")
                 task = Installer.SelfUpdate(enumerator);
+            else if (arg0 == "--extract-all")
+                task = Extracting.ExtractAll();
             else if (enumerator.MoveNext()) {
                 string arg1 = enumerator.Current;
 
@@ -126,9 +128,10 @@ RwModMutator v{typeof(Program).Assembly.GetName().Version} - Documentation: http
 --uninstall           Uninstalls Realm.
 --needs-self-update   Prints 'y' if Realm needs an update or 'n' if not.
 --self-update         Updates Realm.
+--extract-all         Extracts the contents of all RWMOD files in the mods folder.
 --patch [path]        Patches the .NET assembly.
 --download [repo]     Downloads the most recent version of a RWMOD from a GitHub [repo] if need be.
---extract [rwmod]     Extracts the contents of the RWMOD to a folder in the same directory.
+--extract [rwmod]     Extracts the contents of the RWMOD.
 --wrap [rwmod] [path] Wraps the DLL or directory specified at [path] into a RWMOD.
 "
 );

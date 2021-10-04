@@ -1,11 +1,12 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Mono.Cecil.Rocks;
 
 namespace Mutator.Patching;
 
 public static partial class AssemblyPatcher
 {
-    private const ushort version = 0;
+    private const ushort version = 1;
 
     private static AssemblyDefinition GetBepAssemblyDef(string filePath, bool write)
     {
@@ -39,7 +40,9 @@ public static partial class AssemblyPatcher
         }
 
         // Patch the fresh assembly.
-        DoPatch(asm, out string modType);
+        DoPatch(asm, out var modType);
+
+        // Mark that it's been patched.
         AddRwmodAttribute(asm, modType);
 
         File.Copy(filePath, Path.Combine(PatchBackupsFolder.FullName, Path.GetFileName(filePath)), true);
@@ -53,15 +56,22 @@ public static partial class AssemblyPatcher
                 attr.AttributeType.Name == "RwmodAttribute" && 
                 attr.ConstructorArguments.Count == 2 &&
                 attr.ConstructorArguments[0].Value is ushort v && v == version &&
-                attr.ConstructorArguments[1].Value is string
+                attr.ConstructorArguments[1].Value is string[]
             );
     }
 
-    private static void AddRwmodAttribute(AssemblyDefinition asm, string modType)
+    private static void AddRwmodAttribute(AssemblyDefinition asm, IList<string> modTypes)
     {
         // If a valid attribute type already exists, remove it.
         if (asm.MainModule.GetType(asm.Name.Name + "+Realm", "RwmodAttribute") is TypeDefinition rwmodAttributeType) {
             asm.MainModule.Types.Remove(rwmodAttributeType);
+
+            // Also remove all of the attribute declarations on its assembly.
+            for (int i = asm.CustomAttributes.Count - 1; i >= 0; i--) {
+                if (asm.CustomAttributes[i].AttributeType.Name == "RwmodAttribute") {
+                    asm.CustomAttributes.RemoveAt(i);
+                }
+            }
         }
 
         TypeReference attrReference = asm.MainModule.ImportTypeFromCoreLib("System", "Attribute");
@@ -75,6 +85,8 @@ public static partial class AssemblyPatcher
 
         asm.MainModule.Types.Add(rwmodAttributeType);
 
+        ArrayType stringArr = asm.MainModule.TypeSystem.String.MakeArrayType();
+
         // public RwmodAttribute(string) : base() {}
         MethodDefinition ctor = new(
             ".ctor",
@@ -83,7 +95,7 @@ public static partial class AssemblyPatcher
             );
 
         ctor.Parameters.Add(new("version", default, asm.MainModule.TypeSystem.UInt16));
-        ctor.Parameters.Add(new("modType", default, asm.MainModule.TypeSystem.String));
+        ctor.Parameters.Add(new("modTypes", default, stringArr));
 
         ctor.Body = new(ctor);
 
@@ -97,17 +109,21 @@ public static partial class AssemblyPatcher
 
         // }}
 
-        // Add attribute itself to assembly
+        // Add attribute to assembly
+        CustomAttributeArgument[] modTypesArr = new CustomAttributeArgument[modTypes.Count];
+
+        for (int i = 0; i < modTypesArr.Length; i++) {
+            modTypesArr[i] = new(asm.MainModule.TypeSystem.String, modTypes[i]);
+        }
+
         CustomAttribute assemblyAttribute = new(ctor);
         assemblyAttribute.ConstructorArguments.Add(new(asm.MainModule.TypeSystem.UInt16, version));
-        assemblyAttribute.ConstructorArguments.Add(new(asm.MainModule.TypeSystem.String, modType));
+        assemblyAttribute.ConstructorArguments.Add(new(stringArr, modTypesArr));
         asm.CustomAttributes.Add(assemblyAttribute);
     }
 
-    private static void DoPatch(AssemblyDefinition asm, out string modType)
+    private static void DoPatch(AssemblyDefinition asm, out IList<string> modTypes)
     {
-        modType = "";
-
         string hooksAsmPath = Path.Combine(RwDir, "BepInEx", "core", "HOOKS-Assembly-CSharp.dll");
 
         if (!File.Exists(hooksAsmPath)) {
@@ -117,6 +133,8 @@ public static partial class AssemblyPatcher
         LegacyReferenceTransformer? typeScanner = null;
         AssemblyDefinition? hooksAsm = null;
 
+        List<string> modTypesList = new();
+
         try {
             foreach (var module in asm.Modules) {
                 if (module.AssemblyReferences.Any(asmRef => asmRef.Name == "HOOKS-Assembly-CSharp")) {
@@ -124,7 +142,13 @@ public static partial class AssemblyPatcher
                     typeScanner.Transform(module);
                 }
 
-                modType = HotReloadPatcher.GetModType(module, out _)?.FullName ?? "";
+                foreach (TypeDefinition type in module.Types) {
+                    if (!type.IsInterface && !type.IsAbstract && !type.IsValueType) {
+                        if (type.SeekTree(t => t.FullName is "BepInEx.BaseUnityPlugin" or "Partiality.Modloader.PartialityMod", out var targetType)) {
+                            modTypesList.Add(type.FullName);
+                        }
+                    }
+                }
 
                 AccessViolationPrevention.AddUnverifiableCodeAttribute(module);
             }
@@ -136,5 +160,7 @@ public static partial class AssemblyPatcher
         }
 
         AccessViolationPrevention.IgnoreAccessChecksAndSkipVerification(asm);
+
+        modTypes = modTypesList.ToArray();
     }
 }

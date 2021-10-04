@@ -5,7 +5,7 @@ namespace Realm.AssemblyLoading;
 
 public sealed class ModAssembly
 {
-    public ModAssembly(RwmodFile rwmod, int entryIndex, ModDescriptor descriptor, AssemblyDefinition asmDef)
+    public ModAssembly(RwmodFile rwmod, int entryIndex, AssemblyDescriptor descriptor, AssemblyDefinition asmDef)
     {
         Descriptor = descriptor;
         Rwmod = rwmod;
@@ -15,7 +15,7 @@ public sealed class ModAssembly
 
     public readonly RwmodFile Rwmod;
     public readonly int EntryIndex;
-    public readonly ModDescriptor Descriptor;
+    public readonly AssemblyDescriptor Descriptor;
     public AssemblyDefinition AsmDef;
 
     public string FileName => Rwmod.Entries[EntryIndex].FileName;

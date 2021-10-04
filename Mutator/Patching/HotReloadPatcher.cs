@@ -6,22 +6,6 @@ namespace Mutator.Patching;
 
 public static class HotReloadPatcher
 {
-    public static TypeDefinition? GetModType(ModuleDefinition module, out bool bepinex)
-    {
-        bepinex = false;
-        foreach (TypeDefinition type in module.Types) {
-            if (type.IsInterface || type.IsAbstract || type.IsValueType) {
-                continue;
-            }
-
-            if (type.SeekTree(t => t.FullName is "BepInEx.BaseUnityPlugin" or "Partiality.Modloader.PartialityMod", out var targetType)) {
-                bepinex = targetType.FullName == "BepInEx.BaseUnityPlugin";
-                return type;
-            }
-        }
-        return null;
-    }
-
     // TODO HIGH: Can I just remove the hot reload patcher...?
     public static void Patch(TypeDefinition modType, bool bepInExMod)
     {

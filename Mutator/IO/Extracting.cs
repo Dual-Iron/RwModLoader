@@ -2,10 +2,22 @@
 
 public static class Extracting
 {
+    public static async Task ExtractAll()
+    {
+        foreach (var file in Directory.EnumerateFiles(ModsFolder.FullName, "*.rwmod", SearchOption.TopDirectoryOnly)) {
+            await DoExtract(file);
+        }
+    }
+
     public static async Task Extract(string rwmod)
     {
-        string filePath = GetModPath(rwmod);
+        string filePath = Path.GetExtension(rwmod) == ".rwmod" && File.Exists(rwmod) ? rwmod : GetModPath(rwmod);
 
+        await DoExtract(filePath);
+    }
+
+    private static async Task<Stream> DoExtract(string filePath)
+    {
         if (!File.Exists(filePath)) {
             throw ErrFileNotFound(filePath);
         }
@@ -28,5 +40,6 @@ public static class Extracting
             header,
             rwmodFileStream,
             name => File.Create(Path.Combine(directoryNameSafe, name)));
+        return rwmodFileStream;
     }
 }
