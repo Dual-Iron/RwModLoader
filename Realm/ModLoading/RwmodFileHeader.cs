@@ -14,7 +14,6 @@ public sealed class RwmodFileHeader
         }
     }
 
-    // rwmod file format: https://gist.github.com/Dual-Iron/35b71cdd5ffad8b5ad65a3f7214af390
     public RwmodFileHeader(string filePath, Stream input)
     {
         BinaryReader reader = new(input, Encoding.ASCII);

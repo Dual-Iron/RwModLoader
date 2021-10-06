@@ -88,7 +88,6 @@ public static partial class InstallerApi
 
     public static async Task<GitHubRelease> GetRelease(string user, string repo)
     {
-        // TODO LOW: trim so I'm not storing the entire body in the cache
         string message = await FetchFromCache($"body-{user}-{repo}", () => {
             using var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.github.com/repos/{user}/{repo}/releases/latest");
             request.Headers.Add("Accept", "application/vnd.github.v3+json");
@@ -133,7 +132,6 @@ public static partial class InstallerApi
 
     public static async Task<string> FetchFromCache(string key, Func<Task<string>> getValue)
     {
-        // TODO LOW: speed this up using hash checks and Span<char>
         // ([string: key][string: value])*
 
         FileInfo webcache = new(Path.Combine(RwmodsUserFolder.FullName, "webcache.dat"));

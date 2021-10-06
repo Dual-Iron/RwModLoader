@@ -6,7 +6,7 @@ namespace Mutator.Patching;
 
 public static class HotReloadPatcher
 {
-    // TODO HIGH: Can I just remove the hot reload patcher...?
+    // TODO LOW: Can I just remove the hot reload patcher...?
     public static void Patch(TypeDefinition modType, bool bepInExMod)
     {
         const string disable = "OnDisable";

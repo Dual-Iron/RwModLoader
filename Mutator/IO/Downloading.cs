@@ -12,8 +12,6 @@ public class Downloading
 
     public static async Task Download(string url)
     {
-        // TODO: Detect incompatibilities & dependencies
-
         string[] args = url.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
         if (args.Length != 2) {
@@ -21,8 +19,6 @@ public class Downloading
         }
 
         GitHubRelease release = await GetRelease(args[0], args[1]);
-
-        // https://gist.github.com/Dual-Iron/35b71cdd5ffad8b5ad65a3f7214af390#creating-rwmod-files-from-a-github-repository
 
         if (release.Count == 0) {
             throw Err(ExitCodes.AbsentBinaries);

@@ -74,6 +74,8 @@ public sealed class LoadedAssemblyPool
 
     private void RunPatchers(IProgressable progressable, Action<float> setTaskProgress)
     {
+        // TODO LOW: Actual patcher support
+
         List<PatcherPlugin> patchers = AssemblyPatcher.PatcherPlugins.ToList();
 
         if (patchers.Count == 0) {
@@ -141,8 +143,6 @@ public sealed class LoadedAssemblyPool
         }
 
         setTaskProgress(3 / 3f);
-
-        // TODO LOW: dump assemblies
     }
 
     private void LoadAssemblies(IProgressable progressable, Action<float> setTaskProgress)

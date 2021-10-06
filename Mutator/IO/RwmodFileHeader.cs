@@ -1,6 +1,6 @@
 ﻿namespace Mutator.IO;
 
-// rwmod file format: https://gist.github.com/Dual-Iron/35b71cdd5ffad8b5ad65a3f7214af390
+// rwmod file format: https://gist.github.com/Dual-Iron/b28590195548cb382874f0040ec96b78
 public sealed class RwmodFileHeader
 {
     public const int EntryCountByteOffset = 4;
