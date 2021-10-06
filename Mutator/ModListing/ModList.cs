@@ -19,22 +19,15 @@ public static class ModList
 
     private static async Task Setup()
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, "https://raw.githubusercontent.com/AndrewFM/RainDB/master/index.html");
-        request.Headers.Add("Accept", "text/plain");
-        request.Headers.Add("User-Agent", "fetcher-" + Environment.ProcessId);
+        string content = await FetchFromCache("modlist", async () => {
+            using var request = new HttpRequestMessage(HttpMethod.Get, "https://raw.githubusercontent.com/AndrewFM/RainDB/master/index.html");
+            request.Headers.Add("Accept", "text/plain");
+            request.Headers.Add("User-Agent", "fetcher-" + Environment.ProcessId);
 
-        using var response = await Client.SendAsync(request);
+            using var response = await Client.SendAsync(request);
 
-        try {
-            response.EnsureSuccessStatusCode();
-        } catch (HttpRequestException e) {
-            if (e.StatusCode == HttpStatusCode.NotFound) {
-                throw Err(ExitCodes.ConnectionFailed);
-            }
-            throw;
-        }
-
-        string content = await response.Content.ReadAsStringAsync();
+            return await response.EnsureSuccessStatusCode().Content.ReadAsStringAsync();
+        });
 
         const string firstPhrase = "// TOOLS and MODDING UTILITIES";
         const string secondPhrase = "// VERSION 1.5 MODS";

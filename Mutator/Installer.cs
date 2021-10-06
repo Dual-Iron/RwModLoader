@@ -9,8 +9,6 @@ public static class Installer
 {
     public static async Task SelfUpdate(IEnumerator<string> args)
     {
-        await VerifyInternetConnection();
-
         GitHubRelease files = await GetRelease("Dual-Iron", "RwModLoader");
         FileVersionInfo myVersion = FileVersionInfo.GetVersionInfo(Environment.ProcessPath ?? throw new("No process path."));
 
@@ -49,11 +47,7 @@ public static class Installer
             UninstallPartiality();
         }
 
-        // TODO HIGH: allow mutator to overwrite Realm.dll even if BepInEx *is* installed
-        // preferably without deleting the user's config
-        if (!IsBepInExInstalled()) {
-            InstallBepInEx();
-        }
+        InstallBepInEx();
     }
 
     private static void InstallSelf()
@@ -146,8 +140,6 @@ public static class Installer
 
     public static async Task NeedsSelfUpdate()
     {
-        await VerifyInternetConnection();
-
         GitHubRelease files = await GetRelease("Dual-Iron", "RwModLoader");
         FileVersionInfo myVersion = FileVersionInfo.GetVersionInfo(Environment.ProcessPath ?? throw new("No process path."));
 
@@ -158,47 +150,39 @@ public static class Installer
 
     public static void UninstallBepInEx()
     {
-        if (!IsBepInExInstalled()) {
-            return;
-        }
-
-        Directory.Delete(Path.Combine(RwDir, "BepInEx"), true);
         File.Delete(Path.Combine(RwDir, "winhttp.dll"));
-        File.Delete(Path.Combine(RwDir, "doorstop_config.ini"));
-    }
-
-    private static bool IsBepInExInstalled()
-    {
-        string bepInExCoreDirectory = Path.Combine(RwDir, "BepInEx", "core");
-        if (!Directory.Exists(bepInExCoreDirectory)) {
-            return false;
-        }
-
-        string patcherFilePath = Path.Combine(RwDir, "BepInEx", "patchers", "Realm.dll");
-        if (!File.Exists(patcherFilePath)) {
-            return false;
-        }
-
-        try {
-            var bepInEx = AssemblyName.GetAssemblyName(Path.Combine(bepInExCoreDirectory, "BepInEx.dll"));
-            return bepInEx.Name == "BepInEx" && bepInEx.Version >= new Version(5, 4, 15);
-        } catch (BadImageFormatException) {
-            return false;
-        } catch (FileNotFoundException) {
-            return false;
-        }
     }
 
     private static void InstallBepInEx()
     {
-        UninstallBepInEx();
+        static string C(params string[] paths) => Path.Combine(paths);
+
+        string tempDir = "";
 
         try {
+            if (Directory.Exists(C(RwDir, "BepInEx"))) {
+                if (Directory.Exists(C(RwDir, "BepInEx", "config"))) {
+                    tempDir = Path.GetTempFileName();
+                    File.Delete(tempDir);
+                    Directory.CreateDirectory(tempDir);
+                    Directory.Move(C(RwDir, "BepInEx", "config"), C(tempDir, "config"));
+                }
+
+                Directory.Delete(C(RwDir, "BepInEx"), true);
+            }
+
             using Stream rwbep = typeof(Installer).Assembly.GetManifestResourceStream("RwBep") ?? throw new("No stream!");
             using ZipArchive archive = new(rwbep, ZipArchiveMode.Read, true, UseEncoding);
             archive.ExtractToDirectory(RwDir, true);
-        } catch (AggregateException e) {
-            throw e.Flatten();
+
+            if (Directory.Exists(C(tempDir, "config"))) {
+                if (Directory.Exists(C(RwDir, "BepInEx", "config")))
+                    Directory.Delete(C(C(RwDir, "BepInEx", "config")), true);
+                Directory.Move(C(tempDir, "config"), C(RwDir, "BepInEx", "config"));
+            }
+        } finally {
+            if (Directory.Exists(tempDir))
+                Directory.Delete(tempDir, true);
         }
     }
 }

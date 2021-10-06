@@ -30,8 +30,13 @@ public static class Program
             return last;
         }
 
+        if (e is HttpRequestException hre) {
+            Console.Error.WriteLine($"HTTP request error {(int?)hre.StatusCode}: {hre.Message}");
+            return ExitCodes.ConnectionFailed;
+        }
+
         if (e is IOException) {
-            Console.WriteLine(e.Message);
+            Console.Error.WriteLine(e.Message);
             return ExitCodes.IOError;
         }
 

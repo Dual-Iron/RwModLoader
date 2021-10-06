@@ -14,8 +14,6 @@ public class Downloading
     {
         // TODO: Detect incompatibilities & dependencies
 
-        await VerifyInternetConnection();
-
         string[] args = url.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
         if (args.Length != 2) {

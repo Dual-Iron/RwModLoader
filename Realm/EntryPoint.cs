@@ -36,7 +36,7 @@ public static class EntryPoint
         // So, instead, just track the logger that Chainloader uses.
         hook = new Hook(typeof(Logger).GetMethod("LogMessage", BindingFlags.NonPublic | BindingFlags.Static), typeof(EntryPoint).GetMethod(nameof(Logger_Log)));
 
-        // Also, prevent patchers from being disposed. We reuse those.
+        // Also, prevent patchers from being disposed. We use those.
         static void BeforeDispose(Action orig) { }
 
         new Hook(typeof(AssemblyPatcher).GetMethod("DisposePatchers"), BeforeDispose);
@@ -65,7 +65,7 @@ public static class EntryPoint
 
         // Add `EntryPoint.HookChainLoader()` just before the end of the method
         cursor.Index = cursor.Instrs.Count - 1;
-        cursor.EmitDelegate((Action)HookChainloader);
+        cursor.EmitDelegate<Action>(HookChainloader);
     }
 
     private static void HookChainloader()

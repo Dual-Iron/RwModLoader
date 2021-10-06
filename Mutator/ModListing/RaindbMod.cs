@@ -23,8 +23,6 @@ public sealed class RaindbMod
 
     public static async Task PrintAll()
     {
-        await VerifyInternetConnection();
-
         Stream stdout = Console.OpenStandardOutput();
 
         using BinaryWriter writer = new(stdout, UseEncoding, true);

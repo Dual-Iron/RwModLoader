@@ -78,21 +78,6 @@ public static partial class InstallerApi
 
     public static string GetModPath(string name) => Path.Combine(ModsFolder.FullName, Path.ChangeExtension(name, ".rwmod"));
 
-    private static bool hasInternet;
-
-    public static async Task VerifyInternetConnection()
-    {
-        if (hasInternet) return;
-
-        try {
-            (await Client.GetAsync("http://google.com/generate_204")).EnsureSuccessStatusCode();
-        } catch {
-            throw Err(ExitCodes.ConnectionFailed);
-        }
-
-        hasInternet = true;
-    }
-
     public static async Task<GitHubRelease> GetRelease(string user, string repo)
     {
         // TODO LOW: trim so I'm not storing the entire body in the cache
@@ -127,7 +112,8 @@ public static partial class InstallerApi
         async Task<string> GetMessage(HttpRequestMessage request)
         {
             try {
-                return await (await Client.SendAsync(request)).EnsureSuccessStatusCode().Content.ReadAsStringAsync();
+                using var httpResponseMessage = await Client.SendAsync(request);
+                return await httpResponseMessage.EnsureSuccessStatusCode().Content.ReadAsStringAsync();
             } catch (HttpRequestException e) {
                 if (e.StatusCode == HttpStatusCode.NotFound) {
                     throw Err(ExitCodes.AbsentRelease, $"{user}/{repo}");
