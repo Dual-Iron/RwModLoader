@@ -17,18 +17,26 @@ public static partial class InstallerApi
         const int AppID = 312520;
 
         // Check for explicit path override
-        if (File.Exists("path.txt") && File.ReadLines("path.txt").FirstOrDefault() is string firstLine) {
-            var path = firstLine.Trim();
-            if (path.Length > 0 && Directory.Exists(path)) {
-                return Path.GetFullPath(path);
+        if (File.Exists("path.txt")) {
+            if (File.ReadLines("path.txt").FirstOrDefault() is string firstLine) {
+                var path = Path.GetFullPath(firstLine.Trim());
+                if (path.Length > 0 && Directory.Exists(path) && File.Exists(Path.Combine(path, "RainWorld.exe"))) {
+                    return path;
+                }
             }
-            throw Err(ExitCodes.AbsentRainWorldFolder, $"Invalid path.txt file. The first line should be the path to the Rain World directory.");
+            throw Err(ExitCodes.AbsentRainWorldFolder, $"The \"path.txt\" file in \"{Environment.CurrentDirectory}\" is invalid. The first line should be the path to your Rain World folder.");
         }
 
-        // Check simple, common path
-        string samplePath = Path.GetFullPath(@"C:\Program Files (x86)\Steam\steamapps\common\Rain World");
-        if (Directory.Exists(samplePath)) {
-            return samplePath;
+        // Check simple, common paths
+        string[] commonPaths = new[] {
+            @"C:\Program Files (x86)\Steam\steamapps\common\Rain World",
+            @"C:\Program Files\Steam\steamapps\common\Rain World"
+        };
+
+        foreach (var path in commonPaths) {
+            if (Directory.Exists(path)) {
+                return path;
+            }
         }
 
         // Find path rigorously
@@ -52,7 +60,7 @@ public static partial class InstallerApi
             }
         }
 
-        throw Err(ExitCodes.AbsentRainWorldFolder, $"Could not find the Rain World directory. Add a path.txt file to \"{Environment.CurrentDirectory}\" that has your Rain World directory.");
+        throw Err(ExitCodes.AbsentRainWorldFolder, $"Could not find the Rain World directory. Please add a \"path.txt\" file to \"{Environment.CurrentDirectory}\" that has the path your Rain World folder.");
     }
 
     private static HttpClient? client;
