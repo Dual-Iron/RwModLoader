@@ -71,7 +71,6 @@ public sealed class AssemblyPool
 
         static bool IsPatched(AssemblyDefinition definition, [MaybeNullWhen(false)] out IList<string> typeNames)
         {
-            Console.WriteLine(definition.FullName);
             foreach (var customAttribute in definition.CustomAttributes)
                 if (customAttribute.AttributeType.Name == "RwmodAttribute"
                     && customAttribute.ConstructorArguments.Count == 2
