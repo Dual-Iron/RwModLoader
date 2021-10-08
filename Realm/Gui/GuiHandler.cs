@@ -3,6 +3,7 @@ using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using Realm.Jobs;
 using Realm.Logging;
+using System.Linq;
 using UnityEngine;
 
 namespace Realm.Gui;
@@ -28,7 +29,7 @@ public static class GuiHandler
         _ => "RW_16 - Shoreline",
     };
 
-    private const string MODS_BUTTON = "M";
+    private const string HOT_RELOAD = "H";
 
     private static Job? reloadingJob;
 
@@ -40,29 +41,30 @@ public static class GuiHandler
             On.Menu.PauseMenu.ctor += AddReloadAsmsButtonToPauseMenu;
             On.Menu.PauseMenu.Singal += PauseMenuSingal;
             On.Menu.PauseMenu.Update += UpdatePauseMenu;
+            On.Menu.Menu.Update += UpdatePaseMenuBase;
         }
         On.Menu.MainMenu.ctor += AddModsButtonToMainMenu;
         On.Menu.MainMenu.Singal += MainMenuSingal;
         IL.ProcessManager.SwitchMainProcess += CheckForModMenu;
     }
 
+    #region Pause menu
     private static void AddReloadAsmsButtonToPauseMenu(On.Menu.PauseMenu.orig_ctor orig, PauseMenu self, ProcessManager manager, RainWorldGame game)
     {
         orig(self, manager, game);
 
-        SimpleButton modsButton = new(self, self.pages[0], "HOT RELOAD", MODS_BUTTON, self.exitButton.pos - new Vector2(140, 0), new(110, 30));
+        SimpleButton modsButton = new(self, self.pages[0], "HOT RELOAD", HOT_RELOAD, self.exitButton.pos - new Vector2(140, 0), new(110, 30));
 
         self.pages[0].subObjects.Add(modsButton);
     }
 
     private static void PauseMenuSingal(On.Menu.PauseMenu.orig_Singal orig, PauseMenu self, MenuObject sender, string message)
     {
-        if (reloadingJob == null && message == MODS_BUTTON) {
+        if (reloadingJob == null && message == HOT_RELOAD) {
             reloadingJob = Job.Start(() => {
                 ProgramState.Instance.Prefs.Load();
                 ProgramState.Instance.Mods.Reload(new ProgressMessagingProgressable());
-            }); 
-            DisableButtons(self);
+            });
             self.PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
             return;
         }
@@ -72,33 +74,39 @@ public static class GuiHandler
 
     private static void UpdatePauseMenu(On.Menu.PauseMenu.orig_Update orig, PauseMenu self)
     {
-        orig(self);
-
         if (reloadingJob != null) {
-            DisableButtons(self);
-
-            if (reloadingJob.Status == JobStatus.Finished) {
-                reloadingJob = null;
-            }
+            self.wantToContinue = false;
+            self.counter = 0;
         } else {
             foreach (var sob in self.pages[0].subObjects) {
-                if (sob is SimpleButton button && button.signalText == MODS_BUTTON) {
-                    button.GetButtonBehavior.greyedOut = false;
+                if (sob is SimpleButton sib && sib.signalText == HOT_RELOAD) {
+                    sib.GetButtonBehavior.greyedOut = false;
                     break;
                 }
             }
         }
-    }
 
-    private static void DisableButtons(PauseMenu self)
-    {
-        foreach (var sob in self.pages[0].subObjects) {
-            if (sob is ButtonTemplate button) {
-                button.GetButtonBehavior.greyedOut = true;
-            }
+        orig(self);
+
+        if (reloadingJob?.Status == JobStatus.Finished) {
+            reloadingJob = null;
         }
     }
-    
+
+    private static void UpdatePaseMenuBase(On.Menu.Menu.orig_Update orig, Menu.Menu self)
+    {
+        if (self is PauseMenu && reloadingJob != null) {
+            foreach (var sob in self.pages[0].subObjects) {
+                if (sob is SimpleButton sib) {
+                    sib.GetButtonBehavior.greyedOut = true;
+                }
+            }
+        }
+
+        orig(self);
+    }
+    #endregion
+
     private static void AddModsButtonToMainMenu(On.Menu.MainMenu.orig_ctor orig, MainMenu self, ProcessManager manager, bool showRegionSpecificBkg)
     {
         orig(self, manager, showRegionSpecificBkg);
@@ -109,7 +117,7 @@ public static class GuiHandler
             if (mob is SimpleButton button) {
                 if (add == null && button.signalText == "OPTIONS") {
                     // Add MODS button
-                    add = new SimpleButton(self, self.pages[0], "MODS", MODS_BUTTON, button.pos, button.size);
+                    add = new SimpleButton(self, self.pages[0], "MODS", HOT_RELOAD, button.pos, button.size);
                     add.nextSelectable[0] = add;
                     add.nextSelectable[2] = add;
                 }
@@ -128,7 +136,7 @@ public static class GuiHandler
 
     private static void MainMenuSingal(On.Menu.MainMenu.orig_Singal orig, MainMenu self, MenuObject sender, string message)
     {
-        if (message == MODS_BUTTON) {
+        if (message == HOT_RELOAD) {
             self.manager.RequestMainProcessSwitch(ModsMenu.ModsMenuID);
             self.PlaySound(SoundID.MENU_Switch_Page_In);
             return;
