@@ -6,6 +6,15 @@ namespace Realm.ModLoading;
 
 public static class PluginWrapper
 {
+    public static void WrapPluginsThenSave(IProgressable progressable)
+    {
+        WrapPlugins(progressable, out var wrappedAsms);
+
+        if (progressable.ProgressState == ProgressStateType.Failed) return;
+
+        State.Instance.Prefs.EnableThenSave(wrappedAsms);
+    }
+
     public static void WrapPlugins(IProgressable progressable, out List<string> wrappedMods)
     {
         // IMPORTANT: Do not reference BepInEx, Assembly-CSharp, or UnityEngine in this method. Otherwise, BepInEx won't run the chainloader and Realm won't start.

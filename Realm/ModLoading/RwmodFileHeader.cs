@@ -37,5 +37,5 @@ public sealed class RwmodFileHeader
     public readonly string DisplayName;
     public readonly string FilePath;
 
-    public bool Enabled => ProgramState.Instance.Prefs.EnabledMods.Contains(Name);
+    public bool Enabled => State.Instance.Prefs.EnabledMods.Contains(Name);
 }

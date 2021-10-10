@@ -37,7 +37,7 @@ public static class GuiHandler
     {
         ModsMenuMusic.Hook();
 
-        if (ProgramState.Instance.DeveloperMode) {
+        if (State.Instance.DeveloperMode) {
             On.Menu.PauseMenu.ctor += AddReloadAsmsButtonToPauseMenu;
             On.Menu.PauseMenu.Singal += PauseMenuSingal;
             On.Menu.PauseMenu.Update += UpdatePauseMenu;
@@ -62,8 +62,8 @@ public static class GuiHandler
     {
         if (reloadingJob == null && message == HOT_RELOAD) {
             reloadingJob = Job.Start(() => {
-                ProgramState.Instance.Prefs.Load();
-                ProgramState.Instance.Mods.Reload(new MessagingProgressable());
+                State.Instance.Prefs.Load();
+                State.Instance.Mods.Reload(new MessagingProgressable());
             });
             self.PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
             return;

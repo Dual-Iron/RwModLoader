@@ -1,19 +1,22 @@
-﻿using Realm.ModLoading;
+﻿using Realm.Logging;
+using Realm.ModLoading;
 using System.Linq;
 
 namespace Realm;
 
-public sealed class RwmodHeaderCache
+public sealed class RefreshCache
 {
     private List<RwmodFileHeader> headers;
 
-    public RwmodHeaderCache()
+    public RefreshCache()
     {
         headers = RwmodFileHeader.GetRwmodHeaders().ToList();
     }
 
-    public void Refresh()
+    public void Refresh(IProgressable progressable)
     {
+        PluginWrapper.WrapPluginsThenSave(progressable);
+
         headers = RwmodFileHeader.GetRwmodHeaders().ToList();
     }
 

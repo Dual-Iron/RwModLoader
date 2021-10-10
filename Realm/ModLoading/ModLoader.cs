@@ -24,11 +24,9 @@ public sealed class ModLoader
 
         progressable.Message(MessageType.Info, "Wrapping plugins");
 
-        PluginWrapper.WrapPlugins(progressable, out var wrappedAsms);
+        PluginWrapper.WrapPluginsThenSave(progressable);
 
         if (progressable.ProgressState == ProgressStateType.Failed) return;
-
-        ProgramState.Instance.Prefs.EnableThenSave(wrappedAsms);
 
         progressable.Message(MessageType.Info, "Reading assemblies");
 
@@ -39,7 +37,7 @@ public sealed class ModLoader
         RwmodFile[] rwmods = RwmodFile.GetRwmodFiles();
 
         foreach (var rwmod in rwmods) {
-            if (ProgramState.Instance.Prefs.EnabledMods.Contains(rwmod.Header.Name)) {
+            if (State.Instance.Prefs.EnabledMods.Contains(rwmod.Header.Name)) {
                 plugins.Add(rwmod);
             }
         }

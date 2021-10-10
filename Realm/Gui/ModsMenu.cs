@@ -35,9 +35,9 @@ public sealed class ModsMenu : Menu.Menu
 
         modListing = new(Page, pos: new(650, 50), elementSize: new(ModPanel.Width, ModPanel.Height), elementsPerScreen: 16, edgePadding: 5);
 
-        ProgramState.Instance.CurrentRwmodHeaderCache.Refresh();
+        State.Instance.CurrentRefreshCache.Refresh(new MessagingProgressable());
 
-        foreach (var header in ProgramState.Instance.CurrentRwmodHeaderCache.Headers) {
+        foreach (var header in State.Instance.CurrentRefreshCache.Headers) {
             modListing.subObjects.Add(new ModPanel(header, Page, default));
         }
 
@@ -145,7 +145,7 @@ public sealed class ModsMenu : Menu.Menu
 
     private void SaveExit()
     {
-        ProgramState.Instance.Prefs.EnabledMods.Clear();
+        State.Instance.Prefs.EnabledMods.Clear();
 
         List<string> delete = new();
 
@@ -153,19 +153,21 @@ public sealed class ModsMenu : Menu.Menu
             if (panel.WillDelete) {
                 delete.Add(panel.Rwmod.FilePath);
             } else if (panel.IsEnabled) {
-                ProgramState.Instance.Prefs.EnabledMods.Add(panel.Rwmod.Name);
+                State.Instance.Prefs.EnabledMods.Add(panel.Rwmod.Name);
             }
         }
 
-        ProgramState.Instance.Prefs.Save();
+        State.Instance.Prefs.Save();
 
-        ProgramState.Instance.Mods.Reload(performingProgress);
+        State.Instance.Mods.Reload(performingProgress);
 
         foreach (var file in delete) {
             File.Delete(file);
         }
 
-        manager.RequestMainProcessSwitch(ProcessManager.ProcessID.MainMenu);
+        if (performingProgress.ProgressState != ProgressStateType.Failed) {
+            manager.RequestMainProcessSwitch(ProcessManager.ProcessID.MainMenu);
+        }
     }
 
     public override string UpdateInfoText()
