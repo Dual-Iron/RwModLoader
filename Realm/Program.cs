@@ -36,8 +36,8 @@ public static class Program
         StaticFixes.Hook();
 
         if (!skip) {
-            ProgramState.Instance.Prefs.EnableThenSave(earlyWrappedAsms);
             ProgramState.Instance.Prefs.Load();
+            ProgramState.Instance.Prefs.EnableThenSave(earlyWrappedAsms);
             ProgramState.Instance.Mods.Reload(new MessagingProgressable());
         }
 
