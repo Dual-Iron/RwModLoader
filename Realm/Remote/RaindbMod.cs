@@ -8,7 +8,7 @@ public sealed class RaindbMod
     {
         string err;
         using MemoryStream ms = new();
-        using (Process p = Execution.Begin(Extensions.MutatorPath, "--raindb")) {
+        using (Process p = Execution.Begin(RealmPaths.MutatorPath, "--raindb")) {
             p.StandardOutput.BaseStream.CopyTo(ms);
             err = p.StandardError.ReadToEnd();
             Execution.PolitelyKill(p);

@@ -6,9 +6,6 @@ namespace PastebinMachine.EnumExtender;
 public static class EnumExtender
 {
 #pragma warning disable IDE0060 // Remove unused parameter
-    // Used by ModLoader to ensure the reference to EnumExtender is the updated one
-    public static void DoNothing() { }
-
     public static void AddDeclaration(Type enm, string name) => VirtualEnums.VirtualEnumApi.AddDeclaration(enm, name);
     public static void ExtendEnums(List<EnumValue> decls, Dictionary<Type, Type> enums, List<KeyValuePair<IReceiveEnumValue, object>> list2) { }
     public static void ExtendEnumsAgain() { }

@@ -18,9 +18,9 @@ public static class Program
 
     // Called just after the Chainloader starts and likely before the game runs
     // Perfect place to load plugins and add hooks
-    internal static void Main()
+    internal static void Main(List<string> earlyWrappedAsms)
     {
-        if (!File.Exists(Extensions.MutatorPath)) {
+        if (!File.Exists(RealmPaths.MutatorPath)) {
             throw new InvalidOperationException("MUTATOR NOT PRESENT. REINSTALL REALM!");
         }
 
@@ -36,8 +36,9 @@ public static class Program
         StaticFixes.Hook();
 
         if (!skip) {
+            ProgramState.Instance.Prefs.EnableThenSave(earlyWrappedAsms);
             ProgramState.Instance.Prefs.Load();
-            ProgramState.Instance.Mods.Reload(new ProgressMessagingProgressable());
+            ProgramState.Instance.Mods.Reload(new MessagingProgressable());
         }
 
         GuiHandler.Hook();
@@ -50,13 +51,13 @@ public static class Program
             return;
         }
 
-        Execution result = Execution.Run(Extensions.MutatorPath, "--needs-self-update", 1000);
+        Execution result = Execution.Run(RealmPaths.MutatorPath, "--needs-self-update", 1000);
 
         if (result.ExitCode == 0) {
             bool needsToUpdate = result.Output == "y";
             if (needsToUpdate) {
                 using var self = Process.GetCurrentProcess();
-                Execution.Run(Extensions.MutatorPath, $"--kill {self.Id} --self-update --uninstall --install --run \"{Path.Combine(Paths.GameRootPath, "RainWorld.exe")}\"");
+                Execution.Run(RealmPaths.MutatorPath, $"--kill {self.Id} --self-update --uninstall --install --run \"{Path.Combine(Paths.GameRootPath, "RainWorld.exe")}\"");
                 return;
             }
             Logger.LogInfo("Realm is up to date!");
@@ -80,6 +81,6 @@ public static class Program
     private static void LoadEmbeddedAssemblies()
     {
         // Eagerly load these assemblies because it can't hurt
-        PastebinMachine.EnumExtender.EnumExtender.DoNothing();
+        PastebinMachine.EnumExtender.EnumExtender.Test();
     }
 }

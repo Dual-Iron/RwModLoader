@@ -93,6 +93,8 @@ public sealed class AssemblyPool
     public int Count => modAssemblies.Count;
     public IEnumerable<string> Names => modAssemblies.Keys;
     public IEnumerable<ModAssembly> Assemblies => modAssemblies.Values;
+
+    /// <param name="name">Assembly name with no iteration separator.</param>
     public ModAssembly this[string name] => modAssemblies[name];
 
     private AssemblyPool() { }

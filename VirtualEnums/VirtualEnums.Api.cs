@@ -39,22 +39,21 @@ public static partial class VirtualEnumApi
             if (type.Name.StartsWith("EnumExt_"))
                 UseType(type);
 
-        IList<Type> GetTypesSafely(ref ReflectionTypeLoadException? reflError)
+        IEnumerable<Type> GetTypesSafely(ref ReflectionTypeLoadException? reflError)
         {
+            static IEnumerable<Type> GetFrom(ReflectionTypeLoadException e)
+            {
+                foreach (var type in e.Types) {
+                    if (type != null)
+                        yield return type;
+                }
+            }
+
             try {
                 return asm.GetTypes();
             } catch (ReflectionTypeLoadException e) {
-                var ret = new List<Type>(e.Types.Length);
-
-                foreach (Type type in e.Types)
-                    if (type != null)
-                        ret.Add(type);
-
-                ret.TrimExcess();
-
                 reflError = e;
-
-                return ret;
+                return GetFrom(e);
             }
         }
     }

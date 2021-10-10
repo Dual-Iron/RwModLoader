@@ -192,7 +192,7 @@ public sealed class LoadedAssemblyPool
             VirtualEnums.VirtualEnumApi.UseAssembly(loadedAsm.Asm, out var err);
 
             if (err != null) {
-                Program.Logger.LogError(err);
+                progressable.Message(MessageType.Fatal, $"Failed to register {loadedAsm.AsmName} enums.\n  Exception: {err.LoaderExceptions[0]}");
             }
         }
 

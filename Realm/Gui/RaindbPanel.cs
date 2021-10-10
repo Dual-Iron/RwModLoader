@@ -83,7 +83,7 @@ public sealed class RaindbPanel : RectangularMenuObject, IHoverable, IListable
     private readonly SymbolButton dnldButton;
 
     private readonly MenuContainer progDisplayContainer;
-    private readonly LoggedProgressable performingProgress = new();
+    private readonly LoggingProgressable performingProgress = new();
 
     private bool downloaded;
 
@@ -141,7 +141,7 @@ public sealed class RaindbPanel : RectangularMenuObject, IHoverable, IListable
 
                 performingProgress.Message(MessageType.Info, "Downloading");
 
-                Execution pr = Execution.Run(Extensions.MutatorPath, $"--download \"{RaindbMod.Author}/{RaindbMod.Name}\"");
+                Execution pr = Execution.Run(RealmPaths.MutatorPath, $"--download \"{RaindbMod.Author}/{RaindbMod.Name}\"");
 
                 if (pr.ExitCode == 12 /* RepoNotCompliant */) {
                     downloaded = false;

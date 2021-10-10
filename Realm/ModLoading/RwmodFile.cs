@@ -4,7 +4,7 @@ namespace Realm.ModLoading;
 
 public sealed class RwmodFile
 {
-    public static string[] GetRwmodFilePaths() => Directory.GetFiles(Extensions.ModsFolder, "*.rwmod", SearchOption.TopDirectoryOnly);
+    public static string[] GetRwmodFilePaths() => Directory.GetFiles(RealmPaths.ModsFolder, "*.rwmod", SearchOption.TopDirectoryOnly);
 
     public static RwmodFile[] GetRwmodFiles()
     {
@@ -23,7 +23,7 @@ public sealed class RwmodFile
     {
         FileName = Path.GetFileName(path);
         FilePath = path;
-        Stream = File.Open(path, FileMode.Open, FileAccess.Read);
+        Stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
         Header = new(path, Stream);
         Entries = new(FileEntry.GetFileEntries(Header, Stream));
     }

@@ -110,7 +110,7 @@ public static class Program
                     string arg2 = enumerator.Current;
 
                     if (arg0 == "--wrap")
-                        task = Wrapper.Wrap(arg1, arg2, true);
+                        task = Wrapper.Wrap(arg1, arg2);
                 }
             }
 

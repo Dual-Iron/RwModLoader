@@ -2,16 +2,12 @@
 
 namespace Realm;
 
-internal static class Extensions
+internal static class RealmUtils
 {
 #pragma warning disable IDE0029 // Do not use ??= because the == operator must be called.
     private static RainWorld? rw;
     public static RainWorld? RainWorld => rw == null ? rw = UnityEngine.Object.FindObjectOfType<RainWorld>() : rw;
 #pragma warning restore IDE0029
-
-    public static DirectoryInfo UserFolder => Directory.CreateDirectory(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).CreateSubdirectory(".rw");
-    public static string ModsFolder => UserFolder.CreateSubdirectory("mods").FullName;
-    public static string MutatorPath => Path.Combine(UserFolder.FullName, "Mutator.exe");
 
     public static void CopyTo(this Stream from, Stream to)
     {

@@ -75,7 +75,7 @@ internal static class StaticFixes
 
         try {
             // Call stubbed init hooks
-            var rw = Extensions.RainWorld;
+            var rw = RealmUtils.RainWorld;
             if (rw is not null) {
                 rw.Start();
                 RainWorld.LoadSetupValues(true);

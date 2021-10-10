@@ -17,8 +17,4 @@
   <ItemGroup>
     <Reference Include="$(BepPath)core\MonoMod.RuntimeDetour.dll" />
   </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Copy SourceFiles="$(TargetDir)$(TargetName)$(TargetExt)" DestinationFolder="$(BepPath)\rw" />
-  </Target>
 </Project>

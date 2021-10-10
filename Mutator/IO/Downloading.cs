@@ -82,7 +82,7 @@ public class Downloading
             }
 
             try {
-                await Wrapper.Wrap(args[1], tempDir, true);
+                await Wrapper.Wrap(args[1], tempDir);
             } catch {
                 File.Delete(localModPath);
                 throw;

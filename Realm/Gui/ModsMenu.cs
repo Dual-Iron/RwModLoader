@@ -61,7 +61,7 @@ public sealed class ModsMenu : Menu.Menu
     private readonly Listing modListing;
 
     private readonly MenuContainer progDisplayContainer;
-    private readonly LoggedProgressable performingProgress = new();
+    private readonly LoggingProgressable performingProgress = new();
     private readonly BigArrowButton nextButton;
 
     private Page Page => pages[0];

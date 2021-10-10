@@ -8,9 +8,9 @@ public sealed class ProgressableDisplay : RectangularMenuObject
 {
     private readonly MenuLabel? progress;
     private readonly MenuLabel message;
-    private readonly LoggedProgressable prog;
+    private readonly LoggingProgressable prog;
 
-    public ProgressableDisplay(LoggedProgressable prog, MenuObject owner, Vector2 pos, Vector2 size, bool messageOnly = false) : base(owner.menu, owner, pos, size)
+    public ProgressableDisplay(LoggingProgressable prog, MenuObject owner, Vector2 pos, Vector2 size, bool messageOnly = false) : base(owner.menu, owner, pos, size)
     {
         subObjects.Add(new RoundedRect(menu, this, default, size, true) { fillAlpha = 0.8f });
         subObjects.Add(message = new MenuLabel(menu, this, $"Starting", size / 2 + 10 * Vector2.up, default, true));

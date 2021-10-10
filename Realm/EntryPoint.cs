@@ -6,6 +6,7 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
+using Realm.Logging;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Security;
@@ -19,27 +20,31 @@ namespace Realm;
 
 public static class EntryPoint
 {
-    private static Hook? hook;
-    private static bool chainloaderHooked = false;
+    private static List<string> earlyWrappedAsms = new();
+    private static bool initialized;
+    private static bool chainloaderHooked;
 
     public static IEnumerable<string> TargetDLLs => new string[0]; // Don't request anything
 
     public static void Patch(AssemblyDefinition _) { } // Not used since there is nothing to patch
 
-    public static void Finish()
+    public static void Initialize()
     {
-        if (hook != null) {
+        if (initialized) {
             return;
         }
 
+        initialized = true;
+
+        // Have to use EmptyProgressable and can't log the result here.
+        ModLoading.PluginWrapper.WrapPlugins(new EmptyProgressable(), out earlyWrappedAsms);
+        
         // Can't reference or hook Chainloader before it's been initialized on its own or the game bluescreens
         // So, instead, just track the logger that Chainloader uses.
-        hook = new Hook(typeof(Logger).GetMethod("LogMessage", BindingFlags.NonPublic | BindingFlags.Static), typeof(EntryPoint).GetMethod(nameof(Logger_Log)));
+        new Hook(typeof(Logger).GetMethod("LogMessage", BindingFlags.NonPublic | BindingFlags.Static), typeof(EntryPoint).GetMethod(nameof(Logger_Log)));
 
-        // Also, prevent patchers from being disposed. We use those.
-        static void BeforeDispose(Action orig) { }
-
-        new Hook(typeof(AssemblyPatcher).GetMethod("DisposePatchers"), BeforeDispose);
+        // Also, prevent patchers from being disposed.
+        new Hook(typeof(AssemblyPatcher).GetMethod("DisposePatchers"), delegate(Action o) { });
     }
 
     public static void Logger_Log(Action<object> orig, object data)
@@ -77,7 +82,7 @@ public static class EntryPoint
         new Hook(preloaderRunnerType.GetMethod("LocalResolve", BindingFlags.NonPublic | BindingFlags.Static), PreResolve);
 
         try {
-            Program.Main();
+            Program.Main(earlyWrappedAsms);
         } catch (Exception e) {
             Program.Logger.LogFatal(e);
         }
@@ -104,12 +109,7 @@ public static class EntryPoint
             return Assembly.Load(buffer);
         }
 
-        try {
-            return TryGet(args.Name) ?? orig(sender, args);
-        } catch (Exception e) {
-            Program.Logger.LogError(e);
-            return orig(sender, args);
-        }
+        return TryGet(args.Name) ?? orig(sender, args);
     }
 
     delegate Assembly? hook_LocalResolve(Func<object, ResolveEventArgs, Assembly> orig, object sender, ResolveEventArgs args);

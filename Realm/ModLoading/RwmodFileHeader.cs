@@ -7,7 +7,7 @@ public sealed class RwmodFileHeader
         foreach (var file in RwmodFile.GetRwmodFilePaths()) {
             RwmodFileHeader ret;
 
-            using (Stream s = File.Open(file, FileMode.Open, FileAccess.Read))
+            using (Stream s = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.Read))
                 ret = new(file, s);
 
             yield return ret;

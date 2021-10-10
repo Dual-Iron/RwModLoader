@@ -8,7 +8,7 @@ public static partial class AssemblyPatcher
 {
     private const ushort version = 1;
 
-    private static AssemblyDefinition GetBepAssemblyDef(string filePath, bool write)
+    private static AssemblyDefinition GetBepAssemblyDef(string filePath)
     {
         DefaultAssemblyResolver resolver = new();
 
@@ -17,7 +17,7 @@ public static partial class AssemblyPatcher
         resolver.AddSearchDirectory(Path.Combine(RwDir, "BepInEx", "core"));
         resolver.AddSearchDirectory(Path.Combine(RwDir, "BepInEx", "plugins"));
 
-        return AssemblyDefinition.ReadAssembly(filePath, new() { AssemblyResolver = resolver, MetadataResolver = new RwMetadataResolver(resolver), ReadWrite = write });
+        return AssemblyDefinition.ReadAssembly(filePath, new() { AssemblyResolver = resolver, ReadWrite = true });
     }
 
     public static void Patch(string filePath)
@@ -32,8 +32,8 @@ public static partial class AssemblyPatcher
             return;
         }
 
-        using AssemblyDefinition asm = GetBepAssemblyDef(filePath, true);
-        using IAssemblyResolver resolver = asm.MainModule.AssemblyResolver; // Ensure this gets disposed.
+        using var asm = GetBepAssemblyDef(filePath);
+        using var resolver = asm.MainModule.AssemblyResolver; // Ensure this gets disposed.
 
         if (IsPatched(asm)) {
             return;
@@ -56,7 +56,7 @@ public static partial class AssemblyPatcher
                 attr.AttributeType.Name == "RwmodAttribute" && 
                 attr.ConstructorArguments.Count == 2 &&
                 attr.ConstructorArguments[0].Value is ushort v && v == version &&
-                attr.ConstructorArguments[1].Value is string[]
+                attr.ConstructorArguments[1].Value is CustomAttributeArgument[]
             );
     }
 
@@ -138,7 +138,7 @@ public static partial class AssemblyPatcher
         try {
             foreach (var module in asm.Modules) {
                 if (module.AssemblyReferences.Any(asmRef => asmRef.Name == "HOOKS-Assembly-CSharp")) {
-                    typeScanner ??= new(hooksAsm = GetBepAssemblyDef(hooksAsmPath, false));
+                    typeScanner ??= new(hooksAsm = GetBepAssemblyDef(hooksAsmPath));
                     typeScanner.Transform(module);
                 }
 

@@ -12,14 +12,17 @@ public sealed class AssemblyDescriptor
 {
     interface IModDescriptor
     {
+        object? ModObject { get; }
+
         void Initialize(Assembly assembly);
         void Unload();
     }
 
     sealed class Lib : IModDescriptor
     {
-        void IModDescriptor.Initialize(Assembly assembly) { }
+        object? IModDescriptor.ModObject => null;
 
+        void IModDescriptor.Initialize(Assembly assembly) { }
         void IModDescriptor.Unload() { }
     }
 
@@ -37,6 +40,8 @@ public sealed class AssemblyDescriptor
             this.pluginInfo = pluginInfo;
             this.typeName = typeName;
         }
+
+        object? IModDescriptor.ModObject => plugin;
 
         void IModDescriptor.Initialize(Assembly assembly)
         {
@@ -61,6 +66,8 @@ public sealed class AssemblyDescriptor
         {
             this.typeName = typeName;
         }
+
+        object? IModDescriptor.ModObject => instance;
 
         void IModDescriptor.Initialize(Assembly assembly)
         {
@@ -93,15 +100,6 @@ public sealed class AssemblyDescriptor
         }
     }
 
-    private readonly List<IModDescriptor> mods = new();
-
-    public AssemblyDescriptor(AssemblyDefinition definition, IEnumerable<string> modTypes)
-    {
-        foreach (var modType in modTypes) {
-            mods.Add(GetModDescriptor(definition, modType));
-        }
-    }
-
     private static IModDescriptor GetModDescriptor(AssemblyDefinition definition, string modType)
     {
         if (string.IsNullOrEmpty(modType)) {
@@ -123,6 +121,15 @@ public sealed class AssemblyDescriptor
         return new Lib();
     }
 
+    private readonly List<IModDescriptor> mods = new();
+
+    public AssemblyDescriptor(AssemblyDefinition definition, IEnumerable<string> modTypes)
+    {
+        foreach (var modType in modTypes) {
+            mods.Add(GetModDescriptor(definition, modType));
+        }
+    }
+
     public void Initialize(Assembly assembly)
     {
         foreach (var mod in mods) {
@@ -134,6 +141,51 @@ public sealed class AssemblyDescriptor
     {
         foreach (var mod in mods) {
             mod.Unload();
+        }
+    }
+
+    public Ref<object?>? GetReloadState()
+    {
+        foreach (var mod in mods) {
+            if (mod.ModObject is not object o) {
+                continue;
+            }
+
+            Type type = o.GetType();
+
+            MethodInfo? get = type.GetMethod("GetReloadState", BindingFlags.Public | BindingFlags.Instance, null, Type.EmptyTypes, null);
+
+            if (get == null) continue;
+
+            if (get.ReturnType == typeof(void)) {
+                Program.Logger.LogWarning($"The return type of {type.FullName}.GetReloadState() is void.");
+                continue;
+            }
+
+            return new(get.Invoke(o, null));
+        }
+        return null;
+    }
+
+    public void SetUnloadState(object? modData)
+    {
+        foreach (var mod in mods) {
+            if (mod.ModObject is not object o) {
+                continue;
+            }
+
+            Type type = o.GetType();
+
+            MethodInfo? set = type.GetMethod("Reload", BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(object) }, null);
+
+            if (set == null) {
+                Program.Logger.LogWarning($"The mod {type.FullName} has reload data but no Reload(object) method.");
+                continue;
+            }
+
+            set.Invoke(o, new[] { modData });
+
+            return;
         }
     }
 }

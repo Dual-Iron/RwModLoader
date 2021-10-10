@@ -4,7 +4,7 @@ namespace Realm.ModLoading;
 
 public sealed class Preferences
 {
-    private static string PreferencesPath => Path.Combine(Extensions.UserFolder.FullName, "prefs.json");
+    private static string PreferencesPath => Path.Combine(RealmPaths.UserFolder.FullName, "prefs.json");
 
     public void Load()
     {
@@ -40,6 +40,19 @@ public sealed class Preferences
         } catch (Exception e) {
             Program.Logger.LogError("Error while saving: " + e);
         }
+    }
+
+    public void EnableThenSave(IEnumerable<string> modsToEnable)
+    {
+        if (!modsToEnable.Any()) {
+            return;
+        }
+
+        foreach (var item in modsToEnable) {
+            EnabledMods.Add(item);
+        }
+
+        Save();
     }
 
     public HashSet<string> EnabledMods { get; } = new();

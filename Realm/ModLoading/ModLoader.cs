@@ -1,7 +1,6 @@
-﻿using BepInEx;
-using Realm.AssemblyLoading;
+﻿using Realm.AssemblyLoading;
 using Realm.Logging;
-using System.Reflection;
+using System.Linq;
 
 namespace Realm.ModLoading;
 
@@ -11,7 +10,7 @@ public sealed class ModLoader
 
     public void Unload(IProgressable progressable)
     {
-        progressable.Message(MessageType.Info, "Unloading assemblies");
+        progressable.Message(MessageType.Info, "Disabling mods");
 
         LoadedAssemblyPool?.Unload(progressable);
         LoadedAssemblyPool = null;
@@ -19,42 +18,25 @@ public sealed class ModLoader
 
     public void Reload(IProgressable progressable)
     {
+        List<ModReloadState> reloadState = GetReloadState(progressable);
+
         Unload(progressable);
 
-        if (Directory.Exists(Paths.PluginPath)) {
-            bool wrapped = false;
+        progressable.Message(MessageType.Info, "Wrapping plugins");
 
-            string[] pluginFiles = Directory.GetFiles(Paths.PluginPath, "*.dll", SearchOption.TopDirectoryOnly);
+        PluginWrapper.WrapPlugins(progressable, out var wrappedAsms);
 
-            foreach (string pluginFile in pluginFiles) {
-                try {
-                    AssemblyName asmName = AssemblyName.GetAssemblyName(pluginFile);
-                    Execution exec = Execution.Run(Extensions.MutatorPath, $"--wrap \"\" \"{pluginFile}\"");
+        if (progressable.ProgressState == ProgressStateType.Failed) return;
 
-                    if (exec.ExitCode == 0) {
-                        wrapped = true;
-                        ProgramState.Instance.Prefs.EnabledMods.Add(asmName.Name);
-                        progressable.Message(MessageType.Info, $"Wrapped {Path.GetFileName(pluginFile)}.");
-                    } else {
-                        progressable.Message(MessageType.Fatal, $"Failed to wrap {Path.GetFileName(pluginFile)}. {exec.ExitMessage}: {exec.Error}.");
-                    }
-                } catch { }
-            }
+        ProgramState.Instance.Prefs.EnableThenSave(wrappedAsms);
 
-            if (progressable.ProgressState == ProgressStateType.Failed) return;
-
-            if (wrapped) {
-                ProgramState.Instance.Prefs.Save();
-
-                foreach (var pluginFile in pluginFiles) {
-                    File.Delete(pluginFile);
-                }
-            }
-        }
-
-        RwmodFile[] rwmods = RwmodFile.GetRwmodFiles();
+        progressable.Message(MessageType.Info, "Reading assemblies");
 
         List<RwmodFile> plugins = new();
+
+        // DO NOT inline this variable. Obviously.
+        // Not like anyone would do that.
+        RwmodFile[] rwmods = RwmodFile.GetRwmodFiles();
 
         foreach (var rwmod in rwmods) {
             if (ProgramState.Instance.Prefs.EnabledMods.Contains(rwmod.Header.Name)) {
@@ -62,8 +44,6 @@ public sealed class ModLoader
             }
         }
 
-        progressable.Message(MessageType.Info, "Reading assemblies");
-        
         AssemblyPool assemblyPool = AssemblyPool.Read(progressable, plugins);
 
         if (progressable.ProgressState == ProgressStateType.Failed) goto Ret;
@@ -73,14 +53,63 @@ public sealed class ModLoader
         LoadedAssemblyPool = LoadedAssemblyPool.Load(progressable, assemblyPool);
 
         if (progressable.ProgressState == ProgressStateType.Failed) goto Ret;
-        progressable.Message(MessageType.Info, "Initializing mods");
+        progressable.Message(MessageType.Info, "Enabling mods");
         progressable.Progress = 0;
 
         LoadedAssemblyPool.InitializeMods(progressable);
 
-        Ret:
+        if (progressable.ProgressState == ProgressStateType.Failed) goto Ret;
+
+        // Call Reload after the mods are loaded
+        // This ensures they have an instance to pass the state to
+        CallReload(progressable, reloadState);
+
+    Ret:
         foreach (var rwmod in rwmods) {
             rwmod.Stream.Dispose();
         }
     }
+
+    private void CallReload(IProgressable progressable, List<ModReloadState> reloadState)
+    {
+        foreach (var state in reloadState) {
+            LoadedModAssembly? newMod = LoadedAssemblyPool!.LoadedAssemblies.FirstOrDefault(m => m.AsmName == state.AsmName);
+
+            if (newMod != null) {
+                try {
+                    LoadedAssemblyPool.Pool[state.AsmName].Descriptor.SetUnloadState(state.ModData);
+                } catch (Exception e) {
+                    progressable.Message(MessageType.Fatal, $"An uncaught exception was thrown in {newMod.AsmName}. {e}");
+                }
+            }
+        }
+    }
+
+    private List<ModReloadState> GetReloadState(IProgressable progressable)
+    {
+        if (LoadedAssemblyPool == null) {
+            return new();
+        }
+
+        List<ModReloadState> ret = new();
+
+        foreach (var asm in LoadedAssemblyPool.LoadedAssemblies) {
+            try {
+                var state = LoadedAssemblyPool.Pool[asm.AsmName].Descriptor.GetReloadState();
+                if (state is not null) {
+                    ret.Add(new() { AsmName = asm.AsmName, ModData = state.Value });
+                }
+            } catch (Exception e) {
+                progressable.Message(MessageType.Fatal, $"An uncaught exception was thrown in {asm.AsmName}. {e}");
+            }
+        }
+
+        return ret;
+    }
+}
+
+public struct ModReloadState
+{
+    public string AsmName;
+    public object? ModData;
 }
