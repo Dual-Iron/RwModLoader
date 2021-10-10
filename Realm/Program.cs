@@ -21,7 +21,9 @@ public static class Program
     internal static void Main(List<string> earlyWrappedAsms)
     {
         if (!File.Exists(RealmPaths.MutatorPath)) {
-            throw new InvalidOperationException("MUTATOR NOT PRESENT. REINSTALL REALM!");
+            Logger.LogFatal("Mutator not present. Please reinstall Realm!");
+            ReinstallNotif.ApplyHooks();
+            return;
         }
 
         Logger.LogDebug("Debug logging enabled.");
