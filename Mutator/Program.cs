@@ -52,7 +52,7 @@ public static class Program
 
     private static void Run(string[] args)
     {
-        if (args.Length == 0 && Path.GetDirectoryName(Environment.ProcessPath) != RwmodsUserFolder.FullName) {
+        if (args.Length == 0 && Path.GetFileName(Environment.ProcessPath) != "Mutator.exe") {
             Console.WriteLine("Working...");
 
             Installer.Install();
