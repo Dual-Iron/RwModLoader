@@ -82,8 +82,7 @@ public static class Installer
         }
 
         foreach (var item in Directory.GetFiles(modsDir)) {
-            var ext = Path.GetExtension(item);
-            if (ext == ".modHash" || ext == ".modMeta") {
+            if (Path.GetExtension(item) is ".modHash" or ".modMeta") {
                 return true;
             }
         }
@@ -105,12 +104,12 @@ public static class Installer
         if (Directory.Exists(Path.Combine(RwDir, "ModDependencies")))
             Directory.Delete(Path.Combine(RwDir, "ModDependencies"), true);
 
-        foreach (var item in Directory.GetFiles(Path.Combine(RwDir, "Mods"))) {
-            var ext = Path.GetExtension(item);
-            if (ext == ".modHash" || ext == ".modMeta") {
-                File.Delete(item);
+        if (Directory.Exists(Path.Combine(RwDir, "Mods")))
+            foreach (var item in Directory.GetFiles(Path.Combine(RwDir, "Mods"))) {
+                if (Path.GetExtension(item) is ".modHash" or ".modMeta") {
+                    File.Delete(item);
+                }
             }
-        }
     }
 
     public static void Kill(string pid)
