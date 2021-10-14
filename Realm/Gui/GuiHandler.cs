@@ -41,7 +41,7 @@ public static class GuiHandler
             On.Menu.PauseMenu.ctor += AddReloadAsmsButtonToPauseMenu;
             On.Menu.PauseMenu.Singal += PauseMenuSingal;
             On.Menu.PauseMenu.Update += UpdatePauseMenu;
-            On.Menu.Menu.Update += UpdatePaseMenuBase;
+            On.Menu.Menu.Update += UpdatePauseMenuBase;
         }
         On.Menu.MainMenu.ctor += AddModsButtonToMainMenu;
         On.Menu.MainMenu.Singal += MainMenuSingal;
@@ -93,7 +93,7 @@ public static class GuiHandler
         }
     }
 
-    private static void UpdatePaseMenuBase(On.Menu.Menu.orig_Update orig, Menu.Menu self)
+    private static void UpdatePauseMenuBase(On.Menu.Menu.orig_Update orig, Menu.Menu self)
     {
         if (self is PauseMenu && reloadingJob != null) {
             foreach (var sob in self.pages[0].subObjects) {
