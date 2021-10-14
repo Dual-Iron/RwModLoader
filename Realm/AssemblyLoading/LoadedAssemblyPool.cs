@@ -57,12 +57,12 @@ public sealed class LoadedAssemblyPool
         int count = loadedAssemblies.Count;
 
         foreach (var loadedAsmKvp in loadedAssemblies) {
-            monomod.Unload(loadedAsmKvp.Asm);
-
             try {
                 Pool[loadedAsmKvp.AsmName].Descriptor.Unload();
             } catch (Exception e) {
                 progressable.Message(MessageType.Fatal, $"Assembly {loadedAsmKvp.AsmName} failed to unload: {e}");
+            } finally {
+                monomod.Unload(loadedAsmKvp.Asm);
             }
 
             progressable.Progress = ++complete / (float)count;

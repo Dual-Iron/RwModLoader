@@ -64,6 +64,7 @@ public sealed class AssemblyPool
 
                 ret.modAssemblies[name] = new(rwmod, fileEntry.Index, new AssemblyDescriptor(asm, modTypes), asm);
                 asm.Name.Name += IterationSeparator + ret.ID;
+                asm.MainModule.Mvid = Guid.NewGuid();
             }
         }
 
