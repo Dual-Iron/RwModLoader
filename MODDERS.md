@@ -3,7 +3,7 @@
 ### Important note before doing the thing
 Some mods might not play nice with hot reloading. That's on them. That's also why this feature is opt-in and unstable.
 
-Additionally, because assemblies are [never truly unloaded from the application domain](https://docs.microsoft.com/en-us/dotnet/api/system.appdomain?view=net-5.0#remarks), the game *will* eventually run out of memory and crash. To reduce the memory load, avoid using static fields. Instead, opt for passing around an object that represents your mod's state. This lets the garbage collector properly collect your mod after it has been unloaded.
+Additionally, because assemblies are [never truly unloaded from the application domain](https://docs.microsoft.com/en-us/dotnet/api/system.appdomain?view=net-5.0#remarks), the game *will* eventually run out of memory and crash. To reduce the memory load, avoid using static fields without resetting them to `default` in OnDisable. This lets the garbage collector properly collect your mod after it has been unloaded.
 
 ### How to do the thing
 To enable hot reloading:
