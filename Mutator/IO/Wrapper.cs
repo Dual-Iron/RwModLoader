@@ -7,15 +7,20 @@ public class Wrapper
 {
     public static async Task Wrap(string rwmodName, string filePath)
     {
-        string[] files = Array.Empty<string>();
+        List<string> files = new();
 
         if (File.Exists(filePath))
-            files = new[] { filePath };
+            files.Add(filePath);
         else if (Directory.Exists(filePath))
-            files = Directory.GetFiles(filePath, "*", SearchOption.AllDirectories);
+            files.AddRange(Directory.GetFiles(filePath, "*", SearchOption.AllDirectories));
 
-        if (files.Length == 0)
+        if (files.Count == 0)
             throw ErrFileNotFound(filePath);
+
+        files.RemoveAll(s => ModBlacklist.Contains(Path.GetFileNameWithoutExtension(s)));
+
+        if (files.Count == 0)
+            return;
 
         Stream GetRwmodFileStream()
         {
@@ -44,7 +49,7 @@ public class Wrapper
 
             RwmodFileHeader GetHeader()
             {
-                return files.Length == 1
+                return files.Count == 1
                     ? WrapAssembly(filePath) ?? throw Err(ExitCodes.InvalidRwmodType, "Expected a .NET assembly.")
                     : new(Path.GetFileName(filePath), "") { 
                         DisplayName = Path.GetFileName(filePath), 
@@ -58,10 +63,6 @@ public class Wrapper
         ushort count = 0;
 
         foreach (string file in files) {
-            if (ModBlacklist.Any(bl => file.EndsWith(bl + ".dll"))) {
-                continue;
-            }
-
             AssemblyPatcher.Patch(file);
 
             using Stream fileStream = File.OpenRead(file);
@@ -72,10 +73,6 @@ public class Wrapper
             });
 
             count++;
-        }
-
-        if (count == 0) {
-            throw Err(ExitCodes.EmptyRwmod);
         }
 
         rwmodStream.Position = RwmodFileHeader.EntryCountByteOffset;
