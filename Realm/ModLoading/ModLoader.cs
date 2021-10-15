@@ -22,8 +22,6 @@ public sealed class ModLoader
 
         Unload(progressable);
 
-        progressable.Message(MessageType.Info, "Wrapping plugins");
-
         PluginWrapper.WrapPluginsThenSave(progressable);
 
         if (progressable.ProgressState == ProgressStateType.Failed) return;
