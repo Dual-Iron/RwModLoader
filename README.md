@@ -5,7 +5,7 @@ Right now, Realm only loads mods; there's no in-game browser yet. Autoupdating i
 
 To add mods, just drop them in the `Rain World/BepInEx/plugins` folder like usual. Realm will handle the rest.
 
-https://user-images.githubusercontent.com/31146412/137647572-7ef69555-b669-4556-8539-66dd05b0e855.mp4
+https://user-images.githubusercontent.com/31146412/137647603-6034790d-cfcb-40b0-a425-fe113ce7481f.mp4
 
 ## Where get?
 To install Realm, go to the [releases](https://github.com/Dual-Iron/RwModLoader/releases/latest) page.
