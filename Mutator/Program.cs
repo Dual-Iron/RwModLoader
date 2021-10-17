@@ -125,7 +125,7 @@ public static class Program
     private static void ListHelp()
     {
         Console.WriteLine($@"
-RwModMutator v{typeof(Program).Assembly.GetName().Version} - Documentation: https://tinyurl.com/rwmmd
+RwmlMutator v{typeof(Program).Assembly.GetName().Version}
 
 --help                You're here!
 --raindb              Lists mods from RainDB.
