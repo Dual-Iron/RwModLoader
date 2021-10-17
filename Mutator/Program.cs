@@ -55,6 +55,9 @@ public static class Program
         if (args.Length == 0 && Path.GetFileName(Environment.ProcessPath) != "Mutator.exe") {
             Console.WriteLine("Working...");
 
+            // Eagerly load RwDir to ensure it's valid before installing
+            _ = RwDir;
+
             Installer.Install();
 
             Console.Write("Installed the newest release of Realm. Press ENTER to start Rain World or ESC to exit. ");

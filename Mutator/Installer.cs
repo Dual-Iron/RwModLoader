@@ -67,6 +67,9 @@ public static class Installer
             }
 
             File.Copy(processPath, destFileName, true);
+
+            if (File.Exists("path.txt"))
+                File.Copy("path.txt", Path.Combine(copyToDirectory, "path.txt"), true);
         }
     }
 
