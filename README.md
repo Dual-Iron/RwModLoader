@@ -3,6 +3,8 @@ Realm is a modloader for Rain World that lets you reload mods without closing th
 
 Right now, Realm only loads mods; there's no in-game browser yet. Autoupdating is not supported yet, but is planned.
 
+To add mods, just drop them in the `Rain World/BepInEx/plugins` folder like usual. Realm will handle the rest.
+
 Realm replaces AutoUpdate, BepInEx-Partiality-Wrapper, EnumExtender, LogFix, and PublicityStunt. You don't have to install those mods.
 
 ## Where get?
