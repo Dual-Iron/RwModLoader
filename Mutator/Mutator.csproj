@@ -22,6 +22,6 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition=" '$(BuildingInsideVisualStudio)' == 'true' And '$(AlsoPublish)' == 'true' ">
-    <Exec Command="dotnet publish $(ProjectDir)$(ProjectName).csproj -f net6.0 -r win-x64 --no-self-contained -o %appdata%\.rw" />
+    <Exec Command="dotnet publish $(ProjectDir)$(ProjectName).csproj -f net6.0 -r win-x64 --self-contained -o %appdata%\.rw" />
   </Target>
 </Project>
