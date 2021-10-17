@@ -10,7 +10,7 @@ public sealed class AssemblyPool
 {
     public const string IterationSeparator = ";;";
 
-    private static readonly string[] ignore = new[] { "EnumExtender", "PublicityStunt", "AutoUpdate", "LogFix" };
+    private static readonly string[] ignore = new[] { "EnumExtender", "PublicityStunt", "AutoUpdate", "LogFix", "BepInEx-Partiality-Wrapper" };
     private static int id;
 
     /// <summary>
