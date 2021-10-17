@@ -29,8 +29,8 @@ public static class Program
         Logger.LogDebug("Debug logging enabled.");
 
         ConfigFile file = new(configPath: Path.Combine(Paths.ConfigPath, "Realm.cfg"), saveOnInit: true);
-        State.Instance.DeveloperMode = file.Bind("General", "HotReloading", false, "If enabled, Realm will allow hot reloading assemblies in-game. This feature is unstable.").Value;
-        bool skip = file.Bind("General", "SkipLoading", false, "If enabled, Realm won't load mods when starting the game.").Value;
+        State.Instance.DeveloperMode = file.Bind("General", "HotReloading", false, "While enabled, Realm will allow hot reloading assemblies in-game. This feature is unstable.").Value;
+        bool skip = file.Bind("General", "SkipLoading", false, "While enabled, Realm won't self-update or load mods when starting the game.").Value;
 
         if (!skip) TrySelfUpdate();
         LoadEmbeddedAssemblies();
@@ -49,20 +49,18 @@ public static class Program
 
     private static void TrySelfUpdate()
     {
-        if (Environment.GetEnvironmentVariable("LAUNCHED_FROM_MUTATOR", EnvironmentVariableTarget.Process) == "true") {
-            return;
-        }
-
         Execution result = Execution.Run(RealmPaths.MutatorPath, "--needs-self-update", 1000);
 
         if (result.ExitCode == 0) {
             bool needsToUpdate = result.Output == "y";
             if (needsToUpdate) {
+                Logger.LogInfo("Updating Realm.");
+
                 using var self = Process.GetCurrentProcess();
-                Execution.Run(RealmPaths.MutatorPath, $"--kill {self.Id} --self-update --uninstall --install --run \"{Path.Combine(Paths.GameRootPath, "RainWorld.exe")}\"");
+                Execution.Run(RealmPaths.MutatorPath, $"--kill {self.Id} --self-update --install --runrw");
                 return;
             }
-            Logger.LogInfo("Realm is up to date!");
+            Logger.LogInfo("Realm is up to date.");
         } else {
             Logger.LogWarning("Couldn't determine if Realm is up to date or not.");
             Logger.LogDebug($"{result.ExitMessage}: {result.Error}");

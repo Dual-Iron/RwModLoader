@@ -130,14 +130,13 @@ public static class Installer
         } catch { }
     }
 
-    public static void Run(string filePath)
+    public static void RunRw()
     {
-        ProcessStartInfo startInfo = new(filePath) {
-            CreateNoWindow = false,
-            UseShellExecute = false,
-        };
-        startInfo.EnvironmentVariables.Add("LAUNCHED_FROM_MUTATOR", "true");
-        Process.Start(startInfo)?.Dispose();
+        using var p = Process.Start(new ProcessStartInfo {
+            FileName = "steam://run/312520",
+            UseShellExecute = true,
+            Verb = "open"
+        });
     }
 
     public static async Task NeedsSelfUpdate()
@@ -147,7 +146,7 @@ public static class Installer
 
         bool needs = files.Version.ToVersion() > new Version(myVersion.ProductMajorPart, myVersion.ProductMinorPart, myVersion.ProductBuildPart);
 
-        Console.WriteLine(needs ? "y" : "n");
+        Console.Write(needs ? "y" : "n");
     }
 
     public static void UninstallBepInEx()

@@ -96,13 +96,13 @@ public static class Program
                 task = Installer.SelfUpdate(enumerator);
             else if (arg0 == "--extract-all")
                 task = Extracting.ExtractAll();
+            else if (arg0 == "--runrw")
+                task = Task.Run(() => Installer.RunRw());
             else if (enumerator.MoveNext()) {
                 string arg1 = enumerator.Current;
 
                 if (arg0 == "--kill")
                     task = Task.Run(() => Installer.Kill(arg1));
-                else if (arg0 == "--run")
-                    task = Task.Run(() => Installer.Run(arg1));
                 else if (arg0 == "--patch")
                     task = Task.Run(() => AssemblyPatcher.Patch(arg1));
                 else if (arg0 == "--download")
