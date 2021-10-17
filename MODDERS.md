@@ -3,7 +3,7 @@
 ### Important note before doing the thing
 Some mods might not play nice with hot reloading. That's on them. That's also why this feature is opt-in and unstable.
 
-Additionally, because assemblies are [never truly unloaded from the application domain](https://docs.microsoft.com/en-us/dotnet/api/system.appdomain?view=net-5.0#remarks), the game *will* eventually run out of memory and crash. To reduce the memory load, avoid using static fields without resetting them to `default` in OnDisable. This lets the garbage collector properly collect your mod after it has been unloaded.
+Additionally, because assemblies are [never truly unloaded from the application domain](https://docs.microsoft.com/en-us/dotnet/api/system.appdomain?view=net-5.0#remarks), the game *will* eventually run out of memory and crash. To reduce the memory load, reset static fields to `default` in OnDisable. This lets your mod be properly garbage collected after Realm unloads it.
 
 ### How to do the thing
 To enable hot reloading:
@@ -13,7 +13,7 @@ To enable hot reloading:
 To hot reload:
 1. Enter the pause menu in-game.
 2. Modify RWMOD files. You can drop the necessary DLL files in `Rain World/BepInEx/plugins` where they'll get wrapped automatically. Alternatively, you can wrap them through a shell using the mutator's `--wrap` command. Run `"%appdata%/.rw/mutator" --help` for more information.
-3. Click HOT RELOAD in-game. It's to the left of the EXIT button.
+3. Click HOT RELOAD in-game. It's the leftmost button on the pause menu.
 
 ### How to pass state between reloads
 Some mods have improtant information that they need to keep track of—even between reloads. This API is a reliable way to do that by passing an object between old and new assemblies.
@@ -42,14 +42,18 @@ As long as this contract is fulfilled, you can expect the following behavior:
 3. A new copy of your mod is enabled.
 4. The result from GetReloadState() is passed into the new mod through Reload(object).
 
-To use this in practice, I suggest copy-pasting the examples above into your mod class and editing their method bodies to suit your needs.
+I suggest copy-pasting the examples above into your mod class and editing their method bodies to suit your needs.
 
-# Interfacing with Realm via GitHub
+# Interfacing with Realm
+<details>
+  <summary>This isn't implemented yet, but you might want to read it anyway</summary>
+  
+# Via GitHub
 For a mod to interface with Realm, its homepage on raindb.net must be a GitHub repository, and:
 - The repository **must** contain at least one full release.
 - The latest full release **must** match [this Regular Expression](https://regexr.com/66e7q) at least once in its body.
 - The latest full release **must** match [this Regular Expression](https://regexr.com/66jb1) at least once in its tag name.
-- Each explicit dependency **must** be included as a binary.
+- Every dependency **must** be included as a binary.
 
 Mods that interface with Realm are automatically updated and enjoy one-click downloads in the browser.
 
@@ -62,3 +66,4 @@ BINARIES:       MyMod.dll
                 ConfigMachine.dll
 PRE-RELEASE:    No
 ```
+</details
