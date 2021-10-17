@@ -5,17 +5,17 @@ Right now, Realm only loads mods; there's no in-game browser yet. Autoupdating i
 
 To add mods, just drop them in the `Rain World/BepInEx/plugins` folder like usual. Realm will handle the rest.
 
-Realm replaces AutoUpdate, BepInEx-Partiality-Wrapper, EnumExtender, LogFix, and PublicityStunt. You don't have to install those mods.
+https://user-images.githubusercontent.com/31146412/137647572-7ef69555-b669-4556-8539-66dd05b0e855.mp4
 
 ## Where get?
-Go [here](https://github.com/Dual-Iron/RwModLoader/releases/latest).
+To install Realm, go to the [releases](https://github.com/Dual-Iron/RwModLoader/releases/latest) page.
 
 ## Resources
-If you need technical support, go to the [support](.github/SUPPORT.md) section.
+If you need technical support, go [here](.github/SUPPORT.md).
 
 If you're a modder and want to use hot reloading, go [here](MODDERS.md).
 
-To see known issues, go to the [Issues](https://github.com/Dual-Iron/RwModLoader/issues) page.
+To see known issues, go to the [issues](https://github.com/Dual-Iron/RwModLoader/issues) page.
 
 ## Credits
 - Dual
