@@ -96,6 +96,9 @@ public sealed class ModsMenu : Menu.Menu
 
     public override void ShutDownProcess()
     {
+        headerSprite.RemoveFromContainer();
+        headerShadowSprite.RemoveFromContainer();
+
         if (shutDownMusic) {
             ModsMenuMusic.ShutDown(manager.musicPlayer);
         }
