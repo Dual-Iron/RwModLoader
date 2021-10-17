@@ -3,21 +3,30 @@ using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using Realm.Jobs;
 using Realm.Logging;
-using System.Linq;
 using UnityEngine;
 
 namespace Realm.Gui;
 
 public static class GuiHandler
 {
+    private static bool RedUnlocked()
+    {
+        try {
+            return SlugcatSelectMenu.CheckUnlockRed() || RealmUtils.RainWorld!.progression.miscProgressionData.redUnlocked;
+        } catch (Exception e) {
+            Program.Logger.LogError(e);
+            return false;
+        }
+    }
+
     public static MenuScene.SceneID TimedScene => DateTime.Now.DayOfWeek switch {
-        DayOfWeek.Sunday => MenuScene.SceneID.Intro_1_Tree,
+        DayOfWeek.Sunday => RedUnlocked() ? MenuScene.SceneID.Outro_4_Tree : MenuScene.SceneID.Intro_1_Tree,
         DayOfWeek.Monday => MenuScene.SceneID.Intro_2_Branch,
         DayOfWeek.Tuesday => MenuScene.SceneID.Intro_3_In_Tree,
         DayOfWeek.Wednesday => MenuScene.SceneID.Intro_4_Walking,
-        DayOfWeek.Thursday => SlugcatSelectMenu.CheckUnlockRed() ? MenuScene.SceneID.Void_Slugcat_Upright : MenuScene.SceneID.Intro_5_Hunting,
-        DayOfWeek.Friday => SlugcatSelectMenu.CheckUnlockRed() ? MenuScene.SceneID.Void_Slugcat_Down : MenuScene.SceneID.Intro_6_7_Rain_Drop,
-        _ => SlugcatSelectMenu.CheckUnlockRed() ? MenuScene.SceneID.Outro_2_Up_Swim : MenuScene.SceneID.SleepScreen
+        DayOfWeek.Thursday => RedUnlocked() ? MenuScene.SceneID.Void_Slugcat_Upright : MenuScene.SceneID.Intro_5_Hunting,
+        DayOfWeek.Friday => RedUnlocked() ? MenuScene.SceneID.Void_Slugcat_Down : MenuScene.SceneID.Intro_6_7_Rain_Drop,
+        _ => RedUnlocked() ? MenuScene.SceneID.Outro_2_Up_Swim : MenuScene.SceneID.SleepScreen
     };
 
     public static string TimedSong => DateTime.Now.Hour switch {

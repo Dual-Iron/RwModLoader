@@ -1,7 +1,8 @@
 ﻿using Menu;
+using Realm.Assets;
 using Realm.Jobs;
 using Realm.Logging;
-using Realm.ModLoading;
+using UnityEngine;
 
 namespace Realm.Gui;
 
@@ -26,14 +27,14 @@ public sealed class ModsMenu : Menu.Menu
         }));
 
         // Buttons
-        Page.subObjects.Add(nextButton = new BigArrowButton(this, Page, "", new(1116f, 668f), 1));
+        //Page.subObjects.Add(nextButton = new BigArrowButton(this, Page, "", new(1116f, 668f), 1));
         Page.subObjects.Add(cancelButton = new SimpleButton(this, Page, "CANCEL", "", new(200, 50), new(110, 30)));
         Page.subObjects.Add(saveButton = new SimpleButton(this, Page, "SAVE & EXIT", "", new(360, 50), new(110, 30)));
         Page.subObjects.Add(refresh = new SimpleButton(this, Page, "REFRESH", "", new(200, 200), new(110, 30)));
         Page.subObjects.Add(disableAll = new SimpleButton(this, Page, "DISABLE ALL", "", new(200, 250), new(110, 30)));
         Page.subObjects.Add(enableAll = new SimpleButton(this, Page, "ENABLE ALL", "", new(200, 300), new(110, 30)));
 
-        modListing = new(Page, pos: new(650, 50), elementSize: new(ModPanel.Width, ModPanel.Height), elementsPerScreen: 16, edgePadding: 5);
+        modListing = new(Page, pos: new(650, 50), elementSize: new(ModPanel.Width, ModPanel.Height), elementsPerScreen: 15, edgePadding: 5);
 
         State.Instance.CurrentRefreshCache.Refresh(new MessagingProgressable());
 
@@ -51,6 +52,17 @@ public sealed class ModsMenu : Menu.Menu
         );
 
         ModsMenuMusic.Start(manager.musicPlayer);
+
+        const float headerX = 682.99f;
+        const float headerY = 680.01f;
+
+        container.AddChild(headerShadowSprite = Asset.GetSpriteFromRes("ASSETS.MODS.SHADOW"));
+        container.AddChild(headerSprite = Asset.GetSpriteFromRes("ASSETS.MODS"));
+
+        headerSprite.x = headerShadowSprite.x = headerX;
+        headerSprite.y = headerShadowSprite.y = headerY;
+
+        headerSprite.shader = manager.rainWorld.Shaders["MenuText"];
     }
 
     private readonly SimpleButton cancelButton;
@@ -62,7 +74,10 @@ public sealed class ModsMenu : Menu.Menu
 
     private readonly MenuContainer progDisplayContainer;
     private readonly LoggingProgressable performingProgress = new();
-    private readonly BigArrowButton nextButton;
+    private readonly BigArrowButton? nextButton;
+
+    private readonly FSprite headerSprite;
+    private readonly FSprite headerShadowSprite;
 
     private Page Page => pages[0];
 
@@ -180,7 +195,7 @@ public sealed class ModsMenu : Menu.Menu
         }
 
         if (selectedObject == cancelButton) return "Return to main menu";
-        if (selectedObject == saveButton) return "Return to main menu, save changes, and reload mods";
+        if (selectedObject == saveButton) return "Save changes, reload mods, and return to main menu";
         if (selectedObject == enableAll) return "Enable all mods";
         if (selectedObject == disableAll) return "Disable all mods";
         if (selectedObject == refresh) return "Refresh mods";

@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-namespace Realm.ModLoading;
+﻿namespace Realm.ModLoading;
 
 public sealed class Preferences
 {

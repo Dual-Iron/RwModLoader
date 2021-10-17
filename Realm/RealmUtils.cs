@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-namespace Realm;
+﻿namespace Realm;
 
 internal static class RealmUtils
 {

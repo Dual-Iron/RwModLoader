@@ -1,6 +1,5 @@
 ﻿using Realm.AssemblyLoading;
 using Realm.Logging;
-using System.Linq;
 
 namespace Realm.ModLoading;
 

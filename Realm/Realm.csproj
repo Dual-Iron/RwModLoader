@@ -26,9 +26,18 @@
     <Reference Include="Assembly-CSharp">
       <HintPath>$(SteamPath)RainWorld_Data\Managed\Assembly-CSharp-refstub.dll</HintPath>
     </Reference>
+    
     <EmbeddedResource Include="..\VirtualEnums\bin\Debug\net35\EnumExtender.dll">
       <Visible>false</Visible>
       <LogicalName>ASMS.EnumExtender</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Assets\header-MODS.png">
+      <Visible>false</Visible>
+      <LogicalName>ASSETS.MODS</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Assets\header-MODS-shadow.png">
+      <Visible>false</Visible>
+      <LogicalName>ASSETS.MODS.SHADOW</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
   

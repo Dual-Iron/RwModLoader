@@ -1,10 +1,8 @@
 ﻿using BepInEx;
 using Mono.Cecil;
-using Partiality.Modloader;
 using Realm.Logging;
 using Realm.ModLoading;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 
 namespace Realm.AssemblyLoading;
 
