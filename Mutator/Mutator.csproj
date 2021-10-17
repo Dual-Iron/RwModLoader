@@ -8,8 +8,12 @@
     <WarningsAsErrors>nullable</WarningsAsErrors>
     <AlsoPublish>true</AlsoPublish>
     <DefineConstants>IGNORE_COMPLIANCE</DefineConstants> <!--IGNORE_COMPLIANCE-->
+    
     <PublishSingleFile>true</PublishSingleFile>
     <PublishReadyToRun>true</PublishReadyToRun>
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>link</TrimMode>
+    <TrimmerDefaultAction>link</TrimmerDefaultAction>
   </PropertyGroup>
 
   <ItemGroup>
