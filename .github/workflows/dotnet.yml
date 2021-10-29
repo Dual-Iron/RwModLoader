@@ -24,8 +24,8 @@ jobs:
       run: dotnet build VirtualEnums -c Release --no-restore
     - name: Build Realm
       run: dotnet build Realm -c Release --no-restore
-    - name: Build and publish Mutator
-      run: dotnet publish Mutator -c Release -f net6.0 -r win-x64 --no-restore --self-contained -p:PublishReadyToRun=true -p:PublishSingleFile=true -p:PublishTrimmed=true -p:TrimMode=link -p:TrimmerDefaultAction=link
+    - name: Build Mutator as self-contained
+      run: dotnet publish Mutator -c Release -f net6.0 -r win-x64 --self-contained -p:PublishReadyToRun=true -p:PublishSingleFile=true -p:PublishTrimmed=true -p:TrimMode=link -p:TrimmerDefaultAction=link
     - uses: actions/upload-artifact@v2
       with:
         name: UserInstaller.dll
