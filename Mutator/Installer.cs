@@ -96,7 +96,7 @@ public static class Installer
     private static void UninstallPartiality()
     {
         Directory.Delete(Path.Combine(RwDir, "RainWorld_Data", "Managed"), true);
-        Directory.Move(Path.Combine(RwDir, "RainWorld_Data", "Managed_backup"), Path.Combine(RwDir, "RainWorld_Data", "Managed"));
+        DirectoryMove(Path.Combine(RwDir, "RainWorld_Data", "Managed_backup"), Path.Combine(RwDir, "RainWorld_Data", "Managed"));
 
         File.Delete(Path.Combine(RwDir, "consoleLog.txt"));
         File.Delete(Path.Combine(RwDir, "exceptionLog.txt"));
@@ -166,7 +166,7 @@ public static class Installer
                     tempDir = Path.GetTempFileName();
                     File.Delete(tempDir);
                     Directory.CreateDirectory(tempDir);
-                    Directory.Move(C(RwDir, "BepInEx", "config"), C(tempDir, "config"));
+                    DirectoryMove(C(RwDir, "BepInEx", "config"), C(tempDir, "config"));
                 }
 
                 Directory.Delete(C(RwDir, "BepInEx"), true);
@@ -179,11 +179,23 @@ public static class Installer
             if (Directory.Exists(C(tempDir, "config"))) {
                 if (Directory.Exists(C(RwDir, "BepInEx", "config")))
                     Directory.Delete(C(C(RwDir, "BepInEx", "config")), true);
-                Directory.Move(C(tempDir, "config"), C(RwDir, "BepInEx", "config"));
+                DirectoryMove(C(tempDir, "config"), C(RwDir, "BepInEx", "config"));
             }
         } finally {
             if (Directory.Exists(tempDir))
                 Directory.Delete(tempDir, true);
         }
+    }
+
+    private static void DirectoryMove(string source, string destination)
+    {
+        Directory.CreateDirectory(destination);
+        foreach (var subdir in Directory.EnumerateDirectories(source, "*", SearchOption.TopDirectoryOnly)) {
+            DirectoryMove(subdir, Path.Combine(destination, Path.GetFileName(subdir)));
+        }
+        foreach (var file in Directory.EnumerateFiles(source, "*", SearchOption.TopDirectoryOnly)) {
+            File.Move(file, Path.Combine(destination, Path.GetFileName(file)));
+        }
+        Directory.Delete(source);
     }
 }
