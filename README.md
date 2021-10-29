@@ -8,7 +8,7 @@ https://user-images.githubusercontent.com/31146412/137647603-6034790d-cfcb-40b0-
 ## Where get?
 To install Realm, go to the [releases](https://github.com/Dual-Iron/RwModLoader/releases/latest) page.
 
-**Do not** use Realm and BlepOutIn (BOI) concurrently. Additionally, while Realm can auto-update itself, it doesn't support AutoUpdate for mods yet. That's coming soon™️.
+**Do not** use Realm and BlepOutIn (BOI) concurrently. Additionally, while Realm can auto-update itself, it doesn't support AutoUpdate for mods yet. That's coming soon™.
 
 ## Resources
 If you need technical support, go [here](.github/SUPPORT.md).
