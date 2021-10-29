@@ -50,12 +50,9 @@ I suggest copy-pasting the examples above into your mod class and editing their 
   
 # Via GitHub
 For a mod to interface with Realm, its homepage on raindb.net must be a GitHub repository, and:
-- The repository **must** contain at least one full release.
-- The latest full release **must** match [this Regular Expression](https://regexr.com/66e7q) at least once in its body.
-- The latest full release **must** match [this Regular Expression](https://regexr.com/66jb1) at least once in its tag name.
-- Every dependency **must** be included as a binary.
-
-Mods that interface with Realm are automatically updated and enjoy one-click downloads in the browser.
+- The repository must contain at least one full release.
+- The latest full release must match [this Regular Expression](https://regexr.com/66e7q) at least once in its body.
+- Every dependency must be included as a binary.
 
 ### Example release
 ```
