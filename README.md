@@ -19,5 +19,6 @@ To see known issues, go to the [issues](https://github.com/Dual-Iron/RwModLoader
 
 ## Credits
 - Dual
-- [BepInEx](https://github.com/BepInEx/BepInEx/tree/v5-lts) and its dependencies, for making this possible.
-- [Rain World](https://rainworldgame.com/) and [its community](https://discord.gg/rainworld), for making this worthwhile.
+- Rain World's cozy little modding community, for supporting the journey
+- [Rain World](https://rainworldgame.com) itself, for making this worthwhile
+- [BepInEx](https://github.com/BepInEx/BepInEx/tree/v5-lts) and its dependencies, for making this possible
