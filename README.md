@@ -1,5 +1,5 @@
-## What get?
-Realm is a modloader for Rain World that lets you reload mods without closing the game. For users, this means slightly less annoying troubleshooting and file management. For developers, this means you can test features in a rapidfire manner.
+﻿## What get?
+Realm is a modloader for Rain World that lets you reload mods without closing the game. For users, this means less troubleshooting. For developers, this means you can test features rapidly.
 
 Right now, Realm only loads mods; there's no in-game browser yet. Autoupdating is not supported yet, but is planned.
 
@@ -9,6 +9,8 @@ https://user-images.githubusercontent.com/31146412/137647603-6034790d-cfcb-40b0-
 
 ## Where get?
 To install Realm, go to the [releases](https://github.com/Dual-Iron/RwModLoader/releases/latest) page.
+
+**Do not** use Realm and BlepOutIn (BOI) concurrently. Additionally, while Realm can auto-update itself, it doesn't support AutoUpdate for mods yet. That's coming soon™️.
 
 ## Resources
 If you need technical support, go [here](.github/SUPPORT.md).
