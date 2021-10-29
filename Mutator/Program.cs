@@ -1,6 +1,5 @@
 ﻿global using static Mutator.InstallerApi;
 using Mutator.IO;
-using Mutator.ModListing;
 using Mutator.Patching;
 using System.Diagnostics;
 
@@ -84,9 +83,7 @@ public static class Program
 
             string arg0 = enumerator.Current;
 
-            if (arg0 == "--raindb")
-                task = RaindbMod.PrintAll();
-            else if (arg0 == "--install")
+            if (arg0 == "--install")
                 task = Task.Run(Installer.Install);
             else if (arg0 == "--uninstall")
                 task = Task.Run(Installer.UninstallBepInEx);
@@ -105,8 +102,6 @@ public static class Program
                     task = Task.Run(() => Installer.Kill(arg1));
                 else if (arg0 == "--patch")
                     task = Task.Run(() => AssemblyPatcher.Patch(arg1));
-                else if (arg0 == "--download")
-                    task = Downloading.Download(arg1);
                 else if (arg0 == "--extract")
                     task = Task.Run(() => Extracting.Extract(arg1));
                 else if (enumerator.MoveNext()) {
@@ -131,14 +126,12 @@ public static class Program
 RwmlMutator v{typeof(Program).Assembly.GetName().Version}
 
 --help                You're here!
---raindb              Lists mods from RainDB.
 --install             Installs Realm.
 --uninstall           Uninstalls Realm.
 --needs-self-update   Prints 'y' if Realm needs an update or 'n' if not.
 --self-update         Updates Realm.
 --extract-all         Extracts the contents of all RWMOD files in the mods folder.
 --patch [path]        Patches the .NET assembly.
---download [repo]     Downloads the most recent version of a RWMOD from a GitHub [repo] if need be.
 --extract [rwmod]     Extracts the contents of the RWMOD.
 --wrap [rwmod] [path] Wraps the DLL or directory specified at [path] into a RWMOD.
 "

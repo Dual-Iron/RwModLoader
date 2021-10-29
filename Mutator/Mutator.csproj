@@ -6,26 +6,17 @@
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <WarningsAsErrors>nullable</WarningsAsErrors>
-    <AlsoPublish>true</AlsoPublish>
-    <DefineConstants>IGNORE_COMPLIANCE</DefineConstants> <!--IGNORE_COMPLIANCE-->
-    
     <PublishSingleFile>true</PublishSingleFile>
-    <PublishReadyToRun>true</PublishReadyToRun>
-    <PublishTrimmed>true</PublishTrimmed>
-    <TrimMode>link</TrimMode>
-    <TrimmerDefaultAction>link</TrimmerDefaultAction>
+    <ImplicitUsings>true</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
     <PackageReference Include="Mono.Cecil" Version="0.11.4" />
+    
     <EmbeddedResource Include="..\RwBep.zip">
       <Visible>false</Visible>
       <LogicalName>RwBep</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition=" '$(BuildingInsideVisualStudio)' == 'true' And '$(AlsoPublish)' == 'true' ">
-    <Exec Command="dotnet publish $(ProjectDir)$(ProjectName).csproj -f net6.0 -r win-x64 --self-contained -o %appdata%\.rw" />
-  </Target>
 </Project>

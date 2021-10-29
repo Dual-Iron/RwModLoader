@@ -1,10 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="../global.targets" />
-  
-  <PropertyGroup>
-    <SteamPath Condition="'$(SteamPath)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Rain World\</SteamPath>
-    <BepPath>$(SteamPath)BepInEx\</BepPath>
-  </PropertyGroup>
 
   <PropertyGroup>
     <TargetFramework>net35</TargetFramework>
@@ -14,20 +9,30 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Using Include="System" />
+    <Using Include="System.IO" />
+    <Using Include="System.Text" />
+    <Using Include="System.Linq" />
+    <Using Include="System.Collections.Generic" />
+    
     <ProjectReference Include="../VirtualEnums/VirtualEnums.csproj" />
-    <Reference Include="$(BepPath)core\BepInEx.dll" />
-    <Reference Include="$(BepPath)core\BepInEx.Preloader.dll" />
-    <Reference Include="$(BepPath)core\Mono.Cecil.dll" />
-    <Reference Include="$(BepPath)core\MonoMod.Utils.dll" />
-    <Reference Include="$(BepPath)core\MonoMod.RuntimeDetour.dll" />
-    <Reference Include="$(BepPath)core\HOOKS-Assembly-CSharp.dll" />
-    <Reference Include="$(BepPath)core\Partiality.dll" />
-    <Reference Include="$(SteamPath)RainWorld_Data\Managed\UnityEngine.dll" />
+    
+    <Reference Include="..\RwBep\BepInEx\core\BepInEx.dll" />
+    <Reference Include="..\RwBep\BepInEx\core\BepInEx.Preloader.dll" />
+    <Reference Include="..\RwBep\BepInEx\core\Mono.Cecil.dll" />
+    <Reference Include="..\RwBep\BepInEx\core\MonoMod.Utils.dll" />
+    <Reference Include="..\RwBep\BepInEx\core\MonoMod.RuntimeDetour.dll" />
+    <Reference Include="..\RwBep\BepInEx\core\HOOKS-Assembly-CSharp.dll" />
+    <Reference Include="..\RwBep\BepInEx\core\Partiality.dll" />
+    
+    <Reference Include="UnityEngine">
+      <HintPath>lib\refstub-UnityEngine.dll</HintPath>
+    </Reference>
     <Reference Include="Assembly-CSharp">
-      <HintPath>$(SteamPath)RainWorld_Data\Managed\Assembly-CSharp-refstub.dll</HintPath>
+      <HintPath>lib\refstub-Assembly-CSharp.dll</HintPath>
     </Reference>
     
-    <EmbeddedResource Include="..\VirtualEnums\bin\Debug\net35\EnumExtender.dll">
+    <EmbeddedResource Include="..\VirtualEnums\bin\Release\net35\EnumExtender.dll">
       <Visible>false</Visible>
       <LogicalName>ASMS.EnumExtender</LogicalName>
     </EmbeddedResource>
@@ -42,6 +47,7 @@
   </ItemGroup>
   
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Copy SourceFiles="$(TargetDir)$(TargetName)$(TargetExt)" DestinationFolder="$(BepPath)\patchers" />
+    <Copy SourceFiles="$(TargetDir)$(TargetName)$(TargetExt)" DestinationFolder="..\RwBep\BepInEx\patchers" />
+    <ZipDirectory SourceDirectory="..\RwBep" DestinationFile="..\RwBep.zip" Overwrite="true" />
   </Target>
 </Project>

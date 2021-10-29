@@ -2,11 +2,6 @@
   <Import Project="../global.targets" />
 
   <PropertyGroup>
-    <SteamPath Condition="'$(SteamPath)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Rain World\</SteamPath>
-    <BepPath>$(SteamPath)BepInEx\</BepPath>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <TargetFramework>net35</TargetFramework>
     <DebugType>none</DebugType>
     <Nullable>enable</Nullable>
@@ -15,6 +10,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="$(BepPath)core\MonoMod.RuntimeDetour.dll" />
+    <Reference Include="..\RwBep\BepInEx\core\MonoMod.RuntimeDetour.dll" />
   </ItemGroup>
 </Project>

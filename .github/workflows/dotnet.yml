@@ -1,22 +1,17 @@
-name: .NET
+name: Build .NET assemblies
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+on: [push, pull_request]
 
 jobs:
   build:
-
+    name: Build .NET assemblies
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
-    - name: Setup .NET
+    - name: Set up .NET
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: '6.0.x'
         include-prerelease: true
     - name: Restore dependencies
       run: dotnet restore
@@ -24,9 +19,11 @@ jobs:
       run: dotnet build VirtualEnums -c Release --no-restore
     - name: Build Realm
       run: dotnet build Realm -c Release --no-restore
-    - name: Build Mutator as self-contained
+    - name: Package Mutator
       run: dotnet publish Mutator -c Release -f net6.0 -r win-x64 --self-contained -p:PublishReadyToRun=true -p:PublishSingleFile=true -p:PublishTrimmed=true -p:TrimMode=link -p:TrimmerDefaultAction=link
+    - name: Create UserInstaller
+      run: mv "Mutator/bin/Release/net6.0/win-x64/publish/Mutator.exe" "UserInstaller.exe"
     - uses: actions/upload-artifact@v2
       with:
-        name: UserInstaller.dll
-        path: Mutator/bin/Release/net6.0/win-x64/publish/Mutator.exe
+        name: installer-artifacts
+        path: UserInstaller.exe

@@ -10,7 +10,7 @@ using Realm.Logging;
 using Realm.AssemblyLoading;
 using BepInEx.Configuration;
 
-namespace Realm; // TODO NEXT: GUI and proper RWML integration support.
+namespace Realm;
 
 public static class Program
 {
