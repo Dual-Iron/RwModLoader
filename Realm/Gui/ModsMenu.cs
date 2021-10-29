@@ -34,7 +34,7 @@ public sealed class ModsMenu : Menu.Menu
         Page.subObjects.Add(disableAll = new SimpleButton(this, Page, "DISABLE ALL", "", new(200, 250), new(110, 30)));
         Page.subObjects.Add(enableAll = new SimpleButton(this, Page, "ENABLE ALL", "", new(200, 300), new(110, 30)));
 
-        modListing = new(Page, pos: new(650, 50), elementSize: new(ModPanel.Width, ModPanel.Height), elementsPerScreen: 15, edgePadding: 5);
+        modListing = new(Page, pos: new(1366 - ModPanel.Width - 200, 50), elementSize: new(ModPanel.Width, ModPanel.Height), elementsPerScreen: 15, edgePadding: 5);
 
         State.Instance.CurrentRefreshCache.Refresh(new MessagingProgressable());
 
@@ -53,8 +53,9 @@ public sealed class ModsMenu : Menu.Menu
 
         ModsMenuMusic.Start(manager.musicPlayer);
 
-        const float headerX = 682.99f;
-        const float headerY = 680.01f;
+        // Offset by tiny amount so it looks good
+        float headerX = manager.rainWorld.options.ScreenSize.x / 2 - 0.01f; // 682.99
+        float headerY = 680.01f;
 
         container.AddChild(headerShadowSprite = Asset.GetSpriteFromRes("ASSETS.MODS.SHADOW"));
         container.AddChild(headerSprite = Asset.GetSpriteFromRes("ASSETS.MODS"));
