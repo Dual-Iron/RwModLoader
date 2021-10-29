@@ -150,7 +150,7 @@ public static partial class AssemblyPatcher
                     }
                 }
 
-                AccessViolationPrevention.AddUnverifiableCodeAttribute(module);
+                AccessViolationPrevention.AddUnverifiableCodeAttr(module);
             }
         } finally {
             if (hooksAsm != null) {
@@ -159,7 +159,7 @@ public static partial class AssemblyPatcher
             }
         }
 
-        AccessViolationPrevention.IgnoreAccessChecksAndSkipVerification(asm);
+        AccessViolationPrevention.SkipVerification(asm);
 
         modTypes = modTypesList.ToArray();
     }
