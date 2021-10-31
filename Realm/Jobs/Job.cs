@@ -2,20 +2,13 @@
 
 namespace Realm.Jobs;
 
-public sealed class Job
+sealed class Job
 {
     public static Job Start(Action callback)
     {
         Job ret = new(callback);
         ret.Start();
         return ret;
-    }
-
-    public static void WaitAll(IEnumerable<Job> jobs)
-    {
-        foreach (var job in jobs) {
-            job.Wait();
-        }
     }
 
     private readonly object o = new();

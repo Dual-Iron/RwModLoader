@@ -2,9 +2,9 @@
 using Realm.ModLoading;
 using UnityEngine;
 
-namespace Realm.Gui;
+namespace Realm.Gui.Local;
 
-public sealed class ModPanel : RectangularMenuObject, CheckBox.IOwnCheckBox, IListable, IHoverable
+sealed class ModPanel : RectangularMenuObject, CheckBox.IOwnCheckBox, IListable, IHoverable
 {
     public const float Height = 36;
     public const float Width = 540;

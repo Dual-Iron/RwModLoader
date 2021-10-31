@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Realm.Gui;
 
-public class MenuSprite : RectangularMenuObject
+sealed class MenuSprite : RectangularMenuObject
 {
     public readonly FSprite sprite;
 

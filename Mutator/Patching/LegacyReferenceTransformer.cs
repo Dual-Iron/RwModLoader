@@ -2,7 +2,7 @@
 
 namespace Mutator.Patching;
 
-public sealed class LegacyReferenceTransformer
+sealed class LegacyReferenceTransformer
 {
     struct NameDetails
     {

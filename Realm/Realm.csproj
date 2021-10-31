@@ -47,7 +47,8 @@
   </ItemGroup>
   
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Copy SourceFiles="$(TargetDir)$(TargetName)$(TargetExt)" DestinationFolder="..\RwBep\BepInEx\patchers" />
+    <Copy Condition="Exists('$(RainWorldDir)')" SourceFiles="$(TargetPath)" DestinationFolder="$(RainWorldDir)\BepInEx\patchers" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="..\RwBep\BepInEx\patchers" />
     <ZipDirectory SourceDirectory="..\RwBep" DestinationFile="..\RwBep.zip" Overwrite="true" />
   </Target>
 </Project>

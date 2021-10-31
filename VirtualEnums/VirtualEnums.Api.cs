@@ -156,7 +156,7 @@ public static partial class VirtualEnumApi
         return Convert.ChangeType(originalValue, underlyingType);
     }
 
-    private class VirtualEnumData
+    private sealed class VirtualEnumData
     {
         public long MaxValue = long.MinValue;
         public readonly Map<string, long> EnumValues = new();

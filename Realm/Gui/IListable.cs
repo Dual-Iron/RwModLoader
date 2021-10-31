@@ -2,7 +2,7 @@
 
 namespace Realm.Gui;
 
-public interface IListable
+interface IListable
 {
     bool IsBelow { set; }
     bool BlockInteraction { set; }

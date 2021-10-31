@@ -3,7 +3,7 @@ using Realm.ModLoading;
 
 namespace Realm.AssemblyLoading;
 
-public sealed class ModAssembly
+sealed class ModAssembly
 {
     public ModAssembly(RwmodFile rwmod, int entryIndex, AssemblyDescriptor descriptor, AssemblyDefinition asmDef)
     {

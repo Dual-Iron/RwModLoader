@@ -18,7 +18,7 @@ using System.Security.Permissions;
 
 namespace Realm;
 
-public static class EntryPoint
+static class EntryPoint
 {
     private static List<string> earlyWrappedAsms = new();
     private static bool initialized;
@@ -70,7 +70,7 @@ public static class EntryPoint
 
         // Add `EntryPoint.HookChainLoader()` just before the end of the method
         cursor.Index = cursor.Instrs.Count - 1;
-        cursor.EmitDelegate<Action>(HookChainloader);
+        cursor.EmitDelegate(HookChainloader);
     }
 
     private static void HookChainloader()

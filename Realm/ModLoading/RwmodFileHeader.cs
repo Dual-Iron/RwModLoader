@@ -1,6 +1,6 @@
 ﻿namespace Realm.ModLoading;
 
-public sealed class RwmodFileHeader
+sealed class RwmodFileHeader
 {
     public static IEnumerable<RwmodFileHeader> GetRwmodHeaders()
     {
@@ -18,7 +18,7 @@ public sealed class RwmodFileHeader
     {
         BinaryReader reader = new(input, Encoding.ASCII);
 
-        Flags = (RwmodFlags)reader.ReadByte();
+        Flags = reader.ReadByte();
         ModVersion = new(reader.ReadByte(), reader.ReadByte(), reader.ReadByte());
         EntryCount = reader.ReadUInt16();
         Name = reader.ReadString();
@@ -28,7 +28,7 @@ public sealed class RwmodFileHeader
         FilePath = filePath;
     }
 
-    public readonly RwmodFlags Flags;
+    public readonly byte Flags;
     public readonly RwmodVersion ModVersion;
     public readonly ushort EntryCount;
     public readonly string Name;

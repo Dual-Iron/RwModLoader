@@ -6,7 +6,7 @@ namespace VirtualEnums;
 /// <summary>
 /// A bijective dictionary.
 /// </summary>
-public class Map<T1, T2>
+public sealed class Map<T1, T2>
 {
     private readonly Dictionary<T1, T2> forward = new();
     private readonly Dictionary<T2, T1> reverse = new();
@@ -49,7 +49,7 @@ public class Map<T1, T2>
     /// <summary>
     /// Acts as an indexer for a dict.
     /// </summary>
-    public class Indexer<T3, T4> : IEnumerable<KeyValuePair<T3, T4>>
+    public sealed class Indexer<T3, T4> : IEnumerable<KeyValuePair<T3, T4>>
     {
         private readonly Dictionary<T3, T4> dictionary;
 

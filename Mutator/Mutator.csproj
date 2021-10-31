@@ -19,4 +19,8 @@
       <LogicalName>RwBep</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition=" '$(BuildingInsideVisualStudio)' == 'true' And Exists('$(AppData)') ">
+    <Exec Command="dotnet publish -c Release -f net6.0 -r win-x64 --no-self-contained -o &quot;%appdata%\.rw&quot;" />
+  </Target>
 </Project>

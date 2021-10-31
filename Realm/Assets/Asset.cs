@@ -6,7 +6,7 @@ namespace Realm.Assets;
 // Credit goes to Henpemaz for this great snippet of code!
 // https://gist.github.com/Dual-Iron/2481ac0528f3eedfa827ab7cfbef02ec
 
-public static class Asset
+static class Asset
 {
     /// <summary>
     /// Gets a sprite from this assembly's embedded resources.

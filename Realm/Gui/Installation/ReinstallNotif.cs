@@ -1,15 +1,15 @@
 ﻿using Menu;
 
-namespace Realm.Gui;
+namespace Realm.Gui.Installation;
 
-public static class ReinstallNotif
+static class ReinstallNotif
 {
     public static void ApplyHooks()
     {
-        On.Menu.MainMenu.ctor += MainMenu_ctor;
+        On.Menu.MainMenu.ctor += AddReinstallLabel;
     }
 
-    private static void MainMenu_ctor(On.Menu.MainMenu.orig_ctor orig, MainMenu self, ProcessManager manager, bool showRegionSpecificBkg)
+    private static void AddReinstallLabel(On.Menu.MainMenu.orig_ctor orig, MainMenu self, ProcessManager manager, bool showRegionSpecificBkg)
     {
         orig(self, manager, showRegionSpecificBkg);
 

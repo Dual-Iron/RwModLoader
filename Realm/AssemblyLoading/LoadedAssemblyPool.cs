@@ -7,7 +7,7 @@ using MonoMod.RuntimeDetour;
 
 namespace Realm.AssemblyLoading;
 
-public sealed class LoadedAssemblyPool
+sealed class LoadedAssemblyPool
 {
     private static readonly DetourModManager monomod = new();
 

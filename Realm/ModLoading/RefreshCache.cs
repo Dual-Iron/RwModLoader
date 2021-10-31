@@ -1,9 +1,8 @@
 ﻿using Realm.Logging;
-using Realm.ModLoading;
 
-namespace Realm;
+namespace Realm.ModLoading;
 
-public sealed class RefreshCache
+sealed class RefreshCache
 {
     private List<RwmodFileHeader> headers;
 

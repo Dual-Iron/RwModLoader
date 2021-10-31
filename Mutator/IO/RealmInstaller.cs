@@ -1,0 +1,193 @@
+﻿using System.Diagnostics;
+using System.IO.Compression;
+
+namespace Mutator.IO;
+
+static class RealmInstaller
+{
+    public static ExitStatus UserInstall()
+    {
+        if (ExtIO.RwDir.MatchFailure(out var rwDir, out var err)) {
+            return err;
+        }
+
+        var procs = Process.GetProcessesByName("RainWorld");
+        if (procs.Length > 0) {
+            Console.WriteLine("Waiting for Rain World to close...");
+            foreach (var proc in procs) {
+                proc.Kill(true);
+
+                if (!proc.WaitForExit(3000)) {
+                    return ExitStatus.IOError("Close Rain World before continuing.");
+                }
+
+                proc.Dispose();
+            }
+        }
+
+        Console.WriteLine("Installing Realm...");
+
+        try {
+            DoInstall(rwDir);
+        } catch (Exception e) {
+            return ExitStatus.IOError(e.Message);
+        }
+
+        Console.Write("Installed Realm. Press ENTER to start Rain World, or press any other key to exit. ");
+
+        if (Console.ReadKey(true).Key == ConsoleKey.Enter) {
+            Process.Start(new ProcessStartInfo {
+                FileName = "steam://run/312520",
+                UseShellExecute = true,
+                Verb = "open"
+            })?.Dispose();
+        }
+
+        return ExitStatus.Success;
+    }
+
+    public static ExitStatus Uninstall()
+    {
+        if (ExtIO.RwDir.MatchFailure(out var rwDir, out var err)) {
+            return err;
+        }
+
+        try {
+            File.Delete(Path.Combine(rwDir, "winhttp.dll"));
+        } catch (Exception e) {
+            return ExitStatus.IOError(e.Message);
+        }
+
+        return ExitStatus.Success;
+    }
+
+    public static ExitStatus Install()
+    {
+        if (ExtIO.RwDir.MatchFailure(out var rwDir, out var err)) {
+            return err;
+        }
+
+        try {
+            DoInstall(rwDir);
+        } catch (Exception e) {
+            return ExitStatus.IOError(e.ToString());
+        }
+
+        return ExitStatus.Success;
+    }
+
+    private static void DoInstall(string rwDir)
+    {
+        InstallSelf();
+
+        if (IsPartialityInstalled(rwDir)) {
+            UninstallPartiality(rwDir);
+        }
+
+        InstallBepInEx(rwDir);
+    }
+
+    private static void InstallSelf()
+    {
+        string processPath = Environment.ProcessPath ?? throw new("No process path.");
+        string copyToDirectory = ExtIO.UserPath;
+        string destFileName = Path.Combine(copyToDirectory, "Mutator.exe");
+
+        if (processPath != destFileName) {
+            // Make sure we're not installing an older version
+            if (File.Exists(destFileName)) {
+                var versionInfo = FileVersionInfo.GetVersionInfo(destFileName);
+                var version = new Version(versionInfo.ProductMajorPart, versionInfo.ProductMinorPart, versionInfo.ProductBuildPart, versionInfo.ProductPrivatePart);
+                if (version >= typeof(Program).Assembly.GetName().Version) {
+                    return;
+                }
+            }
+
+            File.Copy(processPath, destFileName, true);
+
+            if (File.Exists("path.txt"))
+                File.Copy("path.txt", Path.Combine(copyToDirectory, "path.txt"), true);
+        }
+    }
+
+    private static bool IsPartialityInstalled(string rwDir)
+    {
+        if (Directory.Exists(Path.Combine(rwDir, "RainWorld_Data", "Managed_backup"))) {
+            return true;
+        }
+
+        string modsDir = Path.Combine(rwDir, "Mods");
+        if (!Directory.Exists(modsDir)) {
+            return false;
+        }
+
+        foreach (var item in Directory.GetFiles(modsDir)) {
+            if (Path.GetExtension(item) is ".modHash" or ".modMeta") {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static void UninstallPartiality(string rwDir)
+    {
+        Directory.Delete(Path.Combine(rwDir, "RainWorld_Data", "Managed"), true);
+        MoveDirs(Path.Combine(rwDir, "RainWorld_Data", "Managed_backup"), Path.Combine(rwDir, "RainWorld_Data", "Managed"));
+
+        File.Delete(Path.Combine(rwDir, "consoleLog.txt"));
+        File.Delete(Path.Combine(rwDir, "exceptionLog.txt"));
+
+        if (Directory.Exists(Path.Combine(rwDir, "PartialityHashes")))
+            Directory.Delete(Path.Combine(rwDir, "PartialityHashes"), true);
+
+        if (Directory.Exists(Path.Combine(rwDir, "ModDependencies")))
+            Directory.Delete(Path.Combine(rwDir, "ModDependencies"), true);
+
+        if (Directory.Exists(Path.Combine(rwDir, "Mods")))
+            foreach (var item in Directory.GetFiles(Path.Combine(rwDir, "Mods"))) {
+                if (Path.GetExtension(item) is ".modHash" or ".modMeta") {
+                    File.Delete(item);
+                }
+            }
+    }
+
+    private static void InstallBepInEx(string rwDir)
+    {
+        static string D(params string[] paths) => Directory.CreateDirectory(Path.Combine(paths)).FullName;
+
+        string tempDir = ExtIO.GetTempDir().FullName;
+
+        using var clearTempDir = new Disposable(() => {
+            if (Directory.Exists(tempDir)) {
+                Directory.Delete(tempDir, true);
+            }
+        });
+
+        using (Stream rwbep = typeof(RealmInstaller).Assembly.GetManifestResourceStream("RwBep") ?? throw new("No stream!"))
+        using (ZipArchive archive = new(rwbep, ZipArchiveMode.Read, true, ExtIO.Enc))
+            archive.ExtractToDirectory(tempDir);
+
+        // Move BepInEx/config dir only on fresh installs. This prevents overwriting people's configs.
+        var freshInstall = !File.Exists(Path.Combine(rwDir, "BepInEx", "patchers", "Realm.dll"));
+        if (freshInstall) {
+            MoveDirs(D(tempDir, "BepInEx", "config"), D(rwDir, "BepInEx", "config"));
+        } else {
+            Directory.Delete(D(tempDir, "BepInEx", "config"), true);
+        }
+
+        MoveDirs(tempDir, rwDir);
+    }
+
+    private static void MoveDirs(string source, string destination)
+    {
+        Directory.CreateDirectory(destination);
+        foreach (var subdir in Directory.EnumerateDirectories(source, "*", SearchOption.TopDirectoryOnly)) {
+            MoveDirs(subdir, Path.Combine(destination, Path.GetFileName(subdir)));
+        }
+        foreach (var file in Directory.EnumerateFiles(source, "*", SearchOption.TopDirectoryOnly)) {
+            File.Move(file, Path.Combine(destination, Path.GetFileName(file)), true);
+        }
+        Directory.Delete(source);
+    }
+}

@@ -1,6 +1,6 @@
 ﻿namespace Realm.ModLoading;
 
-public sealed class Preferences
+sealed class Preferences
 {
     private static string PreferencesPath => Path.Combine(RealmPaths.UserFolder.FullName, "prefs.json");
 

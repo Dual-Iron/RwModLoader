@@ -1,59 +1,103 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
+using Mutator.IO;
 
 namespace Mutator.Patching;
 
-public static partial class AssemblyPatcher
+static class Patcher
 {
+    private sealed class RwMetadataResolver : MetadataResolver
+    {
+        public RwMetadataResolver(IAssemblyResolver assemblyResolver) : base(assemblyResolver)
+        {
+        }
+
+        public override TypeDefinition? Resolve(TypeReference type)
+        {
+            var ret = base.Resolve(type);
+
+            // Try to resolve mscorlib references with System.Core as well.
+            if (ret == null) {
+                if (type.Scope.Name == "mscorlib") {
+                    type.Scope.Name = "System.Core";
+
+                    ret = base.Resolve(type);
+
+                    // If it fails, reset the scopename to avoid unintended side-effects.
+                    if (ret == null)
+                        type.Scope.Name = "mscorlib";
+                } else if (type.Scope.Name == "System.Core") {
+                    type.Scope.Name = "mscorlib";
+
+                    ret = base.Resolve(type);
+
+                    // If it fails, reset the scopename to avoid unintended side-effects.
+                    if (ret == null)
+                        type.Scope.Name = "System.Core";
+                }
+            }
+
+            return ret;
+        }
+    }
+
     private const ushort version = 1;
 
-    private static AssemblyDefinition GetBepAssemblyDef(string filePath)
+    private static AssemblyDefinition GetBepAssemblyDef(string rwDir, string filePath)
     {
         DefaultAssemblyResolver resolver = new();
 
         resolver.AddSearchDirectory(Path.GetDirectoryName(filePath));
-        resolver.AddSearchDirectory(Path.Combine(RwDir, "RainWorld_Data", "Managed"));
-        resolver.AddSearchDirectory(Path.Combine(RwDir, "BepInEx", "core"));
-        resolver.AddSearchDirectory(Path.Combine(RwDir, "BepInEx", "plugins"));
+        resolver.AddSearchDirectory(Path.Combine(rwDir, "RainWorld_Data", "Managed"));
+        resolver.AddSearchDirectory(Path.Combine(rwDir, "BepInEx", "core"));
+        resolver.AddSearchDirectory(Path.Combine(rwDir, "BepInEx", "plugins"));
 
         return AssemblyDefinition.ReadAssembly(filePath, new() { AssemblyResolver = resolver, ReadWrite = true });
     }
 
-    public static void Patch(string filePath)
+    public static ExitStatus Patch(string filePath)
     {
         if (!File.Exists(filePath)) {
-            throw ErrFileNotFound(filePath);
+            return ExitStatus.FileNotFound(filePath);
+        }
+
+        if (ExtIO.RwDir.MatchFailure(out var rwDir, out var err)) {
+            return err;
         }
 
         try {
             System.Reflection.AssemblyName.GetAssemblyName(filePath);
         } catch {
-            return;
+            return ExitStatus.Success;
         }
 
-        using var asm = GetBepAssemblyDef(filePath);
+        using var asm = GetBepAssemblyDef(rwDir, filePath);
         using var resolver = asm.MainModule.AssemblyResolver; // Ensure this gets disposed.
 
         if (IsPatched(asm)) {
-            return;
+            return ExitStatus.Success;
         }
 
         // Patch the fresh assembly.
-        DoPatch(asm, out var modType);
+        if (DoPatch(rwDir, asm).MatchFailure(out var modTypes, out var err2)) {
+            return err2;
+        }
 
         // Mark that it's been patched.
-        AddRwmodAttribute(asm, modType);
+        AddRwmodAttribute(asm, modTypes);
 
-        File.Copy(filePath, Path.Combine(PatchBackupsFolder.FullName, Path.GetFileName(filePath)), true);
+        File.Copy(filePath, Path.Combine(ExtIO.BackupsFolder.FullName, Path.GetFileName(filePath)), true);
 
         asm.Write();
+
+        return ExitStatus.Success;
     }
 
     private static bool IsPatched(AssemblyDefinition asm)
     {
         return asm.CustomAttributes.Any(attr =>
-                attr.AttributeType.Name == "RwmodAttribute" && 
+                attr.AttributeType.Name == "RwmodAttribute" &&
                 attr.ConstructorArguments.Count == 2 &&
                 attr.ConstructorArguments[0].Value is ushort v && v == version &&
                 attr.ConstructorArguments[1].Value is CustomAttributeArgument[]
@@ -76,7 +120,7 @@ public static partial class AssemblyPatcher
 
         TypeReference attrReference = asm.MainModule.ImportTypeFromCoreLib("System", "Attribute");
 
-        // namespace Realm { public sealed class RwmodAttribute : System.Attribute {
+        // namespace Realm { sealed class RwmodAttribute : System.Attribute {
         rwmodAttributeType = new(
             asm.Name.Name + "+Realm", "RwmodAttribute",
             TypeAttributes.NotPublic | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit | TypeAttributes.AnsiClass,
@@ -122,30 +166,30 @@ public static partial class AssemblyPatcher
         asm.CustomAttributes.Add(assemblyAttribute);
     }
 
-    private static void DoPatch(AssemblyDefinition asm, out IList<string> modTypes)
+    private static Result<IList<string>, ExitStatus> DoPatch(string rwDir, AssemblyDefinition asm)
     {
-        string hooksAsmPath = Path.Combine(RwDir, "BepInEx", "core", "HOOKS-Assembly-CSharp.dll");
+        string hooksAsmPath = Path.Combine(rwDir, "BepInEx", "core", "HOOKS-Assembly-CSharp.dll");
 
         if (!File.Exists(hooksAsmPath)) {
-            throw ErrFileNotFound(hooksAsmPath);
+            return ExitStatus.FileNotFound(hooksAsmPath);
         }
 
         LegacyReferenceTransformer? typeScanner = null;
         AssemblyDefinition? hooksAsm = null;
 
-        List<string> modTypesList = new();
+        List<string> modTypes = new();
 
         try {
             foreach (var module in asm.Modules) {
                 if (module.AssemblyReferences.Any(asmRef => asmRef.Name == "HOOKS-Assembly-CSharp")) {
-                    typeScanner ??= new(hooksAsm = GetBepAssemblyDef(hooksAsmPath));
+                    typeScanner ??= new(hooksAsm = GetBepAssemblyDef(rwDir, hooksAsmPath));
                     typeScanner.Transform(module);
                 }
 
                 foreach (TypeDefinition type in module.Types) {
                     if (!type.IsInterface && !type.IsAbstract && !type.IsValueType) {
                         if (type.SeekTree(t => t.FullName is "BepInEx.BaseUnityPlugin" or "Partiality.Modloader.PartialityMod", out var targetType)) {
-                            modTypesList.Add(type.FullName);
+                            modTypes.Add(type.FullName);
                         }
                     }
                 }
@@ -161,6 +205,6 @@ public static partial class AssemblyPatcher
 
         AccessViolationPrevention.SkipVerification(asm);
 
-        modTypes = modTypesList.ToArray();
+        return modTypes;
     }
 }

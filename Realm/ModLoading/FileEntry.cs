@@ -1,6 +1,6 @@
 ﻿namespace Realm.ModLoading;
 
-public sealed class FileEntry
+sealed class FileEntry
 {
     public static FileEntry[] GetFileEntries(RwmodFileHeader header, Stream rwmodStream)
     {

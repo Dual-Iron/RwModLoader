@@ -1,6 +1,6 @@
 ﻿namespace Realm.ModLoading;
 
-public struct ModDependencyCollection
+struct ModDependencyCollection
 {
     private readonly string? dependencies;
 

@@ -1,9 +1,9 @@
 ﻿using Mono.Cecil;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Mutator;
+namespace Mutator.Patching;
 
-public static class Extensions
+static class ExtPatching
 {
     public static TypeReference ImportTypeFromCoreLib(this ModuleDefinition module, string ns, string name)
     {
@@ -60,11 +60,5 @@ public static class Extensions
 
         accepted = null;
         return false;
-    }
-
-    public static string ProofDirectory(this string self)
-    {
-        Directory.CreateDirectory(Path.GetDirectoryName(self)!);
-        return self;
     }
 }

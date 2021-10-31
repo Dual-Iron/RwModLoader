@@ -1,140 +1,56 @@
-﻿global using static Mutator.InstallerApi;
+﻿using Mutator;
 using Mutator.IO;
 using Mutator.Patching;
-using System.Diagnostics;
+using Mutator.Web;
 
-namespace Mutator;
+if (args.Length == 0) {
+    if (Path.GetFileName(Environment.ProcessPath) != "Mutator.exe") {
+        var result = RealmInstaller.UserInstall();
+        if (!result.Successful) {
+            Console.Error.WriteLine(result);
+            return (int)result.Code;
+        }
+    }
+    return 0;
+}
 
-public static class Program
+using var webClient = new Disposable(ExtWeb.DisposeClient);
+using var argEnumerator = ((IEnumerable<string>)args).GetEnumerator();
+
+while (argEnumerator.MoveNext()) {
+    ExitStatus status = argEnumerator.Current switch {
+        "-?" => PrintHelp(),
+        "-i" => RealmInstaller.Install(),
+        "-u" => RealmInstaller.Uninstall(),
+        "-q" => SelfUpdater.QuerySelfUpdate().Result,
+        "-p" => argEnumerator.MoveNext() ? Patcher.Patch(argEnumerator.Current) : ExitStatus.ExpectedArg,
+        "-w" => argEnumerator.MoveNext() ? Wrapper.Wrap(argEnumerator.Current) : ExitStatus.ExpectedArg,
+        "-e" => argEnumerator.MoveNext() ? Extractor.Extract(argEnumerator.Current) : ExitStatus.ExpectedArg,
+        _ => ExitStatus.UnknownArg
+    };
+
+    if (!status.Successful) {
+        Console.Error.WriteLine(status);
+
+        if (status.Code is ExitStatus.Codes.UnknownArg or ExitStatus.Codes.ExpectedArg)
+            PrintHelp();
+
+        return (int)status.Code;
+    }
+}
+
+return 0;
+
+static ExitStatus PrintHelp()
 {
-    private static int Main(string[] args)
-    {
-        try {
-            Run(args);
-            return 0;
-        } catch (Exception e) {
-            return (int)HandleError(e);
-        } finally {
-            Dispose();
-        }
-    }
-
-    private static ExitCodes HandleError(Exception e)
-    {
-        if (e is AggregateException ae) {
-            ExitCodes last = ExitCodes.InternalError;
-            foreach (var innerE in ae.Flatten().InnerExceptions) {
-                last = HandleError(innerE);
-            }
-            return last;
-        }
-
-        if (e is HttpRequestException hre) {
-            Console.Error.WriteLine($"HTTP request error {(int?)hre.StatusCode}: {hre.Message}");
-            return ExitCodes.ConnectionFailed;
-        }
-
-        if (e is IOException) {
-            Console.Error.WriteLine(e.Message);
-            return ExitCodes.IOError;
-        }
-
-        if (e is BadExecutionException bee) {
-            Console.Error.WriteLine(e.Message);
-            return bee.ExitCode;
-        }
-
-        Console.WriteLine("The mutator encountered an internal error. " + e.Message);
-        Console.Error.WriteLine(e);
-        return ExitCodes.InternalError;
-    }
-
-    private static void Run(string[] args)
-    {
-        if (args.Length == 0 && Path.GetFileName(Environment.ProcessPath) != "Mutator.exe") {
-            Console.WriteLine("Working...");
-
-            // Eagerly load RwDir to ensure it's valid before installing
-            _ = RwDir;
-
-            Installer.Install();
-
-            Console.Write("Installed the newest release of Realm. Press ENTER to start Rain World or ESC to exit. ");
-
-            if (Console.ReadKey(true).Key == ConsoleKey.Enter) {
-                using var p = Process.Start(new ProcessStartInfo {
-                    FileName = "steam://run/312520",
-                    UseShellExecute = true,
-                    Verb = "open"
-                });
-            }
-            return;
-        }
-
-        if (args.Length == 1 && (args[0] == "?" || args[0] == "--help" || args[0] == "help")) {
-            ListHelp();
-            return;
-        }
-
-        using IEnumerator<string> enumerator = ((IReadOnlyList<string>)args).GetEnumerator();
-
-        while (enumerator.MoveNext()) {
-            Task? task = null;
-
-            string arg0 = enumerator.Current;
-
-            if (arg0 == "--install")
-                task = Task.Run(Installer.Install);
-            else if (arg0 == "--uninstall")
-                task = Task.Run(Installer.UninstallBepInEx);
-            else if (arg0 == "--needs-self-update")
-                task = Installer.NeedsSelfUpdate();
-            else if (arg0 == "--self-update")
-                task = Installer.SelfUpdate(enumerator);
-            else if (arg0 == "--extract-all")
-                task = Extracting.ExtractAll();
-            else if (arg0 == "--runrw")
-                task = Task.Run(() => Installer.RunRw());
-            else if (enumerator.MoveNext()) {
-                string arg1 = enumerator.Current;
-
-                if (arg0 == "--kill")
-                    task = Task.Run(() => Installer.Kill(arg1));
-                else if (arg0 == "--patch")
-                    task = Task.Run(() => AssemblyPatcher.Patch(arg1));
-                else if (arg0 == "--extract")
-                    task = Task.Run(() => Extracting.Extract(arg1));
-                else if (enumerator.MoveNext()) {
-                    string arg2 = enumerator.Current;
-
-                    if (arg0 == "--wrap")
-                        task = Wrapper.Wrap(arg1, arg2);
-                }
-            }
-
-            if (task == null) {
-                throw Err(ExitCodes.InvalidArgs, $"Unknown command '{arg0}' with those parameters. Use '--help' for a list of commands.");
-            }
-
-            task.Wait();
-        }
-    }
-
-    private static void ListHelp()
-    {
-        Console.WriteLine($@"
-RwmlMutator v{typeof(Program).Assembly.GetName().Version}
-
---help                You're here!
---install             Installs Realm.
---uninstall           Uninstalls Realm.
---needs-self-update   Prints 'y' if Realm needs an update or 'n' if not.
---self-update         Updates Realm.
---extract-all         Extracts the contents of all RWMOD files in the mods folder.
---patch [path]        Patches the .NET assembly.
---extract [rwmod]     Extracts the contents of the RWMOD.
---wrap [rwmod] [path] Wraps the DLL or directory specified at [path] into a RWMOD.
-"
-);
-    }
+    Console.WriteLine($@"Mutator v{typeof(ExitStatus).Assembly.GetName().Version}
+-?        prints this help screen
+-i        installs Realm
+-u        uninstalls Realm
+-q        queries for a self-update and prints 'y' or 'n'
+-p [path] patches the .dll file at [path]
+-w [path] wraps the file or directory at [path] into a new RWMOD file and prints the RWMOD's name
+-e [path] extracts the contents of the .rwmod file at [path] into a new directory
+");
+    return ExitStatus.Success;
 }

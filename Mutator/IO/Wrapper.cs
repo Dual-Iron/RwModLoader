@@ -3,9 +3,9 @@ using Mutator.Patching;
 
 namespace Mutator.IO;
 
-public class Wrapper
+static class Wrapper
 {
-    public static async Task Wrap(string rwmodName, string filePath)
+    public static ExitStatus Wrap(string filePath)
     {
         List<string> files = new();
 
@@ -14,60 +14,29 @@ public class Wrapper
         else if (Directory.Exists(filePath))
             files.AddRange(Directory.GetFiles(filePath, "*", SearchOption.AllDirectories));
 
-        if (files.Count == 0)
-            throw ErrFileNotFound(filePath);
+        if (files.Count == 0) return ExitStatus.FileNotFound(filePath);
 
-        files.RemoveAll(s => ModBlacklist.Contains(Path.GetFileNameWithoutExtension(s)));
+        files.RemoveAll(s => ExtGlobal.ModBlacklist.Contains(Path.GetFileNameWithoutExtension(s)));
 
-        if (files.Count == 0)
-            return;
+        if (files.Count == 0) return ExitStatus.Success;
 
-        Stream GetRwmodFileStream()
-        {
-            if (string.IsNullOrWhiteSpace(rwmodName)) {
-                RwmodFileHeader header = GetHeader();
+        RwmodFileHeader? header = GetAssemblyHeader(filePath) ?? new(Path.GetFileName(filePath), "");
 
-                Stream inferredRwmod = File.Create(GetModPath(header.Name));
-                header.Write(inferredRwmod);
-                return inferredRwmod;
-            }
+        using Stream rwmodStream = File.Create(ExtIO.GetModPath(header.Name));
 
-            string path = GetModPath(rwmodName);
-
-            if (!File.Exists(path)) {
-                RwmodFileHeader header = GetHeader();
-                header.Name = rwmodName;
-
-                Stream createdRwmod = File.Create(path);
-                header.Write(createdRwmod);
-                return createdRwmod;
-            }
-
-            Stream readRwmod = File.Open(path, FileMode.Open, FileAccess.ReadWrite);
-            RwmodFileHeader.Read(readRwmod);
-            return readRwmod;
-
-            RwmodFileHeader GetHeader()
-            {
-                return files.Count == 1
-                    ? WrapAssembly(filePath) ?? throw Err(ExitCodes.InvalidRwmodType, "Expected a .NET assembly.")
-                    : new(Path.GetFileName(filePath), "") { 
-                        DisplayName = Path.GetFileName(filePath), 
-                        Homepage = "" 
-                    };
-            }
-        }
-
-        using Stream rwmodStream = GetRwmodFileStream();
+        header.Write(rwmodStream);
 
         ushort count = 0;
 
         foreach (string file in files) {
-            AssemblyPatcher.Patch(file);
+            var patchResult = Patcher.Patch(file);
+            if (!patchResult.Successful) {
+                return patchResult;
+            }
 
             using Stream fileStream = File.OpenRead(file);
 
-            await RwmodOperations.WriteRwmodEntry(rwmodStream, new() {
+            RwmodOperations.WriteRwmodEntry(rwmodStream, new() {
                 FileName = Path.GetFileName(file),
                 Contents = fileStream
             });
@@ -77,9 +46,13 @@ public class Wrapper
 
         rwmodStream.Position = RwmodFileHeader.EntryCountByteOffset;
         rwmodStream.Write(BitConverter.GetBytes(count));
+
+        Console.Write(header.Name);
+
+        return ExitStatus.Success;
     }
 
-    private static RwmodFileHeader? WrapAssembly(string filePath)
+    private static RwmodFileHeader? GetAssemblyHeader(string filePath)
     {
         static string GetAuthor(AssemblyDefinition asm)
         {
@@ -94,18 +67,11 @@ public class Wrapper
         }
 
         try {
-            string name, author;
-            Version? version;
+            using var asm = AssemblyDefinition.ReadAssembly(filePath);
 
-            using (var asm = AssemblyDefinition.ReadAssembly(filePath)) {
-                name = asm.Name.Name;
-                version = asm.Name.Version;
-                author = GetAuthor(asm);
-            }
-
-            return new RwmodFileHeader(name, author) {
-                ModVersion = new(version ?? new(0, 0, 1)),
-                DisplayName = name
+            return new RwmodFileHeader(asm.Name.Name, GetAuthor(asm)) {
+                ModVersion = new(asm.Name.Version ?? new(0, 0, 1)),
+                DisplayName = asm.Name.Name
             };
         } catch {
             return null;

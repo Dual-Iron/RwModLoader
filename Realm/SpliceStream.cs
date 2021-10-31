@@ -1,6 +1,6 @@
 ﻿namespace Realm;
 
-public sealed class SpliceStream : Stream
+sealed class SpliceStream : Stream
 {
     private readonly Stream stream;
     private readonly long start;

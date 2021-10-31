@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Realm.Gui;
 
-public sealed class ProgressableDisplay : RectangularMenuObject
+sealed class ProgressableDisplay : RectangularMenuObject
 {
     private readonly MenuLabel? progress;
     private readonly MenuLabel message;

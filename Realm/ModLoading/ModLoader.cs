@@ -3,7 +3,7 @@ using Realm.Logging;
 
 namespace Realm.ModLoading;
 
-public sealed class ModLoader
+sealed class ModLoader
 {
     public LoadedAssemblyPool? LoadedAssemblyPool { get; private set; }
 
@@ -103,7 +103,7 @@ public sealed class ModLoader
     }
 }
 
-public struct ModReloadState
+struct ModReloadState
 {
     public string AsmName;
     public object? ModData;

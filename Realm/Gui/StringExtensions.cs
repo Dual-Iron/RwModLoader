@@ -1,6 +1,6 @@
 ﻿namespace Realm.Gui;
 
-public static class StringExtensions
+static class StringExtensions
 {
     // CREDIT: https://github.com/SlimeCubed/DevConsole/blob/b0fe50a8af03cf3e686fc4c6f644bd01adb2f8cc/DevConsole/StringEx.cs
     // Awesome string split function
@@ -64,18 +64,6 @@ public static class StringExtensions
         }
 
         yield return text.Substring(sliceStart);
-    }
-
-    /// <summary>
-    /// Splits a string so that each segment's width is below <paramref name="maxWidth"/>.
-    /// </summary>
-    /// <param name="text">The text to split.</param>
-    /// <param name="maxWidth">The upper bound for line width.</param>
-    /// <param name="font">The font used to measure splitting.</param>
-    /// <returns>String segments that will be under <paramref name="maxWidth"/> when displayed using <paramref name="font"/>.</returns>
-    public static IEnumerable<string> SplitLongLines(this string text, float maxWidth, string font)
-    {
-        return text.SplitLongLines(maxWidth, Futile.atlasManager.GetFontWithName(font) ?? throw new ArgumentException("No font.", nameof(font)));
     }
 
     /// <summary>

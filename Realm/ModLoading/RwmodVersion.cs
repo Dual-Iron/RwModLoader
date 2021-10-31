@@ -1,6 +1,6 @@
 ﻿namespace Realm.ModLoading;
 
-public struct RwmodVersion
+struct RwmodVersion
 {
     public RwmodVersion(byte major, byte minor, byte patch)
     {

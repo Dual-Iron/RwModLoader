@@ -2,11 +2,10 @@
 using Realm.Assets;
 using Realm.Jobs;
 using Realm.Logging;
-using UnityEngine;
 
-namespace Realm.Gui;
+namespace Realm.Gui.Local;
 
-public sealed class ModsMenu : Menu.Menu
+sealed class ModsMenu : Menu.Menu
 {
     public const ProcessManager.ProcessID ModsMenuID = (ProcessManager.ProcessID)(-666);
 
@@ -75,7 +74,6 @@ public sealed class ModsMenu : Menu.Menu
 
     private readonly MenuContainer progDisplayContainer;
     private readonly LoggingProgressable performingProgress = new();
-    private readonly BigArrowButton? nextButton;
 
     private readonly FSprite headerSprite;
     private readonly FSprite headerShadowSprite;
@@ -138,12 +136,6 @@ public sealed class ModsMenu : Menu.Menu
             performingJob = Job.Start(SaveExit);
             PlaySound(SoundID.MENU_Switch_Page_Out);
             shutDownMusic = true;
-            return;
-        }
-
-        if (sender == nextButton) {
-            manager.RequestMainProcessSwitch(RaindbMenu.RaindbMenuID);
-            PlaySound(SoundID.MENU_Switch_Arena_Gametype);
             return;
         }
 

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Realm.Gui;
 
-public sealed class Listing : RectangularMenuObject, Slider.ISliderOwner
+sealed class Listing : RectangularMenuObject, Slider.ISliderOwner
 {
     private readonly VerticalSlider slider;
     private readonly MenuContainer sliderContainer;

@@ -1,6 +1,6 @@
 ﻿namespace Realm.Jobs;
 
-public enum JobStatus
+enum JobStatus
 {
     Unstarted,
     InProgress,

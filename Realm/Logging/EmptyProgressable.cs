@@ -1,6 +1,6 @@
 ﻿namespace Realm.Logging;
 
-public sealed class EmptyProgressable : IProgressable
+sealed class EmptyProgressable : IProgressable
 {
     public float Progress { get; set; }
 

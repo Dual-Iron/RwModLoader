@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace Realm.AssemblyLoading;
 
-public sealed class AssemblyDescriptor
+sealed class AssemblyDescriptor
 {
     interface IModDescriptor
     {

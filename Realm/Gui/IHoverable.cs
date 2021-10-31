@@ -2,7 +2,7 @@
 
 namespace Realm.Gui;
 
-public interface IHoverable
+interface IHoverable
 {
     string GetHoverInfo(MenuObject selected);
 }

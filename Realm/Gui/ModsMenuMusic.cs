@@ -2,7 +2,7 @@
 
 namespace Realm.Gui;
 
-public static class ModsMenuMusic
+static class ModsMenuMusic
 {
     private static bool startIntroMusic;
 

@@ -1,6 +1,6 @@
 ﻿namespace Realm.Logging;
 
-public struct MessageInfo
+struct MessageInfo
 {
     public readonly MessageType Type;
     public readonly string Message;

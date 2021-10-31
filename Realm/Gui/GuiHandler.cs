@@ -1,13 +1,14 @@
 ﻿using Menu;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
+using Realm.Gui.Local;
 using Realm.Jobs;
 using Realm.Logging;
 using UnityEngine;
 
 namespace Realm.Gui;
 
-public static class GuiHandler
+static class GuiHandler
 {
     private static bool RedUnlocked()
     {
@@ -158,23 +159,18 @@ public static class GuiHandler
     {
         ILCursor cursor = new(il);
 
-        if (!cursor.TryGotoNext(i => i.MatchSwitch(out _))) {
-            Program.Logger.LogError("No switch statement in ProcessManager.SwitchMainProcess()!");
-            return;
-        }
+        cursor.GotoNext(i => i.MatchSwitch(out _));
 
         // TrySwitchToModMenu(this, ID);
         cursor.Emit(OpCodes.Ldarg_0);
         cursor.Emit(OpCodes.Ldarg_1);
-        cursor.EmitDelegate<Action<ProcessManager, ProcessManager.ProcessID>>(TrySwitchToCustomProcess);
+        cursor.EmitDelegate(SwitchToCustomProcess);
     }
 
-    private static void TrySwitchToCustomProcess(ProcessManager pm, ProcessManager.ProcessID pid)
+    private static void SwitchToCustomProcess(ProcessManager pm, ProcessManager.ProcessID pid)
     {
         if (pid == ModsMenu.ModsMenuID) {
             pm.currentMainLoop = new ModsMenu(pm);
-        } else if (pid == RaindbMenu.RaindbMenuID) {
-            pm.currentMainLoop = new RaindbMenu(pm);
         }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Realm.Logging;
 
-public class LoggingProgressable : Progressable
+sealed class LoggingProgressable : Progressable
 {
     public ReadOnlyCollection<MessageInfo> Messages { get; }
 

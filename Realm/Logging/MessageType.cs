@@ -1,6 +1,6 @@
 ﻿namespace Realm.Logging;
 
-public enum MessageType
+enum MessageType
 {
     Diagnostic, Info, Warning, Fatal
 }

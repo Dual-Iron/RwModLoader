@@ -2,7 +2,7 @@
 
 namespace Realm;
 
-public sealed class State
+sealed class State
 {
     public static State Instance { get; } = new();
 

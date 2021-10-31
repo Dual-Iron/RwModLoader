@@ -1,10 +1,9 @@
 ﻿using BepInEx.Preloader;
 using Realm.Logging;
-using System.Reflection;
 
 namespace Realm.ModLoading;
 
-public static class PluginWrapper
+static class PluginWrapper
 {
     public static void WrapPluginsThenSave(IProgressable progressable)
     {
@@ -38,16 +37,15 @@ public static class PluginWrapper
 
         foreach (string pluginFile in pluginFiles) {
             try {
-                string name = AssemblyName.GetAssemblyName(pluginFile).Name;
+                MutatorProcess proc = MutatorProcess.Execute($"-w \"{pluginFile}\"");
 
-                Execution exec = Execution.Run(RealmPaths.MutatorPath, $"--wrap \"{name}\" \"{pluginFile}\"");
-
-                if (exec.ExitCode == 0) {
-                    wrappedMods.Add(name);
+                if (proc.ExitCode == 0) {
+                    if (proc.Output.Length > 0)
+                        wrappedMods.Add(proc.Output);
 
                     progressable.Message(MessageType.Info, $"Wrapped {Path.GetFileName(pluginFile)}.");
                 } else {
-                    progressable.Message(MessageType.Fatal, $"Failed to wrap {Path.GetFileName(pluginFile)}. {exec.ExitMessage}: {exec.Error}.");
+                    progressable.Message(MessageType.Fatal, $"Failed to wrap {Path.GetFileName(pluginFile)}. {proc}");
                 }
             } catch { }
         }

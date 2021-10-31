@@ -2,7 +2,7 @@
 
 namespace Mutator.Patching;
 
-public static class AccessViolationPrevention
+static class AccessViolationPrevention
 {
     public static void SkipVerification(AssemblyDefinition asm)
     {

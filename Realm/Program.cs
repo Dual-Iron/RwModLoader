@@ -4,15 +4,15 @@ using MonoMod.RuntimeDetour;
 using MonoMod.Cil;
 using Mono.Cecil.Cil;
 using Partiality.Modloader;
-using System.Diagnostics;
 using Realm.Gui;
 using Realm.Logging;
 using Realm.AssemblyLoading;
 using BepInEx.Configuration;
+using Realm.Gui.Installation;
 
 namespace Realm;
 
-public static class Program
+static class Program
 {
     public static ManualLogSource Logger { get; } = BepInEx.Logging.Logger.CreateLogSource("Realm");
 
@@ -32,7 +32,7 @@ public static class Program
         State.Instance.DeveloperMode = file.Bind("General", "HotReloading", false, "While enabled, Realm will allow hot reloading assemblies in-game. This feature is unstable.").Value;
         bool skip = file.Bind("General", "SkipLoading", false, "While enabled, Realm won't self-update or load mods when starting the game.").Value;
 
-        if (!skip) TrySelfUpdate();
+        if (!skip) CheckForSelfUpdate();
         LoadEmbeddedAssemblies();
         NeuterPartiality();
         StaticFixes.Hook();
@@ -44,26 +44,23 @@ public static class Program
         }
 
         GuiHandler.Hook();
-        DebugHandler.Hook();
     }
 
-    private static void TrySelfUpdate()
+    private static void CheckForSelfUpdate()
     {
-        Execution result = Execution.Run(RealmPaths.MutatorPath, "--needs-self-update", 1000);
+        MutatorProcess proc = MutatorProcess.Execute("-q", 1000);
 
-        if (result.ExitCode == 0) {
-            bool needsToUpdate = result.Output == "y";
-            if (needsToUpdate) {
-                Logger.LogInfo("Updating Realm.");
+        if (proc.ExitCode == 0) {
+            if (proc.Output == "y") {
+                Logger.LogError("Realm is not up to date.");
 
-                using var self = Process.GetCurrentProcess();
-                Execution.Run(RealmPaths.MutatorPath, $"--kill {self.Id} --self-update --install --runrw");
-                return;
+                UpdateNotif.ApplyHooks();
+            } else {
+                Logger.LogInfo("Realm is up to date.");
             }
-            Logger.LogInfo("Realm is up to date.");
         } else {
-            Logger.LogWarning("Couldn't determine if Realm is up to date or not.");
-            Logger.LogDebug($"{result.ExitMessage}: {result.Error}");
+            Logger.LogError("Couldn't determine if Realm is up to date.");
+            Logger.LogDebug(proc);
         }
     }
 

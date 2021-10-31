@@ -2,7 +2,7 @@
 
 namespace Realm.AssemblyLoading;
 
-public class LoadedModAssembly
+sealed class LoadedModAssembly
 {
     public readonly Assembly Asm;
     public readonly string AsmName;

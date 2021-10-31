@@ -6,7 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Realm.AssemblyLoading;
 
-public sealed class AssemblyPool
+sealed class AssemblyPool
 {
     public const string IterationSeparator = ";;";
 
@@ -31,7 +31,7 @@ public sealed class AssemblyPool
         foreach (var rwmod in rwmods) {
             foreach (var fileEntry in rwmod.Entries) {
                 count++;
-                progressable.Progress = (float)count / (count + 1); // TODO LOW: Make this an honest progress tracker
+                progressable.Progress = count / (count + 1f);
 
                 AssemblyDefinition asm = AssemblyDefinition.ReadAssembly(
                     stream: fileEntry.GetStreamSplice(rwmod.Stream),
