@@ -8,7 +8,7 @@ https://user-images.githubusercontent.com/31146412/137647603-6034790d-cfcb-40b0-
 ## Where get?
 Some important information before you install Realm:
 - Realm frequently deletes the BepInEx folder. Move valuable files out of there.
-- While Realm can auto-update itself, it doesn't support AutoUpdate for mods yet. That's coming soon™.
+- Realm doesn't support AutoUpdate for mods yet. That's coming soon™.
 - Don't use Realm and BlepOutIn (BOI) at the same time.
 
 To install Realm, go to the [releases](https://github.com/Dual-Iron/RwModLoader/releases/latest) page.
