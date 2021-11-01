@@ -59,7 +59,7 @@ sealed class LoadedAssemblyPool
             try {
                 Pool[loadedAsmKvp.AsmName].Descriptor.Unload();
             } catch (Exception e) {
-                progressable.Message(MessageType.Fatal, $"Assembly {loadedAsmKvp.AsmName} failed to unload: {e}");
+                progressable.Message(MessageType.Fatal, $"Failed to unload {loadedAsmKvp.AsmName}\n{e}");
             } finally {
                 monomod.Unload(loadedAsmKvp.Asm);
             }
@@ -73,12 +73,12 @@ sealed class LoadedAssemblyPool
 
     private void RunPatchers(IProgressable progressable, Action<float> setTaskProgress)
     {
-        // TODO LOW: Actual patcher support
+        // TODO LOW: reloading patchers?
 
         List<PatcherPlugin> patchers = AssemblyPatcher.PatcherPlugins.ToList();
 
         if (patchers.Count == 0) {
-            progressable.Message(MessageType.Warning, "Chainloader and Realm not listed in patcher plugins! This should never happen! See Realm.EntryPoint.Finish()");
+            progressable.Message(MessageType.Fatal, "Chainloader and Realm not listed in patcher plugins! This should never happen! See Realm.EntryPoint.Finish()");
             setTaskProgress(1f);
             return;
         }
@@ -99,7 +99,7 @@ sealed class LoadedAssemblyPool
             try {
                 patcher.Initializer?.Invoke();
             } catch (Exception e) {
-                progressable.Message(MessageType.Fatal, $"Patcher {patcher.TypeName} failed to initialize: {e.Message}");
+                progressable.Message(MessageType.Fatal, $"Patcher {patcher.TypeName} failed to initialize\n{e}");
             }
         }
 
@@ -114,7 +114,7 @@ sealed class LoadedAssemblyPool
             try {
                 targetDLLs = patcher.TargetDLLs();
             } catch (Exception e) {
-                progressable.Message(MessageType.Fatal, $"Patcher {patcher.TypeName} failed in TargetDLLS: {e.Message}");
+                progressable.Message(MessageType.Fatal, $"Patcher {patcher.TypeName} failed in TargetDLLs\n{e}");
                 continue;
             }
 
@@ -125,7 +125,7 @@ sealed class LoadedAssemblyPool
                     try {
                         patcher.Patcher?.Invoke(ref modAsm.AsmDef);
                     } catch (Exception e) {
-                        progressable.Message(MessageType.Fatal, $"Patcher {patcher.TypeName} failed to patch {targetDLL}: {e.Message}");
+                        progressable.Message(MessageType.Fatal, $"Patcher {patcher.TypeName} failed to patch {targetDLL}\n{e}");
                     }
                 }
         }
@@ -137,7 +137,7 @@ sealed class LoadedAssemblyPool
             try {
                 patcher.Finalizer?.Invoke();
             } catch (Exception e) {
-                progressable.Message(MessageType.Fatal, $"Patcher {patcher.TypeName} failed to finalize: {e.Message}");
+                progressable.Message(MessageType.Fatal, $"Patcher {patcher.TypeName} failed to finalize\n{e}");
             }
         }
 
@@ -178,7 +178,7 @@ sealed class LoadedAssemblyPool
             try {
                 loadedAssemblies.Add(new(Assembly.Load(ms.ToArray()), name, asm.FileName));
             } catch (Exception e) {
-                progressable.Message(MessageType.Fatal, $"Assembly {name} failed to load: {e}");
+                progressable.Message(MessageType.Fatal, $"Failed to load {name}\n{e}");
             }
 
             setTaskProgress(++finished / (float)total);
@@ -191,7 +191,7 @@ sealed class LoadedAssemblyPool
             VirtualEnums.VirtualEnumApi.UseAssembly(loadedAsm.Asm, out var err);
 
             if (err != null) {
-                progressable.Message(MessageType.Fatal, $"Failed to register {loadedAsm.AsmName} enums.\n  Exception: {err.LoaderExceptions[0]}");
+                progressable.Message(MessageType.Fatal, $"Failed to register enums for {loadedAsm.AsmName}\n{err.LoaderExceptions[0]}");
             }
         }
 
@@ -207,8 +207,9 @@ sealed class LoadedAssemblyPool
 
             try {
                 modAssembly.Descriptor.Initialize(loadedModAssembly);
+                progressable.Message(MessageType.Debug, $"Finished loading {lasm.AsmName}");
             } catch (Exception e) {
-                progressable.Message(MessageType.Fatal, $"Mod {lasm.AsmName} failed to initialize: {e}");
+                progressable.Message(MessageType.Fatal, $"Failed to initialize {lasm.AsmName}\n{e}");
             }
 
             progressable.Progress = ++finished / (float)total;

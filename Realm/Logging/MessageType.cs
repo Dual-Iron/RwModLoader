@@ -2,5 +2,5 @@
 
 enum MessageType
 {
-    Diagnostic, Info, Warning, Fatal
+    Debug, Info, Warning, Fatal
 }

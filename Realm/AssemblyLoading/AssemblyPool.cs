@@ -50,7 +50,7 @@ sealed class AssemblyPool
                     if (asm.Name.Version.Major != conflicting.AsmDef.Name.Version.Major) {
                         progressable.Message(
                             messageType: MessageType.Fatal,
-                            message: $"Two assemblies named {name} are incompatible: {asm.Name.Version} from {rwmod.Header.Name} and {conflicting.AsmDef.Name.Version} from {conflicting.Rwmod}."
+                            message: $"Two assemblies named {name} are incompatible: {asm.Name.Version} from {rwmod.Header.Name}, and {conflicting.AsmDef.Name.Version} from {conflicting.Rwmod}."
                             );
                         continue;
                     }

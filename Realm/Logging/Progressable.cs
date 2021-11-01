@@ -14,7 +14,7 @@ class Progressable : IProgressable
         }
 
         Program.Logger.Log(messageType switch {
-            MessageType.Diagnostic => LogLevel.Debug,
+            MessageType.Debug => LogLevel.Debug,
             MessageType.Info => LogLevel.Info,
             MessageType.Warning => LogLevel.Warning,
             MessageType.Fatal => LogLevel.Fatal,

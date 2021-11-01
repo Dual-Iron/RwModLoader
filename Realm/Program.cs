@@ -40,7 +40,7 @@ static class Program
         if (!skip) {
             State.Instance.Prefs.Load();
             State.Instance.Prefs.EnableThenSave(earlyWrappedAsms);
-            State.Instance.Mods.Reload(new MessagingProgressable());
+            State.Instance.Mods.Reload(new Progressable());
         }
 
         GuiHandler.Hook();
