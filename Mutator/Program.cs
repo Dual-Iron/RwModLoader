@@ -7,7 +7,13 @@ if (args.Length == 0) {
     if (Path.GetFileName(Environment.ProcessPath) != "Mutator.exe") {
         var result = RealmInstaller.UserInstall();
         if (!result.Successful) {
+            Console.ForegroundColor = ConsoleColor.Red;
             Console.Error.WriteLine(result);
+            Console.ForegroundColor = ConsoleColor.Gray;
+
+            Console.Write("Press any key to exit. ");
+            Console.ReadKey(true);
+
             return (int)result.Code;
         }
     }

@@ -8,6 +8,19 @@ static class ExtIO
 {
     private static string? rwDir;
 
+    public static string? CleanRwDir(string rwDir)
+    {
+        try {
+            rwDir = Path.GetFullPath(rwDir.Trim());
+
+            if (Directory.Exists(rwDir) && File.Exists(Path.Combine(rwDir, "RainWorld.exe"))) {
+                return rwDir;
+            }
+        } catch { }
+
+        return null;
+    }
+
     public static Result<string, ExitStatus> RwDir {
         get {
             if (rwDir != null) return rwDir;
@@ -41,45 +54,41 @@ static class ExtIO
 
         // Check for explicit path override
         if (File.Exists("path.txt")) {
-            if (File.ReadLines("path.txt").FirstOrDefault() is string firstLine) {
-                var path = Path.GetFullPath(firstLine.Trim());
-                if (path.Length > 0 && Directory.Exists(path)) {
-                    return path;
-                }
-                return ExitStatus.FolderNotFound(path);
+            if (File.ReadLines("path.txt").FirstOrDefault() is string firstLine && CleanRwDir(firstLine) is string rwDir) {
+                return rwDir;
             }
             return ExitStatus.RwPathInvalid;
         }
 
         // Check simple, common paths
-        string[] commonPaths = new[] {
+        string[] commonPaths = {
             @"C:\Program Files (x86)\Steam\steamapps\common\Rain World",
             @"C:\Program Files\Steam\steamapps\common\Rain World"
         };
 
         foreach (var path in commonPaths) {
-            if (Directory.Exists(path)) {
-                return path;
+            if (CleanRwDir(path) is string rwDir) {
+                return rwDir;
             }
         }
 
+        if (!OperatingSystem.IsWindows()) return ExitStatus.RwFolderNotFound;
+
         // Find path rigorously
-        if (OperatingSystem.IsWindows()) {
-            object? value =
-                Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Valve\Steam", "InstallPath", null) ??
-                Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Valve\Steam", "InstallPath", null);
+        object? value =
+            Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Valve\Steam", "InstallPath", null) ??
+            Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Valve\Steam", "InstallPath", null);
 
-            if (value is string steamPath) {
-                string appState = File.ReadAllText(Path.Combine(steamPath, "steamapps", $"appmanifest_{AppID}.acf"));
-                var installNameMatch = Regex.Match(appState, @"""installdir""\s*""(.*?)""");
-                if (installNameMatch.Success && installNameMatch.Groups.Count == 2) {
-                    string installName = installNameMatch.Groups[1].Value;
-                    string path = Path.Combine(steamPath, "steamapps", "common", installName);
+        if (value is string steamPath) {
+            string appState = File.ReadAllText(Path.Combine(steamPath, "steamapps", $"appmanifest_{AppID}.acf"));
+            var installNameMatch = Regex.Match(appState, @"""installdir""\s*""(.*?)""", RegexOptions.IgnoreCase);
+            if (installNameMatch.Success && installNameMatch.Groups.Count == 2) {
+                string installName = installNameMatch.Groups[1].Value;
+                string path = Path.Combine(steamPath, "steamapps", "common", installName);
 
-                    if (Directory.Exists(path)) {
-                        File.WriteAllText("path.txt", path + "\n");
-                        return path;
-                    }
+                if (CleanRwDir(path) is string rwDir) {
+                    File.WriteAllText("path.txt", rwDir + "\n");
+                    return rwDir;
                 }
             }
         }

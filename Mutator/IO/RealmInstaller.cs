@@ -7,8 +7,9 @@ static class RealmInstaller
 {
     public static ExitStatus UserInstall()
     {
-        if (ExtIO.RwDir.MatchFailure(out var rwDir, out var err)) {
-            return err;
+        if (ExtIO.RwDir.MatchFailure(out var rwDir, out _)) {
+            rwDir = QueryUserForRwDir();
+            File.WriteAllText("path.txt", rwDir + "\n");
         }
 
         var procs = Process.GetProcessesByName("RainWorld");
@@ -70,7 +71,7 @@ static class RealmInstaller
         try {
             DoInstall(rwDir);
         } catch (Exception e) {
-            return ExitStatus.IOError(e.ToString());
+            return ExitStatus.IOError(e.Message);
         }
 
         return ExitStatus.Success;
@@ -189,5 +190,37 @@ static class RealmInstaller
             File.Move(file, Path.Combine(destination, Path.GetFileName(file)), true);
         }
         Directory.Delete(source);
+    }
+
+    private static string QueryUserForRwDir()
+    {
+        string? rwDir;
+
+        bool helpGiven = false;
+
+        Console.Write("Couldn't find Rain World's installation folder. Please enter it here.\n> ");
+
+        while (true) {
+            rwDir = Console.ReadLine();
+
+            Console.WriteLine();
+
+            if (rwDir == null) throw new InvalidOperationException("The console buffer ran out of space!");
+
+            rwDir = ExtIO.CleanRwDir(rwDir);
+
+            if (rwDir != null) return rwDir;
+
+            if (!helpGiven) {
+                Console.Write("That path is invalid. Go here for help: [");
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.Write("https://savelocation.net/steam-game-folder");
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.Write("]\n> ");
+                helpGiven = true;
+            } else {
+                Console.Write("Enter Rain World's installation folder.\n> ");
+            }
+        }
     }
 }
