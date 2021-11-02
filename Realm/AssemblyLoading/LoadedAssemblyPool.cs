@@ -116,10 +116,18 @@ sealed class LoadedAssemblyPool
 
             if (err != null) {
                 foreach (var e in err.LoaderExceptions) {
+                    if (e is FileNotFoundException fnf && BepInEx.Utility.TryParseAssemblyName(fnf.FileName, out AssemblyName name)) {
+                        PrintMissingDependency(progressable, loadedAsm, name);
+                        goto Cont;
+                    }
+                }
+                foreach (var e in err.LoaderExceptions) {
                     progressable.Message(MessageType.Debug, e.ToString());
                 }
                 progressable.Message(MessageType.Fatal, $"Failed to register enums for {loadedAsm.AsmName}, exception details logged\n\nThis is usually because the mod is missing a dependency. Did you forget to download or enable a mod?");
             }
+
+        Cont:;
         }
 
         if (progressable.ProgressState == ProgressStateType.Failed) return;
@@ -138,7 +146,7 @@ sealed class LoadedAssemblyPool
                 modAssembly.Descriptor.Initialize(loadedModAssembly);
                 progressable.Message(MessageType.Debug, $"Finished loading {lasm.AsmName}");
             } catch (FileNotFoundException e) when (BepInEx.Utility.TryParseAssemblyName(e.FileName, out AssemblyName name)) {
-                progressable.Message(MessageType.Fatal, $"The mod {lasm.AsmName} v{lasm.Asm.GetName().Version.ToString(2)} is missing a dependency: {name.Name} v{name.Version.ToString(2)}");
+                PrintMissingDependency(progressable, lasm, name);
             } catch (Exception e) {
                 progressable.Message(MessageType.Fatal, $"Failed to initialize {lasm.AsmName}\n{e}");
             }
@@ -147,5 +155,10 @@ sealed class LoadedAssemblyPool
         }
 
         StaticFixes.PostLoad();
+    }
+
+    private static void PrintMissingDependency(IProgressable progressable, LoadedModAssembly lasm, AssemblyName name)
+    {
+        progressable.Message(MessageType.Fatal, $"The mod {lasm.AsmName} v{lasm.Asm.GetName().Version.ToString(2)} is missing a dependency: {name.Name} v{name.Version.ToString(2)}");
     }
 }
