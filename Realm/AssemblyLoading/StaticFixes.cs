@@ -38,7 +38,6 @@ internal static class StaticFixes
                     if (lasm.AsmName == name) {
                         Program.Logger.LogDebug($"Using a fake Assembly.Location value for {name}.");
 
-                        // TODO LOW: Don't assume all assemblie are plugins
                         return Path.Combine(Paths.PluginPath, lasm.FileName);
                     }
                 }

@@ -1,18 +1,32 @@
 ﻿using Realm.AssemblyLoading;
 using Realm.Logging;
+using System.Threading;
 
 namespace Realm.ModLoading;
 
 sealed class ModLoader
 {
+    private readonly List<WeakReference> hangingMods = new();
+
     public LoadedAssemblyPool? LoadedAssemblyPool { get; private set; }
 
-    public void Unload(IProgressable progressable)
+    public void WarnHangingMods(IProgressable progressable)
     {
-        progressable.Message(MessageType.Info, "Disabling mods");
+        Thread.MemoryBarrier();
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
 
-        LoadedAssemblyPool?.Unload(progressable);
-        LoadedAssemblyPool = null;
+        List<string> names = new();
+
+        foreach (var weakRef in hangingMods) {
+            if (weakRef.Target is object mod) {
+                names.Add(mod.GetType().ToString());
+            }
+        }
+
+        if (names.Count > 0) {
+            progressable.Message(MessageType.Warning, $"The following mods aren't fully unloaded: [{string.Join(", ", names.ToArray())}]");
+        }
     }
 
     public void Reload(IProgressable progressable)
@@ -21,6 +35,29 @@ sealed class ModLoader
 
         Unload(progressable);
 
+        if (progressable.ProgressState == ProgressStateType.Failed) return;
+
+        Load(progressable, reloadState);
+    }
+
+    private void Unload(IProgressable progressable)
+    {
+        progressable.Message(MessageType.Info, "Disabling mods");
+
+        if (LoadedAssemblyPool == null) return;
+
+        hangingMods.Clear();
+
+        foreach (var asm in LoadedAssemblyPool.Pool.Assemblies) {
+            hangingMods.AddRange(asm.Descriptor.GetModObjects().Select(m => new WeakReference(m)));
+        }
+
+        LoadedAssemblyPool.Unload(progressable);
+        LoadedAssemblyPool = null;
+    }
+
+    private void Load(IProgressable progressable, List<ModReloadState> reloadState)
+    {
         PluginWrapper.WrapPlugins(progressable, out var wrappedAsms);
 
         if (progressable.ProgressState == ProgressStateType.Failed) return;
@@ -34,11 +71,9 @@ sealed class ModLoader
 
         List<RwmodFile> plugins = new();
 
-        // DO NOT inline this variable. Obviously.
-        // Not like anyone would do that.
+        // DO NOT inline this variable.
         RwmodFile[] rwmods = RwmodFile.GetRwmodFiles();
 
-        // Ensure that these streams get disposed after we're done using them.
         using Disposable disposeStreams = new(() => { foreach (var r in rwmods) r.Stream.Dispose(); });
 
         foreach (var rwmod in rwmods) {

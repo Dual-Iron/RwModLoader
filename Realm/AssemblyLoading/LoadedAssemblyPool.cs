@@ -2,7 +2,6 @@
 using System.Collections.ObjectModel;
 using System.Reflection;
 using UnityEngine;
-using BepInEx.Preloader.Patching;
 using MonoMod.RuntimeDetour;
 
 namespace Realm.AssemblyLoading;

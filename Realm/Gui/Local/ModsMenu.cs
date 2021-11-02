@@ -15,7 +15,7 @@ sealed class ModsMenu : Menu.Menu
         pages.Add(new(this, null, "main", 0));
 
         // Big pretty background picture
-        Page.subObjects.Add(new InteractiveMenuScene(this, Page, GuiHandler.TimedScene) { cameraRange = 0.2f });
+        Page.subObjects.Add(new InteractiveMenuScene(this, Page, ModsMenuGui.TimedScene) { cameraRange = 0.2f });
 
         // A scaled up translucent black pixel to make the background less distracting
         Page.subObjects.Add(new MenuSprite(Page, new(-1, -1), new("pixel") {
@@ -197,6 +197,7 @@ sealed class ModsMenu : Menu.Menu
         }
 
         State.Instance.Mods.Reload(performingProgress);
+        State.Instance.Mods.WarnHangingMods(performingProgress);
 
         if (performingProgress.ProgressState == ProgressStateType.Failed) {
             errors = true;

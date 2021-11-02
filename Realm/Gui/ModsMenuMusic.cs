@@ -4,6 +4,15 @@ namespace Realm.Gui;
 
 static class ModsMenuMusic
 {
+    private static string TimedSong => DateTime.Now.Hour switch {
+        < 4 => "NA_39 - Cracked Earth",
+        < 8 => "NA_04 - Silicon",
+        < 12 => "NA_30 - Distance",
+        < 16 => "NA_24 - Emotion Thread",
+        < 20 => "NA_09 - Interest Pad",
+        _ => "RW_16 - Shoreline",
+    };
+
     private static bool startIntroMusic;
 
     public static void Hook()
@@ -44,7 +53,7 @@ static class ModsMenuMusic
     {
         if (music != null && !playing) {
             music.FadeOutAllSongs(40);
-            SimpleRequestSong(music, GuiHandler.TimedSong, 10);
+            SimpleRequestSong(music, TimedSong, 10);
             startIntroMusic = false;
             playing = true;
         }

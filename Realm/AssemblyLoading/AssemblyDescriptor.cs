@@ -130,6 +130,15 @@ sealed class AssemblyDescriptor
         }
     }
 
+    public IEnumerable<object> GetModObjects()
+    {
+        foreach (var mod in mods) {
+            if (mod.ModObject is object o) {
+                yield return o;
+            }
+        }
+    }
+
     public void Initialize(Assembly assembly)
     {
         foreach (var mod in mods) {
