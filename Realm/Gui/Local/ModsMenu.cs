@@ -26,14 +26,6 @@ sealed class ModsMenu : Menu.Menu
             anchorY = 0
         }));
 
-        if (ShouldSavingQuit) {
-            MenuLabel ml = new(this, Page, "*this will close the game", new(360, 25), new(110, 30), false);
-
-            ml.label.color = MenuColor(MenuColors.MediumGrey).rgb;
-
-            Page.subObjects.Add(ml);
-        }
-
         // Buttons
         //Page.subObjects.Add(nextButton = new BigArrowButton(this, Page, "", new(1116f, 668f), 1));
         Page.subObjects.Add(cancelButton = new SimpleButton(this, Page, "CANCEL", "", new(200, 50), new(110, 30)));
@@ -43,6 +35,16 @@ sealed class ModsMenu : Menu.Menu
         Page.subObjects.Add(enableAll = new SimpleButton(this, Page, "ENABLE ALL", "", new(200, 300), new(110, 30)));
 
         modListing = new(Page, pos: new(1366 - ModPanel.Width - 200, 50), elementSize: new(ModPanel.Width, ModPanel.Height), elementsPerScreen: 15, edgePadding: 5);
+        
+        if (ShouldSavingQuit) {
+            MenuLabel notListedNotice = new(this, Page, "*patchers not listed", new(modListing.pos.x, modListing.pos.y - modListing.size.y / 2 - 10), modListing.size, false);
+            notListedNotice.label.color = MenuColor(MenuColors.MediumGrey).rgb;
+            Page.subObjects.Add(notListedNotice);
+
+            MenuLabel warning = new(this, Page, "*this will close the game", new(saveButton.pos.x, saveButton.pos.y - 25), saveButton.size, false);
+            warning.label.color = MenuColor(MenuColors.MediumGrey).rgb;
+            Page.subObjects.Add(warning);
+        }
 
         State.Instance.CurrentRefreshCache.Refresh(new MessagingProgressable());
 
