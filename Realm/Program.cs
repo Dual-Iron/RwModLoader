@@ -20,6 +20,8 @@ static class Program
     // Perfect place to load plugins and add hooks
     internal static void Main(List<string> earlyWrappedAsms, bool extraPatchers)
     {
+        GuiFix.Fix();
+
         if (!File.Exists(RealmPaths.MutatorPath)) {
             Logger.LogFatal("Mutator not present. Please reinstall Realm!");
             ReinstallNotif.ApplyHooks();
