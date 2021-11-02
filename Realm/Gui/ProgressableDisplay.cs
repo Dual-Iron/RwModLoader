@@ -22,11 +22,15 @@ sealed class ProgressableDisplay : RectangularMenuObject
         this.prog = prog;
     }
 
+    int lastCount = 0;
+
     public override void Update()
     {
-        if (prog.Messages.Count > 0) {
+        if (lastCount != prog.Messages.Count) {
+            lastCount = prog.Messages.Count;
+
             MessageInfo latestMessage = prog.Messages[prog.Messages.Count - 1];
-            message.text = latestMessage.Message;
+            message.text = string.Join("\n", latestMessage.Message.SplitLongLines(size.x, message.label._font).ToArray());
             message.label.color = latestMessage.Type switch {
                 MessageType.Info => Color.white,
                 MessageType.Warning => Color.yellow,
@@ -36,7 +40,10 @@ sealed class ProgressableDisplay : RectangularMenuObject
         }
 
         if (progress != null) {
-            progress.text = $"{prog.Progress:p}";
+            if (prog.ProgressState != ProgressStateType.Failed)
+                progress.text = $"{prog.Progress:p}";
+            else
+                progress.label.isVisible = false;
         }
 
         base.Update();

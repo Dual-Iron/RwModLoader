@@ -40,17 +40,11 @@ sealed class Preferences
         }
     }
 
-    public void EnableThenSave(IEnumerable<string> modsToEnable)
+    public void Enable(IEnumerable<string> mods)
     {
-        if (!modsToEnable.Any()) {
-            return;
+        foreach (var mod in mods) {
+            EnabledMods.Add(mod);
         }
-
-        foreach (var item in modsToEnable) {
-            EnabledMods.Add(item);
-        }
-
-        Save();
     }
 
     public HashSet<string> EnabledMods { get; } = new();

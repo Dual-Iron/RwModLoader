@@ -133,7 +133,7 @@ sealed class ModPanel : RectangularMenuObject, CheckBox.IOwnCheckBox, IListable,
             return $"{(IsEnabled ? "Disable" : "Enable")} mod";
         }
         if (selected == deleteButton) {
-            return $"{(WillDelete ? "Dequeue" : "Enqueue")} mod for deletion";
+            return $"{(WillDelete ? "Don't delete" : "Delete")} mod";
         }
         return "";
     }

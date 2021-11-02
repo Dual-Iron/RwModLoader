@@ -113,22 +113,9 @@ static class RealmInstaller
 
     private static bool IsPartialityInstalled(string rwDir)
     {
-        if (Directory.Exists(Path.Combine(rwDir, "RainWorld_Data", "Managed_backup"))) {
-            return true;
-        }
-
-        string modsDir = Path.Combine(rwDir, "Mods");
-        if (!Directory.Exists(modsDir)) {
-            return false;
-        }
-
-        foreach (var item in Directory.GetFiles(modsDir)) {
-            if (Path.GetExtension(item) is ".modHash" or ".modMeta") {
-                return true;
-            }
-        }
-
-        return false;
+        return Directory.Exists(Path.Combine(rwDir, "Mods")) 
+            && Directory.Exists(Path.Combine(rwDir, "RainWorld_Data", "Managed_backup"))
+            && Directory.EnumerateFiles(Path.Combine(rwDir, "RainWorld_Data", "Managed_backup")).Any();
     }
 
     private static void UninstallPartiality(string rwDir)

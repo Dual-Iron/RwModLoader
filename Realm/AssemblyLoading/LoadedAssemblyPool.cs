@@ -27,8 +27,6 @@ sealed class LoadedAssemblyPool
             progressable.Progress = Mathf.Lerp(tasksComplete / totalTasks, (tasksComplete + 1) / totalTasks, percent);
         }
 
-        ret.RunPatchers(progressable, SetTaskProgress);
-
         tasksComplete++;
         if (progressable.ProgressState == ProgressStateType.Failed) {
             return ret;
@@ -69,79 +67,6 @@ sealed class LoadedAssemblyPool
 
         loadedAssemblies.Clear();
         VirtualEnums.VirtualEnumApi.Clear();
-    }
-
-    private void RunPatchers(IProgressable progressable, Action<float> setTaskProgress)
-    {
-        // TODO LOW: reloading patchers?
-
-        List<PatcherPlugin> patchers = AssemblyPatcher.PatcherPlugins.ToList();
-
-        if (patchers.Count == 0) {
-            progressable.Message(MessageType.Fatal, "Chainloader and Realm not listed in patcher plugins! This should never happen! See Realm.EntryPoint.Finish()");
-            setTaskProgress(1f);
-            return;
-        }
-
-        // Remove ChainLoader patcher
-        patchers.RemoveAt(0);
-
-        // Remove self
-        patchers.RemoveAll(pp => pp.TypeName == typeof(EntryPoint).FullName);
-
-        if (patchers.Count == 0) {
-            setTaskProgress(1f);
-            return;
-        }
-
-        // Initialize()
-        foreach (var patcher in patchers) {
-            try {
-                patcher.Initializer?.Invoke();
-            } catch (Exception e) {
-                progressable.Message(MessageType.Fatal, $"Patcher {patcher.TypeName} failed to initialize\n{e}");
-            }
-        }
-
-        setTaskProgress(1 / 3f);
-
-        var assembliesByFile = Pool.Assemblies.ToDictionary(asm => asm.FileName);
-
-        // Patch(ref AssemblyDefinition)
-        foreach (var patcher in patchers) {
-            // TargetDLLs
-            IEnumerable<string> targetDLLs;
-            try {
-                targetDLLs = patcher.TargetDLLs();
-            } catch (Exception e) {
-                progressable.Message(MessageType.Fatal, $"Patcher {patcher.TypeName} failed in TargetDLLs\n{e}");
-                continue;
-            }
-
-            if (targetDLLs == null) continue;
-
-            foreach (var targetDLL in targetDLLs)
-                if (assembliesByFile.TryGetValue(targetDLL, out var modAsm)) {
-                    try {
-                        patcher.Patcher?.Invoke(ref modAsm.AsmDef);
-                    } catch (Exception e) {
-                        progressable.Message(MessageType.Fatal, $"Patcher {patcher.TypeName} failed to patch {targetDLL}\n{e}");
-                    }
-                }
-        }
-
-        setTaskProgress(2 / 3f);
-
-        // Finish()
-        foreach (var patcher in patchers) {
-            try {
-                patcher.Finalizer?.Invoke();
-            } catch (Exception e) {
-                progressable.Message(MessageType.Fatal, $"Patcher {patcher.TypeName} failed to finalize\n{e}");
-            }
-        }
-
-        setTaskProgress(3 / 3f);
     }
 
     private void LoadAssemblies(IProgressable progressable, Action<float> setTaskProgress)

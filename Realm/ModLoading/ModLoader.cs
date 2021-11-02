@@ -21,9 +21,14 @@ sealed class ModLoader
 
         Unload(progressable);
 
-        PluginWrapper.WrapPluginsThenSave(progressable);
+        PluginWrapper.WrapPlugins(progressable, out var wrappedAsms);
 
         if (progressable.ProgressState == ProgressStateType.Failed) return;
+
+        if (wrappedAsms.Count > 0) {
+            State.Instance.Prefs.Enable(wrappedAsms);
+            State.Instance.Prefs.Save();
+        }
 
         progressable.Message(MessageType.Info, "Reading assemblies");
 
@@ -33,6 +38,9 @@ sealed class ModLoader
         // Not like anyone would do that.
         RwmodFile[] rwmods = RwmodFile.GetRwmodFiles();
 
+        // Ensure that these streams get disposed after we're done using them.
+        using Disposable disposeStreams = new(() => { foreach (var r in rwmods) r.Stream.Dispose(); });
+
         foreach (var rwmod in rwmods) {
             if (State.Instance.Prefs.EnabledMods.Contains(rwmod.Header.Name)) {
                 plugins.Add(rwmod);
@@ -41,28 +49,23 @@ sealed class ModLoader
 
         AssemblyPool assemblyPool = AssemblyPool.Read(progressable, plugins);
 
-        if (progressable.ProgressState == ProgressStateType.Failed) goto Ret;
+        if (progressable.ProgressState == ProgressStateType.Failed) return;
         progressable.Message(MessageType.Info, "Loading assemblies");
         progressable.Progress = 0;
 
         LoadedAssemblyPool = LoadedAssemblyPool.Load(progressable, assemblyPool);
 
-        if (progressable.ProgressState == ProgressStateType.Failed) goto Ret;
+        if (progressable.ProgressState == ProgressStateType.Failed) return;
         progressable.Message(MessageType.Info, "Enabling mods");
         progressable.Progress = 0;
 
         LoadedAssemblyPool.InitializeMods(progressable);
 
-        if (progressable.ProgressState == ProgressStateType.Failed) goto Ret;
+        if (progressable.ProgressState == ProgressStateType.Failed) return;
 
         // Call Reload after the mods are loaded
         // This ensures they have an instance to pass the state to
         CallReload(progressable, reloadState);
-
-    Ret:
-        foreach (var rwmod in rwmods) {
-            rwmod.Stream.Dispose();
-        }
     }
 
     private void CallReload(IProgressable progressable, List<ModReloadState> reloadState)

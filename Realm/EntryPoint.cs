@@ -21,6 +21,7 @@ namespace Realm;
 static class EntryPoint
 {
     private static List<string> earlyWrappedAsms = new();
+    private static bool extraPatchers;
     private static bool initialized;
     private static bool chainloaderHooked;
 
@@ -35,6 +36,7 @@ static class EntryPoint
         }
 
         initialized = true;
+        extraPatchers = AssemblyPatcher.PatcherPlugins.Count > 2;
 
         // Have to use EmptyProgressable and can't log the result here.
         ModLoading.PluginWrapper.WrapPlugins(new EmptyProgressable(), out earlyWrappedAsms);
@@ -42,9 +44,6 @@ static class EntryPoint
         // Can't reference or hook Chainloader before it's been initialized on its own or the game bluescreens
         // So, instead, just track the logger that Chainloader uses.
         new Hook(typeof(Logger).GetMethod("LogMessage", BindingFlags.NonPublic | BindingFlags.Static), typeof(EntryPoint).GetMethod(nameof(Logger_Log)));
-
-        // Also, prevent patchers from being disposed.
-        new Hook(typeof(AssemblyPatcher).GetMethod("DisposePatchers"), delegate(Action o) { });
     }
 
     public static void Logger_Log(Action<object> orig, object data)
@@ -82,7 +81,7 @@ static class EntryPoint
         new Hook(preloaderRunnerType.GetMethod("LocalResolve", BindingFlags.NonPublic | BindingFlags.Static), PreResolve);
 
         try {
-            Program.Main(earlyWrappedAsms);
+            Program.Main(earlyWrappedAsms, extraPatchers);
         } catch (Exception e) {
             Program.Logger.LogFatal(e);
         }

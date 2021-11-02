@@ -18,13 +18,15 @@ static class Program
 
     // Called just after the Chainloader starts and likely before the game runs
     // Perfect place to load plugins and add hooks
-    internal static void Main(List<string> earlyWrappedAsms)
+    internal static void Main(List<string> earlyWrappedAsms, bool extraPatchers)
     {
         if (!File.Exists(RealmPaths.MutatorPath)) {
             Logger.LogFatal("Mutator not present. Please reinstall Realm!");
             ReinstallNotif.ApplyHooks();
             return;
         }
+
+        State.Instance.NoHotReloading = extraPatchers;
 
         Logger.LogDebug("Debug logging enabled.");
 
@@ -39,7 +41,8 @@ static class Program
 
         if (!skip) {
             State.Instance.Prefs.Load();
-            State.Instance.Prefs.EnableThenSave(earlyWrappedAsms);
+            State.Instance.Prefs.Enable(earlyWrappedAsms);
+            State.Instance.Prefs.Save();
             State.Instance.Mods.Reload(new Progressable());
         }
 

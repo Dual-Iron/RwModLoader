@@ -2,6 +2,7 @@
 using Realm.Assets;
 using Realm.Jobs;
 using Realm.Logging;
+using UnityEngine;
 
 namespace Realm.Gui.Local;
 
@@ -24,6 +25,14 @@ sealed class ModsMenu : Menu.Menu
             anchorX = 0,
             anchorY = 0
         }));
+
+        if (ShouldSavingQuit) {
+            MenuLabel ml = new(this, Page, "*this will close the game", new(360, 25), new(110, 30), false);
+
+            ml.label.color = MenuColor(MenuColors.MediumGrey).rgb;
+
+            Page.subObjects.Add(ml);
+        }
 
         // Buttons
         //Page.subObjects.Add(nextButton = new BigArrowButton(this, Page, "", new(1116f, 668f), 1));
@@ -79,9 +88,11 @@ sealed class ModsMenu : Menu.Menu
     private readonly FSprite headerShadowSprite;
 
     private Page Page => pages[0];
+    private bool ShouldSavingQuit => State.Instance.NoHotReloading;
 
     private Job? performingJob;     // Current job.
     private bool shutDownMusic;     // Set false to not restart music on shutdown. Useful for refreshing.
+    private bool errors;
 
     private bool PreventButtonClicks => manager.upcomingProcess != null || performingJob != null;
 
@@ -113,6 +124,11 @@ sealed class ModsMenu : Menu.Menu
             }
         }
 
+        if (errors) {
+            cancelButton.menuLabel.text = "EXIT GAME";
+            cancelButton.GetButtonBehavior.greyedOut = false;
+        }
+
         base.Update();
     }
 
@@ -126,6 +142,11 @@ sealed class ModsMenu : Menu.Menu
     public override void Singal(MenuObject sender, string message)
     {
         if (sender == cancelButton) {
+            if (errors) {
+                Application.Quit();
+                return;
+            }
+
             manager.RequestMainProcessSwitch(ProcessManager.ProcessID.MainMenu);
             PlaySound(SoundID.MENU_Switch_Page_Out);
             shutDownMusic = true;
@@ -158,11 +179,9 @@ sealed class ModsMenu : Menu.Menu
     {
         State.Instance.Prefs.EnabledMods.Clear();
 
-        List<string> delete = new();
-
         foreach (var panel in Panels) {
             if (panel.WillDelete) {
-                delete.Add(panel.Rwmod.FilePath);
+                File.Delete(panel.Rwmod.FilePath);
             } else if (panel.IsEnabled) {
                 State.Instance.Prefs.EnabledMods.Add(panel.Rwmod.Name);
             }
@@ -170,13 +189,16 @@ sealed class ModsMenu : Menu.Menu
 
         State.Instance.Prefs.Save();
 
-        State.Instance.Mods.Reload(performingProgress);
-
-        foreach (var file in delete) {
-            File.Delete(file);
+        if (ShouldSavingQuit) {
+            Application.Quit();
+            return;
         }
 
-        if (performingProgress.ProgressState != ProgressStateType.Failed) {
+        State.Instance.Mods.Reload(performingProgress);
+
+        if (performingProgress.ProgressState == ProgressStateType.Failed) {
+            errors = true;
+        } else {
             manager.RequestMainProcessSwitch(ProcessManager.ProcessID.MainMenu);
         }
     }
@@ -186,15 +208,18 @@ sealed class ModsMenu : Menu.Menu
         if (selectedObject is IHoverable hoverable) {
             return hoverable.GetHoverInfo(selectedObject);
         }
+
         if (selectedObject?.owner is IHoverable ownerHoverable) {
             return ownerHoverable.GetHoverInfo(selectedObject);
         }
 
+        if (selectedObject == cancelButton && errors) return "Exit game";
         if (selectedObject == cancelButton) return "Return to main menu";
-        if (selectedObject == saveButton) return "Save changes, reload mods, and return to main menu";
+        if (selectedObject == saveButton && ShouldSavingQuit) return "Save changes and exit the game";
+        if (selectedObject == saveButton) return "Save changes and return to main menu";
         if (selectedObject == enableAll) return "Enable all mods";
         if (selectedObject == disableAll) return "Disable all mods";
-        if (selectedObject == refresh) return "Refresh mods";
+        if (selectedObject == refresh) return "Refresh mod list";
 
         return base.UpdateInfoText();
     }

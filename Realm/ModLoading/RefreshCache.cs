@@ -13,7 +13,11 @@ sealed class RefreshCache
 
     public void Refresh(IProgressable progressable)
     {
-        PluginWrapper.WrapPluginsThenSave(progressable);
+        State.Instance.Prefs.Load();
+
+        PluginWrapper.WrapPlugins(progressable, out _);
+
+        if (progressable.ProgressState == ProgressStateType.Failed) return;
 
         headers = RwmodFileHeader.GetRwmodHeaders().ToList();
     }

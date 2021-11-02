@@ -29,44 +29,58 @@ sealed class AssemblyPool
         int count = -1;
 
         foreach (var rwmod in rwmods) {
-            foreach (var fileEntry in rwmod.Entries) {
+            var dlls = rwmod.Entries.Where(f => f.FileName.EndsWith(".dll"));
+
+            foreach (var fileEntry in dlls) {
                 count++;
                 progressable.Progress = count / (count + 1f);
 
-                AssemblyDefinition asm = AssemblyDefinition.ReadAssembly(
-                    stream: fileEntry.GetStreamSplice(rwmod.Stream),
-                    parameters: new() { ReadSymbols = false, AssemblyResolver = resolver
-                    });
-
-                string name = asm.Name.Name;
-
-                // If the assembly is blacklisted or not a mod assembly, skip.
-                if (ignore.Contains(name) || !IsPatched(asm, out var modTypes))
-                    continue;
-
-                // If an assembly with this name already exists,
-                if (ret.modAssemblies.TryGetValue(name, out ModAssembly conflicting)) {
-                    // If it's a different major version, there's a conflict.
-                    if (asm.Name.Version.Major != conflicting.AsmDef.Name.Version.Major) {
-                        progressable.Message(
-                            messageType: MessageType.Fatal,
-                            message: $"Two assemblies named {name} are incompatible: {asm.Name.Version} from {rwmod.Header.Name}, and {conflicting.AsmDef.Name.Version} from {conflicting.Rwmod}."
-                            );
-                        continue;
-                    }
-                    // If it's a more recent version, skip.
-                    else if (conflicting.AsmDef.Name.Version > asm.Name.Version)
-                        continue;
-                    // Otherwise, replace the existing one.
-                }
-
-                ret.modAssemblies[name] = new(rwmod, fileEntry.Index, new AssemblyDescriptor(asm, modTypes), asm);
-                asm.Name.Name += IterationSeparator + ret.ID;
-                asm.MainModule.Mvid = Guid.NewGuid();
+                _ = TryAddAsm(ret, fileEntry, rwmod);
             }
         }
 
         return ret;
+
+        ModAssembly? TryAddAsm(AssemblyPool ret, FileEntry fileEntry, RwmodFile rwmod)
+        {
+            AssemblyDefinition asm;
+
+            try {
+                asm = AssemblyDefinition.ReadAssembly(
+                    stream: fileEntry.GetStreamSplice(rwmod.Stream),
+                    parameters: new() { ReadSymbols = false, AssemblyResolver = resolver }
+                    );
+            } catch {
+                return null;
+            }
+
+            string name = asm.Name.Name;
+
+            // If the assembly is blacklisted or not a mod assembly, skip.
+            if (ignore.Contains(name) || !IsPatched(asm, out var modTypes))
+                return null;
+
+            // If an assembly with this name already exists,
+            if (ret.modAssemblies.TryGetValue(name, out ModAssembly conflicting)) {
+                // If it's a different major version, there's a conflict.
+                if (asm.Name.Version.Major != conflicting.AsmDef.Name.Version.Major) {
+                    progressable.Message(
+                        messageType: MessageType.Fatal,
+                        message: $"Two assemblies named {name} are incompatible: {asm.Name.Version} from {rwmod.Header.Name}, and {conflicting.AsmDef.Name.Version} from {conflicting.Rwmod}."
+                        );
+                    return null;
+                }
+                // If it's a more recent version, skip.
+                else if (conflicting.AsmDef.Name.Version > asm.Name.Version)
+                    return null;
+            }
+
+            ret.modAssemblies[name] = new(rwmod, fileEntry.Index, new AssemblyDescriptor(asm, modTypes), asm);
+            asm.Name.Name += IterationSeparator + ret.ID;
+            asm.MainModule.Mvid = Guid.NewGuid();
+
+            return ret.modAssemblies[name];
+        }
 
         static bool IsPatched(AssemblyDefinition definition, [MaybeNullWhen(false)] out IList<string> typeNames)
         {
