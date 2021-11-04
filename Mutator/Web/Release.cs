@@ -1,5 +1,4 @@
-﻿using Mutator.IO;
-using System.Net;
+﻿using System.Net;
 
 namespace Mutator.Web;
 
@@ -8,9 +7,9 @@ sealed class Release
     private readonly IList<string> uris;
 
     public string Body { get; }
-    public RwmodVersion Version { get; }
+    public SemVer Version { get; }
 
-    public Release(IList<string> uris, RwmodVersion version, string body)
+    public Release(IList<string> uris, SemVer version, string body)
     {
         this.uris = uris;
         Body = body;

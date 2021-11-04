@@ -4,11 +4,11 @@ namespace Realm.ModLoading;
 
 sealed class RefreshCache
 {
-    private List<RwmodFileHeader> headers;
+    private ICollection<RwmodFileHeader> headers;
 
     public RefreshCache()
     {
-        headers = RwmodFileHeader.GetRwmodHeaders().ToList();
+        headers = RwmodFileHeader.GetRwmodHeaders();
     }
 
     public void Refresh(IProgressable progressable)
@@ -19,7 +19,7 @@ sealed class RefreshCache
 
         if (progressable.ProgressState == ProgressStateType.Failed) return;
 
-        headers = RwmodFileHeader.GetRwmodHeaders().ToList();
+        headers = RwmodFileHeader.GetRwmodHeaders();
     }
 
     public IEnumerable<RwmodFileHeader> Headers => headers;

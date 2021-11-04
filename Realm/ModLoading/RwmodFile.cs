@@ -6,31 +6,49 @@ sealed class RwmodFile
 {
     public static string[] GetRwmodFilePaths() => Directory.GetFiles(RealmPaths.ModsFolder, "*.rwmod", SearchOption.TopDirectoryOnly);
 
-    public static RwmodFile[] GetRwmodFiles()
+    public static ICollection<RwmodFile> GetRwmodFiles()
     {
+        List<RwmodFile> ret = new();
+
         string[] files = GetRwmodFilePaths();
 
-        RwmodFile[] ret = new RwmodFile[files.Length];
-
-        for (int i = 0; i < ret.Length; i++) {
-            ret[i] = new(files[i]);
+        foreach (string filePath in files) {
+            if (Read(filePath) is RwmodFile r)
+                ret.Add(r);
         }
 
         return ret;
     }
 
-    public RwmodFile(string path)
+    public static RwmodFile? Read(string path)
     {
-        FileName = Path.GetFileName(path);
-        FilePath = path;
-        Stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-        Header = new(path, Stream);
-        Entries = new(FileEntry.GetFileEntries(Header, Stream));
+        var fileName = Path.GetFileName(path);
+        var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+        var headerR = RwmodHeader.Read(stream);
+
+        if (headerR.MatchFailure(out var header, out var err)) {
+            Program.Logger.LogWarning($"Couldn't read RWMOD file \"{fileName}\": {err}");
+            stream.Dispose();
+            return null;
+        }
+
+        var entries = new ReadOnlyCollection<RwmodFileEntry>(RwmodFileEntry.ReadAll(stream).ToList());
+
+        return new(fileName, path, stream, header, entries);
     }
 
     public readonly string FileName;
     public readonly string FilePath;
     public readonly Stream Stream;
-    public readonly RwmodFileHeader Header;
-    public readonly ReadOnlyCollection<FileEntry> Entries;
+    public readonly RwmodHeader Header;
+    public readonly ReadOnlyCollection<RwmodFileEntry> Entries;
+
+    private RwmodFile(string fileName, string path, FileStream stream, RwmodHeader header, ReadOnlyCollection<RwmodFileEntry> entries)
+    {
+        FileName = fileName;
+        FilePath = path;
+        Stream = stream;
+        Header = header;
+        Entries = entries;
+    }
 }

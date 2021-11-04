@@ -13,6 +13,7 @@ readonly struct ExitStatus
         FolderNotFound,
         RwFolderNotFound,
         RwPathInvalid,
+        FileTooLarge,
         IOError = 0x30,
         ConnectionFailed
     }
@@ -41,9 +42,10 @@ readonly struct ExitStatus
     public static ExitStatus ExpectedArg => new(Codes.ExpectedArg);
     public static ExitStatus ConnectionFailed => new(Codes.ConnectionFailed);
     public static ExitStatus InvalidTagName => new(Codes.InvalidTagName);
+    public static ExitStatus FileTooLarge(string path) => new(Codes.FileTooLarge, $"file \"{path}\" is too large");
     public static ExitStatus FileNotFound(string path) => new(Codes.FileNotFound, $"file \"{path}\" not found");
     public static ExitStatus FolderNotFound(string path) => new(Codes.FolderNotFound, $"folder \"{path}\" not found");
-    public static ExitStatus CorruptRwmod(string name) => new(Codes.CorruptRwmod, $"rwmod \"{name}\" is corrupt");
+    public static ExitStatus CorruptRwmod(string name, string reason) => new(Codes.CorruptRwmod, $"rwmod \"{name}\" is corrupt: {reason}");
     public static ExitStatus RwFolderNotFound =>
         new(Codes.RwFolderNotFound, $"couldn't find the Rain World directory; create a \"path.txt\" file in \"{Path.GetDirectoryName(Environment.ProcessPath)}\" that contains the path to the Rain World folder");
     public static ExitStatus RwPathInvalid =>

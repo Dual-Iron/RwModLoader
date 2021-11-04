@@ -20,13 +20,11 @@ static class Wrapper
 
         if (files.Count == 0) return ExitStatus.Success;
 
-        RwmodFileHeader? header = GetAssemblyHeader(filePath) ?? new(Path.GetFileName(filePath), "");
+        RwmodHeader? header = GetAssemblyHeader(filePath) ?? new(0, new(0, 1, 0), Path.GetFileName(filePath), "", "");
 
         using Stream rwmodStream = File.Create(ExtIO.GetModPath(header.Name));
 
         header.Write(rwmodStream);
-
-        ushort count = 0;
 
         foreach (string file in files) {
             var patchResult = Patcher.Patch(file);
@@ -36,23 +34,21 @@ static class Wrapper
 
             using Stream fileStream = File.OpenRead(file);
 
-            RwmodOperations.WriteRwmodEntry(rwmodStream, new() {
-                FileName = Path.GetFileName(file),
-                Contents = fileStream
-            });
+            if (fileStream.Length > uint.MaxValue) return ExitStatus.FileTooLarge(file);
 
-            count++;
+            RwmodFileEntry entry = new(Path.GetFileName(file), (uint)fileStream.Length);
+
+            entry.Write(rwmodStream);
+
+            RwmodIO.CopyStream(fileStream, rwmodStream, fileStream.Length);
         }
-
-        rwmodStream.Position = RwmodFileHeader.EntryCountByteOffset;
-        rwmodStream.Write(BitConverter.GetBytes(count));
 
         Console.Write(header.Name);
 
         return ExitStatus.Success;
     }
 
-    private static RwmodFileHeader? GetAssemblyHeader(string filePath)
+    private static RwmodHeader? GetAssemblyHeader(string filePath)
     {
         static string GetAuthor(AssemblyDefinition asm)
         {
@@ -69,10 +65,7 @@ static class Wrapper
         try {
             using var asm = AssemblyDefinition.ReadAssembly(filePath);
 
-            return new RwmodFileHeader(asm.Name.Name, GetAuthor(asm)) {
-                ModVersion = new(asm.Name.Version ?? new(0, 0, 1)),
-                DisplayName = asm.Name.Name
-            };
+            return new RwmodHeader(0, new SemVer(asm.Name.Version), asm.Name.Name, GetAuthor(asm), "");
         } catch {
             return null;
         }

@@ -29,7 +29,7 @@ sealed class AssemblyPool
         int count = -1;
 
         foreach (var rwmod in rwmods) {
-            var dlls = rwmod.Entries.Where(f => f.FileName.EndsWith(".dll"));
+            var dlls = rwmod.Entries.Where(f => f.Name.EndsWith(".dll"));
 
             foreach (var fileEntry in dlls) {
                 count++;
@@ -41,13 +41,13 @@ sealed class AssemblyPool
 
         return ret;
 
-        ModAssembly? TryAddAsm(AssemblyPool ret, FileEntry fileEntry, RwmodFile rwmod)
+        ModAssembly? TryAddAsm(AssemblyPool ret, RwmodFileEntry fileEntry, RwmodFile rwmod)
         {
             AssemblyDefinition asm;
 
             try {
                 asm = AssemblyDefinition.ReadAssembly(
-                    stream: fileEntry.GetStreamSplice(rwmod.Stream),
+                    stream: new SpliceStream(rwmod.Stream, fileEntry.Offset, fileEntry.Size),
                     parameters: new() { ReadSymbols = false, AssemblyResolver = resolver }
                     );
             } catch {
@@ -75,7 +75,7 @@ sealed class AssemblyPool
                     return null;
             }
 
-            ret.modAssemblies[name] = new(rwmod, fileEntry.Index, new AssemblyDescriptor(asm, modTypes), asm);
+            ret.modAssemblies[name] = new(rwmod, fileEntry, new AssemblyDescriptor(asm, modTypes), asm);
             asm.Name.Name += IterationSeparator + ret.ID;
             asm.MainModule.Mvid = Guid.NewGuid();
 

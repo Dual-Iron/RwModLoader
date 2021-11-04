@@ -7,6 +7,8 @@ internal static class RealmUtils
     public static RainWorld? RainWorld => rw == null ? rw = UnityEngine.Object.FindObjectOfType<RainWorld>() : rw;
 #pragma warning restore IDE0029
 
+    public static bool Enabled(this RwmodHeader header) => State.Instance.Prefs.EnabledMods.Contains(header.Name);
+
     public static void CopyTo(this Stream from, Stream to)
     {
         byte[] b = new byte[32768];

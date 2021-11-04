@@ -9,26 +9,28 @@ sealed class ModPanel : RectangularMenuObject, CheckBox.IOwnCheckBox, IListable,
     public const float Height = 36;
     public const float Width = 540;
 
-    public ModPanel(RwmodFileHeader rwmod, MenuObject owner, Vector2 pos) : base(owner.menu, owner, pos, new(Width, Height))
+    public ModPanel(RwmodFileHeader fileHeader, MenuObject owner, Vector2 pos) : base(owner.menu, owner, pos, new(Width, Height))
     {
-        Rwmod = rwmod;
+        var header = fileHeader.Header;
+
+        FileHeader = fileHeader;
 
         FContainer parent = Container;
         parent.AddChild(Container = new());
 
-        IsEnabled = rwmod.Enabled;
+        IsEnabled = header.Enabled();
 
         float posX = 0;
 
         subObjects.Add(enabledCheckBox = new CheckBox(menu, this, this, new(posX += 10, size.y / 2 - 12), 0, "", ""));
 
-        string display = $"{rwmod.DisplayName} v{rwmod.ModVersion.Major}.{rwmod.ModVersion.Minor}";
+        string display = $"{header.Name} v{header.Version.Major}.{header.Version.Minor}";
         float displayWidth = display.MeasureWidth("DisplayFont");
         MenuLabel displayLabel = new(menu, this, display, new(posX += 34, 2), new(displayWidth, size.y), true);
         subObjects.Add(displayLabel);
 
-        if (!string.IsNullOrEmpty(rwmod.Author)) {
-            string author = $"by {rwmod.Author}";
+        if (!string.IsNullOrEmpty(header.Owner)) {
+            string author = $"by {header.Owner}";
             float authorWidth = author.MeasureWidth("font");
             MenuLabel authorLabel = new(menu, this, author, new(posX += displayWidth + 4, 2), new(authorWidth, size.y), false);
             subObjects.Add(authorLabel);
@@ -43,7 +45,7 @@ sealed class ModPanel : RectangularMenuObject, CheckBox.IOwnCheckBox, IListable,
         }));
     }
 
-    public readonly RwmodFileHeader Rwmod;
+    public readonly RwmodFileHeader FileHeader;
     private readonly CheckBox enabledCheckBox;
     private readonly SymbolButton deleteButton;
     private readonly MenuSprite bar;

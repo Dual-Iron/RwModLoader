@@ -31,7 +31,7 @@ static class ExtIO
         }
     }
 
-    public static Encoding Enc => Encoding.ASCII;
+    public static Encoding Enc => Encoding.Unicode;
 
     public static string UserPath { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".rw");
 

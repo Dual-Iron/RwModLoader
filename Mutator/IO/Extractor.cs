@@ -26,15 +26,17 @@ static class Extractor
 
         Directory.CreateDirectory(directoryNameSafe);
 
-        using Stream rwmodFileStream = File.Open(filePath, FileMode.Open, FileAccess.Read);
+        using Stream rwmodStream = File.Open(filePath, FileMode.Open, FileAccess.Read);
 
-        var header = RwmodFileHeader.Read(rwmodFileStream);
+        if (RwmodHeader.Read(rwmodStream).MatchFailure(out _, out var err)) {
+            return ExitStatus.CorruptRwmod(filePath, err);
+        }
 
-        RwmodOperations.ReadRwmodEntries(
-            header,
-            rwmodFileStream,
-            name => File.Create(Path.Combine(directoryNameSafe, name))
-            );
+        foreach (var entry in RwmodFileEntry.ReadAll(rwmodStream)) {
+            using Stream fs = File.Create(Path.Combine(directoryNameSafe, entry.Name));
+
+            RwmodIO.CopyStream(new SpliceStream(rwmodStream, entry.Offset, entry.Size), fs, entry.Size);
+        }
 
         return ExitStatus.Success;
     }

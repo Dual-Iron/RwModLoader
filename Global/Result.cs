@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace Mutator;
+namespace Rwml;
 
 readonly struct Result<T, E>
 {

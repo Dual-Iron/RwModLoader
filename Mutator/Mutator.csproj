@@ -11,6 +11,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Using Include="Rwml"/>
+    <Using Include="Rwml.IO"/>
+    <Using Include="System.Linq"/>
+
+    <Compile Include="../Global/**/*.cs" />
+    
     <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
     <PackageReference Include="Mono.Cecil" Version="0.11.4" />
     

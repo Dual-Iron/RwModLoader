@@ -1,14 +1,12 @@
-﻿using Mutator.IO;
-using System.Net;
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace Mutator.Web;
 
 static class SelfUpdater
 {
-    private static async Task<Result<RwmodVersion, HttpStatusCode>> GetRepoVersion(string user, string repo)
+    private static async Task<Result<SemVer, ExitStatus>> GetRepoVersion(string user, string repo)
     {
-        var result = await Cache.Fetch<HttpStatusCode>($"tagname-{user}-{repo}", async () => {
+        var result = await Cache.Fetch<ExitStatus>($"tagname-{user}-{repo}", async () => {
             using var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.github.com/repos/{user}/{repo}/releases/latest");
             request.Headers.Add("Accept", "application/vnd.github.v3+json");
             request.Headers.Add("User-Agent", "downloader-" + Environment.ProcessId);
@@ -16,7 +14,7 @@ static class SelfUpdater
             using var response = await ExtWeb.Client.SendAsync(request);
 
             if (!response.IsSuccessStatusCode) {
-                return response.StatusCode;
+                return ExitStatus.ConnectionFailed;
             }
 
             using var content = response.Content;
@@ -25,7 +23,7 @@ static class SelfUpdater
             var tagName = doc.RootElement.GetProperty("tag_name").GetString();
 
             if (tagName == null)
-                return HttpStatusCode.OK;
+                return ExitStatus.InvalidTagName;
 
             return tagName;
         });
@@ -34,11 +32,12 @@ static class SelfUpdater
             return code;
         }
 
-        if (!RwmodVersion.TryParse(tagName, out var version)) {
-            return HttpStatusCode.OK;
+        var version = SemVer.Parse(tagName);
+        if (version == null) {
+            return ExitStatus.InvalidTagName;
         }
 
-        return version;
+        return version.Value;
     }
 
     public static async Task<ExitStatus> QuerySelfUpdate()
@@ -46,13 +45,10 @@ static class SelfUpdater
         var result = await GetRepoVersion("Dual-Iron", "RwModLoader");
 
         if (result.MatchFailure(out var remoteVersion, out var code)) {
-            if (code == HttpStatusCode.OK) {
-                return ExitStatus.InvalidTagName;
-            }
-            return ExitStatus.ConnectionFailed;
+            return code;
         }
 
-        RwmodVersion localVersion = new(typeof(SelfUpdater).Assembly.GetName().Version!);
+        SemVer localVersion = new(typeof(SelfUpdater).Assembly.GetName().Version!);
 
         bool needs = remoteVersion > localVersion;
 

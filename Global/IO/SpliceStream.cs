@@ -1,4 +1,4 @@
-﻿namespace Realm;
+﻿namespace Rwml.IO;
 
 sealed class SpliceStream : Stream
 {

@@ -120,6 +120,12 @@ sealed class ModsMenu : Menu.Menu
 
     public override void Update()
     {
+        if (performingJob?.Exception is Exception e) {
+            performingProgress.Message(MessageType.Fatal, e.ToString());
+            errors = true;
+            performingJob = null;
+        }
+
         foreach (var mob in Page.subObjects) {
             if (mob is ButtonTemplate button) {
                 button.GetButtonBehavior.greyedOut = PreventButtonClicks;
@@ -183,9 +189,9 @@ sealed class ModsMenu : Menu.Menu
 
         foreach (var panel in Panels) {
             if (panel.WillDelete) {
-                File.Delete(panel.Rwmod.FilePath);
+                File.Delete(panel.FileHeader.FilePath);
             } else if (panel.IsEnabled) {
-                State.Instance.Prefs.EnabledMods.Add(panel.Rwmod.Name);
+                State.Instance.Prefs.EnabledMods.Add(panel.FileHeader.Header.Name);
             }
         }
 

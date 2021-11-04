@@ -72,7 +72,7 @@ sealed class ModLoader
         List<RwmodFile> plugins = new();
 
         // DO NOT inline this variable.
-        RwmodFile[] rwmods = RwmodFile.GetRwmodFiles();
+        ICollection<RwmodFile> rwmods = RwmodFile.GetRwmodFiles();
 
         using Disposable disposeStreams = new(() => { foreach (var r in rwmods) r.Stream.Dispose(); });
 
