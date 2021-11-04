@@ -13,7 +13,7 @@ sealed class RefreshCache
 
     public void Refresh(IProgressable progressable)
     {
-        State.Instance.Prefs.Load();
+        State.Prefs.Load();
 
         PluginWrapper.WrapPlugins(progressable, out _);
 

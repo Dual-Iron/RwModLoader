@@ -26,7 +26,7 @@ internal static class StaticFixes
     private static string HookGetLocation(Func<Assembly, string> orig, Assembly self)
     {
         var ret = orig(self);
-        var lasmPool = State.Instance.Mods.LoadedAssemblyPool;
+        var lasmPool = State.Mods.LoadedAssemblyPool;
 
         if (lasmPool != null && ret.IsNullOrWhiteSpace()) {
             string name = self.GetName().Name;

@@ -63,8 +63,8 @@ sealed class ModLoader
         if (progressable.ProgressState == ProgressStateType.Failed) return;
 
         if (wrappedAsms.Count > 0) {
-            State.Instance.Prefs.Enable(wrappedAsms);
-            State.Instance.Prefs.Save();
+            State.Prefs.Enable(wrappedAsms);
+            State.Prefs.Save();
         }
 
         progressable.Message(MessageType.Info, "Reading assemblies");
@@ -77,7 +77,7 @@ sealed class ModLoader
         using Disposable disposeStreams = new(() => { foreach (var r in rwmods) r.Stream.Dispose(); });
 
         foreach (var rwmod in rwmods) {
-            if (State.Instance.Prefs.EnabledMods.Contains(rwmod.Header.Name)) {
+            if (State.Prefs.EnabledMods.Contains(rwmod.Header.Name)) {
                 plugins.Add(rwmod);
             }
         }

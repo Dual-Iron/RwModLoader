@@ -2,13 +2,11 @@
 
 namespace Realm;
 
-sealed class State
+static class State
 {
-    public static State Instance { get; } = new();
-
-    public readonly RefreshCache CurrentRefreshCache = new();
-    public readonly ModLoader Mods = new();
-    public readonly Preferences Prefs = new();
-    public bool DeveloperMode;
-    public bool NoHotReloading;
+    public static readonly RefreshCache CurrentRefreshCache = new();
+    public static readonly ModLoader Mods = new();
+    public static readonly Preferences Prefs = new();
+    public static bool DeveloperMode;
+    public static bool NoHotReloading;
 }

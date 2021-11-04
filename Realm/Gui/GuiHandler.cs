@@ -8,7 +8,7 @@ static class GuiHandler
     {
         ModsMenuMusic.Hook();
 
-        if (State.Instance.DeveloperMode) {
+        if (State.DeveloperMode) {
             HotReloadingGui.Hook();
         }
 

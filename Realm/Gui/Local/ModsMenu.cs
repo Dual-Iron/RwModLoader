@@ -46,9 +46,9 @@ sealed class ModsMenu : Menu.Menu
             Page.subObjects.Add(warning);
         }
 
-        State.Instance.CurrentRefreshCache.Refresh(new MessagingProgressable());
+        State.CurrentRefreshCache.Refresh(new MessagingProgressable());
 
-        foreach (var header in State.Instance.CurrentRefreshCache.Headers) {
+        foreach (var header in State.CurrentRefreshCache.Headers) {
             modListing.subObjects.Add(new ModPanel(header, Page, default));
         }
 
@@ -90,7 +90,7 @@ sealed class ModsMenu : Menu.Menu
     private readonly FSprite headerShadowSprite;
 
     private Page Page => pages[0];
-    private bool ShouldSavingQuit => State.Instance.NoHotReloading;
+    private bool ShouldSavingQuit => State.NoHotReloading;
 
     private Job? performingJob;     // Current job.
     private bool shutDownMusic;     // Set false to not restart music on shutdown. Useful for refreshing.
@@ -185,25 +185,25 @@ sealed class ModsMenu : Menu.Menu
 
     private void SaveExit()
     {
-        State.Instance.Prefs.EnabledMods.Clear();
+        State.Prefs.EnabledMods.Clear();
 
         foreach (var panel in Panels) {
             if (panel.WillDelete) {
                 File.Delete(panel.FileHeader.FilePath);
             } else if (panel.IsEnabled) {
-                State.Instance.Prefs.EnabledMods.Add(panel.FileHeader.Header.Name);
+                State.Prefs.EnabledMods.Add(panel.FileHeader.Header.Name);
             }
         }
 
-        State.Instance.Prefs.Save();
+        State.Prefs.Save();
 
         if (ShouldSavingQuit) {
             Application.Quit();
             return;
         }
 
-        State.Instance.Mods.Reload(performingProgress);
-        State.Instance.Mods.WarnHangingMods(performingProgress);
+        State.Mods.Reload(performingProgress);
+        State.Mods.WarnHangingMods(performingProgress);
 
         if (performingProgress.ProgressState == ProgressStateType.Failed) {
             errors = true;

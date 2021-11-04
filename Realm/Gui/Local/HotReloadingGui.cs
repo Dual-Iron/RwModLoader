@@ -31,11 +31,11 @@ static class HotReloadingGui
     {
         if (reloadingJob == null && message == HOT_RELOAD) {
             reloadingJob = Job.Start(() => {
-                State.Instance.Prefs.Load();
+                State.Prefs.Load();
 
                 MessagingProgressable progressable = new();
-                State.Instance.Mods.Reload(progressable);
-                State.Instance.Mods.WarnHangingMods(progressable);
+                State.Mods.Reload(progressable);
+                State.Mods.WarnHangingMods(progressable);
             });
             self.PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
             return;
