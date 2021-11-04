@@ -153,7 +153,7 @@ static class RealmInstaller
         });
 
         using (Stream rwbep = typeof(RealmInstaller).Assembly.GetManifestResourceStream("RwBep") ?? throw new("No stream!"))
-        using (ZipArchive archive = new(rwbep, ZipArchiveMode.Read, true, ExtIO.Enc))
+        using (ZipArchive archive = new(rwbep, ZipArchiveMode.Read, true))
             archive.ExtractToDirectory(tempDir);
 
         // Move BepInEx/config dir only on fresh installs. This prevents overwriting people's configs.
