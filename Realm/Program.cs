@@ -16,8 +16,7 @@ static class Program
 {
     public static ManualLogSource Logger { get; } = BepInEx.Logging.Logger.CreateLogSource("Realm");
 
-    // Called just after the Chainloader starts and likely before the game runs
-    // Perfect place to load plugins and add hooks
+    // Start doing stuff here.
     internal static void Main(List<string> earlyWrappedAsms, bool extraPatchers)
     {
         GuiFix.Fix();
