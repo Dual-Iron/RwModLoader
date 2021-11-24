@@ -1,4 +1,11 @@
-﻿using BepInEx;
+﻿global using Rwml.IO;
+global using System;
+global using System.IO;
+global using System.Text;
+global using System.Linq;
+global using System.Collections.Generic;
+
+using BepInEx;
 using BepInEx.Logging;
 using MonoMod.RuntimeDetour;
 using MonoMod.Cil;

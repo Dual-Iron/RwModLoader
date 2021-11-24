@@ -9,14 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Using Include="Rwml"/>
-    <Using Include="Rwml.IO"/>
-    <Using Include="System" />
-    <Using Include="System.IO" />
-    <Using Include="System.Text" />
-    <Using Include="System.Linq" />
-    <Using Include="System.Collections.Generic" />
-
     <Compile Include="../Global/**/*.cs" />
 
     <ProjectReference Include="../VirtualEnums/VirtualEnums.csproj" />

@@ -17,6 +17,7 @@ internal static class StaticFixes
     public static void Hook()
     {
         On.RainWorld.Start += RainWorld_Start;
+        On.RainWorld.LoadResources += RainWorld_LoadResources;
         On.RainWorldGame.ctor += RainWorldGame_ctor;
         On.ProcessManager.ctor += ProcessManager_ctor;
 
@@ -76,6 +77,7 @@ internal static class StaticFixes
             if (rw is not null) {
                 rw.Start();
                 RainWorld.LoadSetupValues(true);
+                rw.LoadResources();
 
                 if (rw.processManager != null) {
                     pm.Invoke(rw.processManager, new[] { rw });
@@ -103,6 +105,12 @@ internal static class StaticFixes
     {
         if (!stubbed)
             orig(self, manager);
+    }
+
+    private static void RainWorld_LoadResources(On.RainWorld.orig_LoadResources orig, RainWorld self)
+    {
+        if (!stubbed)
+            orig(self);
     }
 
     private static void RainWorld_Start(On.RainWorld.orig_Start orig, RainWorld self)
