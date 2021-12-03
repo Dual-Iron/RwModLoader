@@ -10,6 +10,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="..\RwBep\BepInEx\core\MonoMod.RuntimeDetour.dll" />
+    <Reference Include="../RwBep/BepInEx/core/MonoMod.RuntimeDetour.dll" />
   </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Copy Condition="Exists('$(RainWorldDir)')" SourceFiles="$(TargetPath)" DestinationFolder="$(RainWorldDir)/BepInEx/core" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="../RwBep/BepInEx/core" />
+  </Target>
 </Project>

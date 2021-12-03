@@ -13,38 +13,34 @@
 
     <ProjectReference Include="../VirtualEnums/VirtualEnums.csproj" />
     
-    <Reference Include="..\RwBep\BepInEx\core\BepInEx.dll" />
-    <Reference Include="..\RwBep\BepInEx\core\BepInEx.Preloader.dll" />
-    <Reference Include="..\RwBep\BepInEx\core\Mono.Cecil.dll" />
-    <Reference Include="..\RwBep\BepInEx\core\MonoMod.Utils.dll" />
-    <Reference Include="..\RwBep\BepInEx\core\MonoMod.RuntimeDetour.dll" />
-    <Reference Include="..\RwBep\BepInEx\core\HOOKS-Assembly-CSharp.dll" />
-    <Reference Include="..\RwBep\BepInEx\core\Partiality.dll" />
+    <Reference Include="../RwBep/BepInEx/core/BepInEx.dll" />
+    <Reference Include="../RwBep/BepInEx/core/BepInEx.Preloader.dll" />
+    <Reference Include="../RwBep/BepInEx/core/Mono.Cecil.dll" />
+    <Reference Include="../RwBep/BepInEx/core/MonoMod.Utils.dll" />
+    <Reference Include="../RwBep/BepInEx/core/MonoMod.RuntimeDetour.dll" />
+    <Reference Include="../RwBep/BepInEx/core/HOOKS-Assembly-CSharp.dll" />
+    <Reference Include="../RwBep/BepInEx/core/Partiality.dll" />
     
     <Reference Include="UnityEngine">
-      <HintPath>lib\refstub-UnityEngine.dll</HintPath>
+      <HintPath>lib/refstub-UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp">
-      <HintPath>lib\refstub-Assembly-CSharp.dll</HintPath>
+      <HintPath>lib/refstub-Assembly-CSharp.dll</HintPath>
     </Reference>
     
-    <EmbeddedResource Include="..\VirtualEnums\bin\Release\net35\EnumExtender.dll">
-      <Visible>false</Visible>
-      <LogicalName>ASMS.EnumExtender</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Assets\header-MODS.png">
+    <EmbeddedResource Include="Assets/header-MODS.png">
       <Visible>false</Visible>
       <LogicalName>ASSETS.MODS</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Assets\header-MODS-shadow.png">
+    <EmbeddedResource Include="Assets/header-MODS-shadow.png">
       <Visible>false</Visible>
       <LogicalName>ASSETS.MODS.SHADOW</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
   
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Copy Condition="Exists('$(RainWorldDir)')" SourceFiles="$(TargetPath)" DestinationFolder="$(RainWorldDir)\BepInEx\patchers" />
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="..\RwBep\BepInEx\patchers" />
-    <ZipDirectory SourceDirectory="..\RwBep" DestinationFile="..\RwBep.zip" Overwrite="true" />
+    <Copy Condition="Exists('$(RainWorldDir)')" SourceFiles="$(TargetPath)" DestinationFolder="$(RainWorldDir)/BepInEx/patchers" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="../RwBep/BepInEx/patchers" />
+    <ZipDirectory SourceDirectory="../RwBep" DestinationFile="../RwBep.zip" Overwrite="true" />
   </Target>
 </Project>

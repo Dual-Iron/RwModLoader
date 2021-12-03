@@ -45,7 +45,6 @@ static class Program
         bool skip = file.Bind("General", "SkipLoading", false, "While enabled, Realm won't self-update or load mods when starting the game.").Value;
 
         if (!skip) CheckForSelfUpdate();
-        LoadEmbeddedAssemblies();
         NeuterPartiality();
         StaticFixes.Hook();
 
@@ -109,11 +108,5 @@ static class Program
         }
 
         _ = new ILHook(typeof(ModManager).GetMethod("LoadAllMods"), LoadAllModsIL);
-    }
-
-    private static void LoadEmbeddedAssemblies()
-    {
-        // Eagerly load these assemblies because it can't hurt
-        PastebinMachine.EnumExtender.EnumExtender.Test();
     }
 }

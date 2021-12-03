@@ -74,11 +74,8 @@ static class EntryPoint
 
     private static void HookChainloader()
     {
-        Assembly preloaderAssembly = typeof(AssemblyPatcher).Assembly;
-        Type preloaderRunnerType = preloaderAssembly.GetType("BepInEx.Preloader.PreloaderRunner");
-
-        // Hook BepInEx's resolver so we can run before it.
-        new Hook(preloaderRunnerType.GetMethod("LocalResolve", BindingFlags.NonPublic | BindingFlags.Static), PreResolve);
+        // Eagerly load EnumExtender assembly
+        PastebinMachine.EnumExtender.EnumExtender.Test();
 
         try {
             Program.Main(earlyWrappedAsms, extraPatchers);
@@ -87,30 +84,4 @@ static class EntryPoint
             Program.Logger.LogFatal(e);
         }
     }
-
-    private static Assembly? PreResolve(Func<object, ResolveEventArgs, Assembly> orig, object sender, ResolveEventArgs args)
-    {
-        static Assembly? TryGet(string fullName)
-        {
-            AssemblyName name = new(fullName);
-
-            using Stream? asmStream = typeof(EntryPoint).Assembly.GetManifestResourceStream($"ASMS.{name.Name}");
-
-            if (asmStream == null) {
-                return null;
-            }
-
-            byte[] buffer = new byte[asmStream.Length];
-
-            using MemoryStream ms = new(buffer);
-
-            asmStream.CopyTo(ms);
-
-            return Assembly.Load(buffer);
-        }
-
-        return TryGet(args.Name) ?? orig(sender, args);
-    }
-
-    delegate Assembly? hook_LocalResolve(Func<object, ResolveEventArgs, Assembly> orig, object sender, ResolveEventArgs args);
 }
