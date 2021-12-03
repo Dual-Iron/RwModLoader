@@ -1,5 +1,5 @@
 ## How do I install mods?
-Put files ending in .dll in the "plugins" folder in the mods menu. Make sure to refresh the mods page.
+Put files that end with .dll into the "plugins" folder in the mods menu. Then, refresh the mods page.
 
 ## How do I uninstall mods?
 - For hook mods, disable or uninstall them in the mods menu.
