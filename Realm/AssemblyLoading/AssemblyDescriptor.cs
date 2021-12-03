@@ -86,6 +86,10 @@ sealed class AssemblyDescriptor
 
         void IModDescriptor.Unload()
         {
+            if (instance == null) {
+                return;
+            }
+
             // Remove mod before custom code. Ensures the mod is removed even if it fails to unload.
             var loadedMods = PartialityManager.Instance.modManager.loadedMods;
 
@@ -96,7 +100,7 @@ sealed class AssemblyDescriptor
             }
 
             // Disable mod
-            instance!.OnDisable();
+            instance.OnDisable();
         }
     }
 
