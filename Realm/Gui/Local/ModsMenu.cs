@@ -1,7 +1,9 @@
-﻿using Menu;
+﻿using BepInEx;
+using Menu;
 using Realm.Assets;
 using Realm.Jobs;
 using Realm.Logging;
+using System.Diagnostics;
 using UnityEngine;
 
 namespace Realm.Gui.Local;
@@ -9,6 +11,31 @@ namespace Realm.Gui.Local;
 sealed class ModsMenu : Menu.Menu
 {
     public const ProcessManager.ProcessID ModsMenuID = (ProcessManager.ProcessID)(-666);
+
+    private readonly MenuLabel quitWarning;
+    private readonly SimpleButton? openPatchesButton;
+    private readonly SimpleButton cancelButton;
+    private readonly SimpleButton saveButton;
+    private readonly SimpleButton enableAll;
+    private readonly SimpleButton disableAll;
+    private readonly SimpleButton refresh;
+    private readonly Listing modListing;
+
+    private readonly MenuContainer progDisplayContainer;
+    private readonly LoggingProgressable performingProgress = new();
+
+    private readonly FSprite headerSprite;
+    private readonly FSprite headerShadowSprite;
+
+    private Page Page => pages[0];
+
+    private Job? performingJob;     // Current job.
+    private bool shutDownMusic;     // Set false to not restart music on shutdown. Useful for refreshing.
+    private bool errors;
+
+    private bool PreventButtonClicks => manager.upcomingProcess != null || performingJob != null;
+
+    private bool QuitOnSave => State.NoHotReloading;
 
     public ModsMenu(ProcessManager manager) : base(manager, ModsMenuID)
     {
@@ -28,23 +55,29 @@ sealed class ModsMenu : Menu.Menu
 
         // Buttons
         //Page.subObjects.Add(nextButton = new BigArrowButton(this, Page, "", new(1116f, 668f), 1));
-        Page.subObjects.Add(cancelButton = new SimpleButton(this, Page, "CANCEL", "", new(200, 50), new(110, 30)));
-        Page.subObjects.Add(saveButton = new SimpleButton(this, Page, "SAVE & EXIT", "", new(360, 50), new(110, 30)));
-        Page.subObjects.Add(refresh = new SimpleButton(this, Page, "REFRESH", "", new(200, 200), new(110, 30)));
-        Page.subObjects.Add(disableAll = new SimpleButton(this, Page, "DISABLE ALL", "", new(200, 250), new(110, 30)));
-        Page.subObjects.Add(enableAll = new SimpleButton(this, Page, "ENABLE ALL", "", new(200, 300), new(110, 30)));
+        Page.subObjects.Add(cancelButton = new(this, Page, "CANCEL", "", new(200, 50), new(110, 30)));
+        Page.subObjects.Add(saveButton = new(this, Page, "SAVE & EXIT", "", new(360, 50), new(110, 30)));
+        Page.subObjects.Add(refresh = new(this, Page, "REFRESH", "", new(200, 200), new(110, 30)));
+        Page.subObjects.Add(disableAll = new (this, Page, "DISABLE ALL", "", new(200, 250), new(110, 30)));
+        Page.subObjects.Add(enableAll = new(this, Page, "ENABLE ALL", "", new(200, 300), new(110, 30)));
 
         modListing = new(Page, pos: new(1366 - ModPanel.Width - 200, 50), elementSize: new(ModPanel.Width, ModPanel.Height), elementsPerScreen: 15, edgePadding: 5);
-        
-        if (ShouldSavingQuit) {
-            MenuLabel notListedNotice = new(this, Page, "*patchers not listed", new(modListing.pos.x, modListing.pos.y - modListing.size.y / 2 - 10), modListing.size, false);
+
+        if (State.PatchMods.Count > 0) {
+            Page.subObjects.Add(openPatchesButton = new(this, Page, "PATCH MODS", "", new(200, 350), new(110, 30)));
+
+            string s = State.PatchMods.Count > 1 ? "s" : "";
+            string n = State.PatchMods.Count == 1 ? "a" : State.PatchMods.Count.ToString();
+
+            MenuLabel notListedNotice = new(this, Page, $"and {n} patch mod{s}", new(modListing.pos.x, modListing.pos.y - modListing.size.y / 2 - 15), modListing.size, false);
             notListedNotice.label.color = MenuColor(MenuColors.MediumGrey).rgb;
             Page.subObjects.Add(notListedNotice);
-
-            MenuLabel warning = new(this, Page, "*this will close the game", new(saveButton.pos.x, saveButton.pos.y - 25), saveButton.size, false);
-            warning.label.color = MenuColor(MenuColors.MediumGrey).rgb;
-            Page.subObjects.Add(warning);
         }
+
+        quitWarning = new(this, Page, "*this will close the game", new(saveButton.pos.x, saveButton.pos.y - 30), saveButton.size, false);
+        quitWarning.label.color = MenuColor(MenuColors.MediumGrey).rgb;
+        quitWarning.label.isVisible = false;
+        Page.subObjects.Add(quitWarning);
 
         State.CurrentRefreshCache.Refresh(new MessagingProgressable());
 
@@ -76,34 +109,11 @@ sealed class ModsMenu : Menu.Menu
         headerSprite.shader = manager.rainWorld.Shaders["MenuText"];
     }
 
-    private readonly SimpleButton cancelButton;
-    private readonly SimpleButton saveButton;
-    private readonly SimpleButton enableAll;
-    private readonly SimpleButton disableAll;
-    private readonly SimpleButton refresh;
-    private readonly Listing modListing;
-
-    private readonly MenuContainer progDisplayContainer;
-    private readonly LoggingProgressable performingProgress = new();
-
-    private readonly FSprite headerSprite;
-    private readonly FSprite headerShadowSprite;
-
-    private Page Page => pages[0];
-    private bool ShouldSavingQuit => State.NoHotReloading;
-
-    private Job? performingJob;     // Current job.
-    private bool shutDownMusic;     // Set false to not restart music on shutdown. Useful for refreshing.
-    private bool errors;
-
-    private bool PreventButtonClicks => manager.upcomingProcess != null || performingJob != null;
-
-    private IEnumerable<ModPanel> Panels {
-        get {
-            foreach (var sob in modListing.subObjects)
-                if (sob is ModPanel p)
-                    yield return p;
-        }
+    private IEnumerable<ModPanel> GetPanels()
+    {
+        foreach (var sob in modListing.subObjects)
+            if (sob is ModPanel p)
+                yield return p;
     }
 
     public override void ShutDownProcess()
@@ -143,6 +153,7 @@ sealed class ModsMenu : Menu.Menu
     public override void GrafUpdate(float timeStacker)
     {
         progDisplayContainer.Container.alpha = performingJob != null ? 1 : 0;
+        quitWarning.label.isVisible = QuitOnSave;
 
         base.GrafUpdate(timeStacker);
     }
@@ -169,15 +180,17 @@ sealed class ModsMenu : Menu.Menu
         }
 
         if (sender == enableAll) {
-            foreach (ModPanel panel in Panels) {
+            foreach (ModPanel panel in GetPanels()) {
                 panel.SetEnabled(true);
             }
         } else if (sender == disableAll) {
-            foreach (ModPanel panel in Panels) {
+            foreach (ModPanel panel in GetPanels()) {
                 panel.SetEnabled(false);
             }
         } else if (sender == refresh) {
             manager.RequestMainProcessSwitch(ID);
+        } else if (sender == openPatchesButton) {
+            Process.Start("explorer", $"\"{Path.Combine(Paths.BepInExRootPath, "monomod")}\"");
         }
 
         PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
@@ -187,7 +200,7 @@ sealed class ModsMenu : Menu.Menu
     {
         State.Prefs.EnabledMods.Clear();
 
-        foreach (var panel in Panels) {
+        foreach (var panel in GetPanels()) {
             if (panel.WillDelete) {
                 File.Delete(panel.FileHeader.FilePath);
             } else if (panel.IsEnabled) {
@@ -197,7 +210,7 @@ sealed class ModsMenu : Menu.Menu
 
         State.Prefs.Save();
 
-        if (ShouldSavingQuit) {
+        if (QuitOnSave) {
             Application.Quit();
             return;
         }
@@ -224,11 +237,12 @@ sealed class ModsMenu : Menu.Menu
 
         if (selectedObject == cancelButton && errors) return "Exit game";
         if (selectedObject == cancelButton) return "Return to main menu";
-        if (selectedObject == saveButton && ShouldSavingQuit) return "Save changes and exit the game";
+        if (selectedObject == saveButton && QuitOnSave) return "Save changes and exit the game";
         if (selectedObject == saveButton) return "Save changes and return to main menu";
         if (selectedObject == enableAll) return "Enable all mods";
         if (selectedObject == disableAll) return "Disable all mods";
         if (selectedObject == refresh) return "Refresh mod list";
+        if (selectedObject == openPatchesButton) return "Open folder containing patch mods";
 
         return base.UpdateInfoText();
     }

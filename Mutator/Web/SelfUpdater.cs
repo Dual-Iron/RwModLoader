@@ -42,18 +42,23 @@ static class SelfUpdater
 
     public static async Task<ExitStatus> QuerySelfUpdate()
     {
-        var result = await GetRepoVersion("Dual-Iron", "RwModLoader");
+        try {
+            var result = await GetRepoVersion("Dual-Iron", "RwModLoader");
 
-        if (result.MatchFailure(out var remoteVersion, out var code)) {
-            return code;
+            if (result.MatchFailure(out var remoteVersion, out var code)) {
+                return code;
+            }
+
+            SemVer localVersion = new(typeof(SelfUpdater).Assembly.GetName().Version!);
+
+            bool needs = remoteVersion > localVersion;
+
+            Console.Write(needs ? 'y' : 'n');
+
+            return ExitStatus.Success;
         }
-
-        SemVer localVersion = new(typeof(SelfUpdater).Assembly.GetName().Version!);
-
-        bool needs = remoteVersion > localVersion;
-
-        Console.Write(needs ? 'y' : 'n');
-
-        return ExitStatus.Success;
+        catch (AggregateException) {
+            return ExitStatus.ConnectionFailed;
+        }
     }
 }

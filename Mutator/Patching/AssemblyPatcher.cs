@@ -7,41 +7,6 @@ namespace Mutator.Patching;
 
 static class Patcher
 {
-    private sealed class RwMetadataResolver : MetadataResolver
-    {
-        public RwMetadataResolver(IAssemblyResolver assemblyResolver) : base(assemblyResolver)
-        {
-        }
-
-        public override TypeDefinition? Resolve(TypeReference type)
-        {
-            var ret = base.Resolve(type);
-
-            // Try to resolve mscorlib references with System.Core as well.
-            if (ret == null) {
-                if (type.Scope.Name == "mscorlib") {
-                    type.Scope.Name = "System.Core";
-
-                    ret = base.Resolve(type);
-
-                    // If it fails, reset the scopename to avoid unintended side-effects.
-                    if (ret == null)
-                        type.Scope.Name = "mscorlib";
-                } else if (type.Scope.Name == "System.Core") {
-                    type.Scope.Name = "mscorlib";
-
-                    ret = base.Resolve(type);
-
-                    // If it fails, reset the scopename to avoid unintended side-effects.
-                    if (ret == null)
-                        type.Scope.Name = "System.Core";
-                }
-            }
-
-            return ret;
-        }
-    }
-
     private const ushort version = 1;
 
     private static AssemblyDefinition GetBepAssemblyDef(string rwDir, string filePath)
@@ -72,6 +37,16 @@ static class Patcher
             return ExitStatus.Success;
         }
 
+        try {
+            return PatchSafe(filePath, rwDir);
+        }
+        catch (IOException e) {
+            return ExitStatus.IOError(e.Message);
+        }
+    }
+
+    private static ExitStatus PatchSafe(string filePath, string rwDir)
+    {
         using var asm = GetBepAssemblyDef(rwDir, filePath);
         using var resolver = asm.MainModule.AssemblyResolver; // Ensure this gets disposed.
 
@@ -80,6 +55,10 @@ static class Patcher
         }
 
         // Patch the fresh assembly.
+        if (CheckForMonomod(rwDir, asm, filePath)) {
+            return ExitStatus.Success;
+        }
+
         if (DoPatch(rwDir, asm).MatchFailure(out var modTypes, out var err2)) {
             return err2;
         }
@@ -92,6 +71,24 @@ static class Patcher
         asm.Write();
 
         return ExitStatus.Success;
+    }
+
+    private static bool CheckForMonomod(string rwDir, AssemblyDefinition asm, string filePath)
+    {
+        if (asm.MainModule.AssemblyReferences.Any(a => a.Name == "MonoMod") && asm.MainModule.Types.Any(t => t.Name.StartsWith("patch_"))) {
+            // Probably a monomod patch mod.
+            asm.Dispose();
+            asm.MainModule.AssemblyResolver.Dispose();
+
+            string filename = Path.GetFileNameWithoutExtension(filePath);
+
+            Directory.CreateDirectory(Path.Combine(rwDir, "BepInEx", "monomod"));
+
+            File.Move(filePath, Path.Combine(rwDir, "BepInEx", "monomod", $"Assembly-CSharp.{filename}.mm.dll"));
+
+            return true;
+        }
+        return false;
     }
 
     private static bool IsPatched(AssemblyDefinition asm)

@@ -26,6 +26,8 @@ static class Program
     // Start doing stuff here.
     internal static void Main(List<string> earlyWrappedAsms, bool extraPatchers)
     {
+        Logger.LogDebug("Debug logging enabled.");
+
         GuiFix.Fix();
 
         if (!File.Exists(RealmPaths.MutatorPath)) {
@@ -34,9 +36,9 @@ static class Program
             return;
         }
 
-        State.NoHotReloading = extraPatchers;
+        State.PatchMods.AddRange(GetPatchMods());
 
-        Logger.LogDebug("Debug logging enabled.");
+        State.NoHotReloading = extraPatchers || State.PatchMods.Count > 0;
 
         ConfigFile file = new(configPath: Path.Combine(Paths.ConfigPath, "Realm.cfg"), saveOnInit: true);
         State.DeveloperMode = file.Bind("General", "HotReloading", false, "While enabled, Realm will allow hot reloading assemblies in-game. This feature is unstable.").Value;
@@ -55,6 +57,27 @@ static class Program
         }
 
         GuiHandler.Hook();
+    }
+
+    private static List<string> GetPatchMods()
+    {
+        const string prefix = "Assembly-CSharp.";
+        const string suffix = ".mm.dll";
+
+        string mmPath = Path.Combine(Paths.BepInExRootPath, "monomod");
+        string[] patchMods = Directory.Exists(mmPath) ? Directory.GetFiles(mmPath) : new string[0];
+
+        List<string> ret = new(capacity: patchMods.Length);
+
+        foreach (string patchMod in patchMods) {
+            var fileName = Path.GetFileName(patchMod);
+
+            if (fileName.StartsWith(prefix) && fileName.EndsWith(suffix)) {
+                ret.Add(fileName.Substring(prefix.Length, fileName.Length - prefix.Length - suffix.Length));
+            }
+        }
+
+        return ret;
     }
 
     private static void CheckForSelfUpdate()
