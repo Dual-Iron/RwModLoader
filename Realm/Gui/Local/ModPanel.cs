@@ -132,10 +132,10 @@ sealed class ModPanel : RectangularMenuObject, CheckBox.IOwnCheckBox, IListable,
     string IHoverable.GetHoverInfo(MenuObject selected)
     {
         if (selected == enabledCheckBox) {
-            return $"{(IsEnabled ? "Disable" : "Enable")} mod";
+            return $"Click to {(IsEnabled ? "disable" : "enable")}";
         }
         if (selected == deleteButton) {
-            return $"{(WillDelete ? "Don't delete" : "Delete")} mod";
+            return $"Click to {(WillDelete ? "reinstall" : "uninstall")}";
         }
         return "";
     }

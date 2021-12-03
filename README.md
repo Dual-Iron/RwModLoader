@@ -13,8 +13,8 @@ Some important information before you install Realm:
 
 To install Realm, go to the [releases](https://github.com/Dual-Iron/RwModLoader/releases/latest) page.
 
-## Resources
-- [Tech support](.github/SUPPORT.md)
+## Resources and help
+- [Usage and support](.github/SUPPORT.md)
 - [Modder guide](MODDERS.md)
 - [Known issues](https://github.com/Dual-Iron/RwModLoader/issues)
 
