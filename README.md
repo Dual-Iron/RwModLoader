@@ -14,11 +14,9 @@ Some important information before you install Realm:
 To install Realm, go to the [releases](https://github.com/Dual-Iron/RwModLoader/releases/latest) page.
 
 ## Resources
-If you need technical support, go [here](.github/SUPPORT.md).
-
-If you're a modder and want to use hot reloading, go [here](MODDERS.md).
-
-To see known issues, go to the [issues](https://github.com/Dual-Iron/RwModLoader/issues) page.
+- [Tech support](.github/SUPPORT.md)
+- [Modder guide](MODDERS.md)
+- [Known issues](https://github.com/Dual-Iron/RwModLoader/issues)
 
 ## Credits
 - Dual
