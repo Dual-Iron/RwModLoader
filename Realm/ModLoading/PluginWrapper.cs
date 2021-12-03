@@ -28,6 +28,7 @@ static class PluginWrapper
 
         foreach (string pluginFile in pluginFiles) {
             try {
+                // TODO pass all args in at once to increase performance
                 MutatorProcess proc = MutatorProcess.Execute($"-w \"{pluginFile}\"");
 
                 if (proc.ExitCode == 0) {

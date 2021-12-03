@@ -58,7 +58,7 @@ static class SelfUpdater
 
             return ExitStatus.Success;
         }
-        catch (AggregateException) {
+        catch {
             return ExitStatus.ConnectionFailed;
         }
     }

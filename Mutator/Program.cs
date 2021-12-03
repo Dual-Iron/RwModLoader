@@ -36,7 +36,7 @@ while (argEnumerator.MoveNext()) {
     };
 
     if (!status.Successful) {
-        Console.Error.WriteLine(status);
+        Console.Error.Write(status);
 
         if (status.Code is ExitStatus.Codes.UnknownArg or ExitStatus.Codes.ExpectedArg)
             PrintHelp();
@@ -49,7 +49,7 @@ return 0;
 
 static ExitStatus PrintHelp()
 {
-    Console.WriteLine($@"Mutator v{typeof(ExitStatus).Assembly.GetName().Version}
+    Console.WriteLine($@"\nMutator v{typeof(ExitStatus).Assembly.GetName().Version}
 -?        prints this help screen
 -i        installs Realm
 -u        uninstalls Realm
