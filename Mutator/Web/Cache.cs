@@ -26,7 +26,8 @@ static class Cache
                     return entryValue;
                 }
             }
-        } catch (EndOfStreamException e) {
+        }
+        catch (EndOfStreamException e) {
             Console.Error.WriteLine("Corrupt webcache! " + e.Message);
             fs.SetLength(0);
         }

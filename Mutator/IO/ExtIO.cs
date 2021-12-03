@@ -16,13 +16,16 @@ static class ExtIO
             if (Directory.Exists(rwDir) && File.Exists(Path.Combine(rwDir, "RainWorld.exe"))) {
                 return rwDir;
             }
-        } catch { }
+        }
+        catch { }
 
         return null;
     }
 
-    public static Result<string, ExitStatus> RwDir {
-        get {
+    public static Result<string, ExitStatus> RwDir
+    {
+        get
+        {
             if (rwDir != null) return rwDir;
 
             var result = GetRwDir();

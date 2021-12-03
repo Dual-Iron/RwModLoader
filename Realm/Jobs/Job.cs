@@ -44,7 +44,8 @@ sealed class Job
         try {
             action!();
             Finish(null);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             Finish(e);
         }
         action = null;

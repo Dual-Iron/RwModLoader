@@ -50,7 +50,8 @@ sealed class AssemblyPool
                     stream: new SpliceStream(rwmod.Stream, fileEntry.Offset, fileEntry.Size),
                     parameters: new() { ReadSymbols = false, AssemblyResolver = resolver }
                     );
-            } catch {
+            }
+            catch {
                 return null;
             }
 

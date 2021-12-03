@@ -58,7 +58,7 @@ sealed class ModsMenu : Menu.Menu
         Page.subObjects.Add(cancelButton = new(this, Page, "CANCEL", "", new(200, 50), new(110, 30)));
         Page.subObjects.Add(saveButton = new(this, Page, "SAVE & EXIT", "", new(360, 50), new(110, 30)));
         Page.subObjects.Add(refresh = new(this, Page, "REFRESH", "", new(200, 200), new(110, 30)));
-        Page.subObjects.Add(disableAll = new (this, Page, "DISABLE ALL", "", new(200, 250), new(110, 30)));
+        Page.subObjects.Add(disableAll = new(this, Page, "DISABLE ALL", "", new(200, 250), new(110, 30)));
         Page.subObjects.Add(enableAll = new(this, Page, "ENABLE ALL", "", new(200, 300), new(110, 30)));
 
         modListing = new(Page, pos: new(1366 - ModPanel.Width - 200, 50), elementSize: new(ModPanel.Width, ModPanel.Height), elementsPerScreen: 15, edgePadding: 5);
@@ -183,13 +183,16 @@ sealed class ModsMenu : Menu.Menu
             foreach (ModPanel panel in GetPanels()) {
                 panel.SetEnabled(true);
             }
-        } else if (sender == disableAll) {
+        }
+        else if (sender == disableAll) {
             foreach (ModPanel panel in GetPanels()) {
                 panel.SetEnabled(false);
             }
-        } else if (sender == refresh) {
+        }
+        else if (sender == refresh) {
             manager.RequestMainProcessSwitch(ID);
-        } else if (sender == openPatchesButton) {
+        }
+        else if (sender == openPatchesButton) {
             Process.Start("explorer", $"\"{Path.Combine(Paths.BepInExRootPath, "monomod")}\"");
         }
 
@@ -203,7 +206,8 @@ sealed class ModsMenu : Menu.Menu
         foreach (var panel in GetPanels()) {
             if (panel.WillDelete) {
                 File.Delete(panel.FileHeader.FilePath);
-            } else if (panel.IsEnabled) {
+            }
+            else if (panel.IsEnabled) {
                 State.Prefs.EnabledMods.Add(panel.FileHeader.Header.Name);
             }
         }
@@ -220,7 +224,8 @@ sealed class ModsMenu : Menu.Menu
 
         if (performingProgress.ProgressState == ProgressStateType.Failed) {
             errors = true;
-        } else {
+        }
+        else {
             manager.RequestMainProcessSwitch(ProcessManager.ProcessID.MainMenu);
         }
     }

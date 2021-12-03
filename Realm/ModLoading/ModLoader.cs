@@ -111,7 +111,8 @@ sealed class ModLoader
             if (newMod != null) {
                 try {
                     LoadedAssemblyPool.Pool[state.AsmName].Descriptor.SetUnloadState(state.ModData);
-                } catch (Exception e) {
+                }
+                catch (Exception e) {
                     progressable.Message(MessageType.Fatal, $"An uncaught exception was thrown in {newMod.AsmName}. {e}");
                 }
             }
@@ -132,7 +133,8 @@ sealed class ModLoader
                 if (state is not null) {
                     ret.Add(new() { AsmName = asm.AsmName, ModData = state.Value });
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 progressable.Message(MessageType.Fatal, $"An uncaught exception was thrown in {asm.AsmName}. {e}");
             }
         }

@@ -47,11 +47,13 @@ sealed class Listing : RectangularMenuObject, Slider.ISliderOwner
                 listable.IsBelow = false;
                 listable.BlockInteraction = true;
                 listable.Visibility = Mathf.Clamp01(1 - (scrollPos - topDepth) / listable.Size.y);
-            } else if (depth > scrollPos + size.y - edgePadding) {
+            }
+            else if (depth > scrollPos + size.y - edgePadding) {
                 listable.IsBelow = true;
                 listable.BlockInteraction = true;
                 listable.Visibility = Mathf.Clamp01(1 - (depth - (scrollPos + size.y - edgePadding)) / listable.Size.y);
-            } else {
+            }
+            else {
                 listable.IsBelow = false;
                 listable.BlockInteraction = false;
                 listable.Visibility = 1;
@@ -64,7 +66,8 @@ sealed class Listing : RectangularMenuObject, Slider.ISliderOwner
             float scrollDelta = Input.mouseScrollDelta.y * -25;
             if (vel < 0 == scrollDelta < 0) {
                 vel += scrollDelta;
-            } else if (scrollDelta != 0) {
+            }
+            else if (scrollDelta != 0) {
                 vel = scrollDelta;
             }
         }

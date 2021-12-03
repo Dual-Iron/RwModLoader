@@ -126,7 +126,8 @@ sealed class LegacyReferenceTransformer
         if (member.DeclaringType != null && ShouldTransform(member.Name, out var details)) {
             if (types.TryGetValue(member.Name, out var ret)) {
                 member.Name = ret;
-            } else {
+            }
+            else {
                 member.Name = types[member.Name] = Transform(member, details);
             }
         }
@@ -174,14 +175,16 @@ sealed class LegacyReferenceTransformer
             foreach (var type in newHooksType.NestedTypes)
                 if (type.Name.StartsWith(culledName) && index++ == details.fnIndex)
                     return type.Name;
-        } else if (member is MethodReference) {
+        }
+        else if (member is MethodReference) {
             int index = 0;
             if (details.prefixType == PrefixType.Add) {
                 foreach (var @event in newHooksType.Events)
                     if (@event.AddMethod.Name.StartsWith(culledName))
                         if (index++ == details.fnIndex)
                             return @event.AddMethod.Name;
-            } else {
+            }
+            else {
                 foreach (var @event in newHooksType.Events)
                     if (@event.RemoveMethod.Name.StartsWith(culledName))
                         if (index++ == details.fnIndex)

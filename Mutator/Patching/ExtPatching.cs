@@ -53,7 +53,8 @@ static class ExtPatching
 
             try {
                 type = type.Resolve().BaseType;
-            } catch (AssemblyResolutionException) {
+            }
+            catch (AssemblyResolutionException) {
                 break;
             }
         }

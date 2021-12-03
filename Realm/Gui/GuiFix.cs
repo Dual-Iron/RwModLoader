@@ -35,7 +35,8 @@ static class GuiFix
                 });
 
                 letterCount = 0;
-            } else {
+            }
+            else {
                 letterCount++;
             }
         }
@@ -70,7 +71,8 @@ static class GuiFix
             if (letter == '\n') {
                 if (letterCount == 0) {
                     lines[lineCount].bounds = new Rect(0, 0, nextY, nextY - usableLineHeight);
-                } else {
+                }
+                else {
                     lines[lineCount].bounds = new Rect(minX, minY, maxX - minX, maxY - minY);
                 }
 
@@ -84,7 +86,8 @@ static class GuiFix
 
                 lineCount++;
                 letterCount = 0;
-            } else {
+            }
+            else {
                 FKerningInfo foundKerning = self._nullKerning;
 
                 for (int k = 0; k < self._kerningCount; k++) {
@@ -98,7 +101,8 @@ static class GuiFix
 
                 if (self._charInfosByID.ContainsKey(letter)) {
                     charInfo = self._charInfosByID[letter];
-                } else {
+                }
+                else {
                     charInfo = self._charInfosByID[0];
                 }
 
@@ -106,7 +110,8 @@ static class GuiFix
 
                 if (letterCount == 0) {
                     nextX = -charInfo.offsetX;
-                } else {
+                }
+                else {
                     nextX += totalKern;
                 }
 
@@ -133,7 +138,8 @@ static class GuiFix
 
         if (letterCount == 0) {
             lines[lineCount].bounds = new Rect(0, 0, nextY, nextY - usableLineHeight);
-        } else {
+        }
+        else {
             lines[lineCount].bounds = new Rect(minX, minY, maxX - minX, maxY - minY);
         }
 

@@ -145,7 +145,8 @@ static class Asset
         if (slicerData != null) {
             imageData.anisoLevel = 1;
             imageData.filterMode = 0;
-        } else {
+        }
+        else {
             imageData.wrapMode = TextureWrapMode.Clamp;
         }
 
@@ -250,7 +251,8 @@ static class Asset
             }
             FAtlasManager._nextAtlasIndex++;
             Futile.atlasManager.AddAtlas(fatlas);
-        } else {
+        }
+        else {
             FAtlas other = Futile.atlasManager.GetAtlasWithName(atlasName);
             bool isFullReplacement = true;
             foreach (FAtlasElement fae in other.elements) {
@@ -264,7 +266,8 @@ static class Asset
                 Futile.atlasManager.ActuallyUnloadAtlasOrImage(atlasName); // Unload previous version if present
                 FAtlasManager._nextAtlasIndex++;
                 Futile.atlasManager.AddAtlas(fatlas); // Simple
-            } else {
+            }
+            else {
                 // uuuugh
                 // partially unload the old
                 foreach (FAtlasElement fae in fatlas._elements) {

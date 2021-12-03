@@ -77,7 +77,8 @@ sealed class RwmodHeader
             var homepage = ReadStringFull(ref b, s);
 
             return new RwmodHeader((FileFlags)flags, version, modName, modOwner, homepage);
-        } catch {
+        }
+        catch {
             return "corrupt file";
         }
     }

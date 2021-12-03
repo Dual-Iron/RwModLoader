@@ -33,7 +33,8 @@ static class Patcher
 
         try {
             System.Reflection.AssemblyName.GetAssemblyName(filePath);
-        } catch {
+        }
+        catch {
             return ExitStatus.Success;
         }
 
@@ -193,7 +194,8 @@ static class Patcher
 
                 AccessViolationPrevention.AddUnverifiableCodeAttr(module);
             }
-        } finally {
+        }
+        finally {
             if (hooksAsm != null) {
                 hooksAsm.Dispose();
                 hooksAsm.MainModule.AssemblyResolver.Dispose();

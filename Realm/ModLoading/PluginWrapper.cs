@@ -35,10 +35,12 @@ static class PluginWrapper
                         wrappedMods.Add(proc.Output);
 
                     progressable.Message(MessageType.Info, $"Wrapped {Path.GetFileName(pluginFile)}.");
-                } else {
+                }
+                else {
                     progressable.Message(MessageType.Fatal, $"Failed to wrap {Path.GetFileName(pluginFile)}. {proc}");
                 }
-            } catch { }
+            }
+            catch { }
         }
 
         if (progressable.ProgressState == ProgressStateType.Failed) {

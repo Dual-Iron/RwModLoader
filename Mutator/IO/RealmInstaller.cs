@@ -30,7 +30,8 @@ static class RealmInstaller
 
         try {
             DoInstall(rwDir);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             return ExitStatus.IOError(e.Message);
         }
 
@@ -55,7 +56,8 @@ static class RealmInstaller
 
         try {
             File.Delete(Path.Combine(rwDir, "winhttp.dll"));
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             return ExitStatus.IOError(e.Message);
         }
 
@@ -70,7 +72,8 @@ static class RealmInstaller
 
         try {
             DoInstall(rwDir);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             return ExitStatus.IOError(e.Message);
         }
 
@@ -113,7 +116,7 @@ static class RealmInstaller
 
     private static bool IsPartialityInstalled(string rwDir)
     {
-        return Directory.Exists(Path.Combine(rwDir, "Mods")) 
+        return Directory.Exists(Path.Combine(rwDir, "Mods"))
             && Directory.Exists(Path.Combine(rwDir, "RainWorld_Data", "Managed_backup"))
             && Directory.EnumerateFiles(Path.Combine(rwDir, "RainWorld_Data", "Managed_backup")).Any();
     }
@@ -146,7 +149,8 @@ static class RealmInstaller
 
         string tempDir = ExtIO.GetTempDir().FullName;
 
-        using var clearTempDir = new Disposable(() => {
+        using var clearTempDir = new Disposable(() =>
+        {
             if (Directory.Exists(tempDir)) {
                 Directory.Delete(tempDir, true);
             }
@@ -160,7 +164,8 @@ static class RealmInstaller
         var freshInstall = !File.Exists(Path.Combine(rwDir, "BepInEx", "patchers", "Realm.dll"));
         if (freshInstall) {
             MoveDirs(D(tempDir, "BepInEx", "config"), D(rwDir, "BepInEx", "config"));
-        } else {
+        }
+        else {
             Directory.Delete(D(tempDir, "BepInEx", "config"), true);
         }
 
@@ -205,7 +210,8 @@ static class RealmInstaller
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.Write("]\n> ");
                 helpGiven = true;
-            } else {
+            }
+            else {
                 Console.Write("Enter Rain World's installation folder.\n> ");
             }
         }

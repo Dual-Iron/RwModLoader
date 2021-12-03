@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace VirtualEnums;
@@ -35,25 +36,20 @@ public static partial class VirtualEnumApi
         }
 
         var types = GetTypesSafely(ref reflError);
-        foreach (var type in types)
-            if (type.Name.StartsWith("EnumExt_"))
+
+        foreach (var type in types) {
+            if (type.Name.StartsWith("EnumExt_")) {
                 UseType(type);
+            }
+        }
 
         IEnumerable<Type> GetTypesSafely(ref ReflectionTypeLoadException? reflError)
         {
-            static IEnumerable<Type> GetFrom(ReflectionTypeLoadException e)
-            {
-                foreach (var type in e.Types) {
-                    if (type != null)
-                        yield return type;
-                }
-            }
-
             try {
                 return asm.GetTypes();
             } catch (ReflectionTypeLoadException e) {
                 reflError = e;
-                return GetFrom(e);
+                return e.Types.Where(t => t != null);
             }
         }
     }
@@ -106,7 +102,7 @@ public static partial class VirtualEnumApi
         return data.MaxValue;
     }
 
-    // Private nested so that it can have public members not visible to API.
+    // Private nested so it can have public members that aren't visible to API.
     // Allows for faster reflection.
     private static class Caster
     {

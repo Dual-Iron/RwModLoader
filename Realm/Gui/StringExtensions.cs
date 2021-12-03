@@ -45,7 +45,8 @@ static class StringExtensions
                 lastWhitespace = i;
 
                 x += cInfo.xadvance;
-            } else {
+            }
+            else {
                 // Split if this char would go over the edge
                 if (x + cInfo.width > maxWidth) {
                     int sliceEnd = sliceStart == lastWhitespace ? i : lastWhitespace + 1;
@@ -56,7 +57,8 @@ static class StringExtensions
                     lastWhitespace = sliceEnd;
                     i = sliceStart;
                     x = 0;
-                } else
+                }
+                else
                     x += cInfo.xadvance;
             }
 

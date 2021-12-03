@@ -21,7 +21,8 @@ sealed class Preferences
             foreach (var name in (List<object>)data["enabled"]) {
                 EnabledMods.Add((string)name);
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             Program.Logger.LogError("Error while loading: " + e);
             EnabledMods.Clear();
         }
@@ -35,7 +36,8 @@ sealed class Preferences
 
         try {
             File.WriteAllText(PreferencesPath, Json.Serialize(objects));
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             Program.Logger.LogError("Error while saving: " + e);
         }
     }

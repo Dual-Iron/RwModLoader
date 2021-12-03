@@ -41,7 +41,8 @@ internal static class RealmUtils
                 if (!sorted.Contains(node)) {
                     return false;
                 }
-            } else {
+            }
+            else {
                 visited.Add(node);
 
                 stack.Push(node);

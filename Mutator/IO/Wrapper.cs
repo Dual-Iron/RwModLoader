@@ -66,7 +66,8 @@ static class Wrapper
             using var asm = AssemblyDefinition.ReadAssembly(filePath);
 
             return new RwmodHeader(0, new SemVer(asm.Name.Version), asm.Name.Name, GetAuthor(asm), "");
-        } catch {
+        }
+        catch {
             return null;
         }
     }

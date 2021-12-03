@@ -10,7 +10,8 @@ static class ModsMenuGui
     {
         try {
             return SlugcatSelectMenu.CheckUnlockRed() || RealmUtils.RainWorld!.progression.miscProgressionData.redUnlocked;
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             Program.Logger.LogError(e);
             return false;
         }

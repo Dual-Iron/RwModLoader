@@ -40,7 +40,7 @@ static class EntryPoint
 
         // Have to use EmptyProgressable and can't log the result here.
         ModLoading.PluginWrapper.WrapPlugins(new EmptyProgressable(), out earlyWrappedAsms);
-        
+
         // Can't reference or hook Chainloader before it's been initialized on its own or the game bluescreens
         // So, instead, just track the logger that Chainloader uses.
         new Hook(typeof(Logger).GetMethod("LogMessage", BindingFlags.NonPublic | BindingFlags.Static), typeof(EntryPoint).GetMethod(nameof(Logger_Log)));
@@ -82,7 +82,8 @@ static class EntryPoint
 
         try {
             Program.Main(earlyWrappedAsms, extraPatchers);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             Program.Logger.LogFatal(e);
         }
     }

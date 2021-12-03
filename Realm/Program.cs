@@ -89,10 +89,12 @@ static class Program
                 Logger.LogError("Realm is not up to date.");
 
                 UpdateNotif.ApplyHooks();
-            } else {
+            }
+            else {
                 Logger.LogInfo("Realm is up to date.");
             }
-        } else {
+        }
+        else {
             Logger.LogError("Couldn't determine if Realm is up to date.");
             Logger.LogDebug(proc);
         }

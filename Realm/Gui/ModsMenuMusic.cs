@@ -43,7 +43,8 @@ static class ModsMenuMusic
         if (mp.song == null) {
             mp.song = song;
             mp.song.playWhenReady = true;
-        } else {
+        }
+        else {
             mp.nextSong = song;
             mp.nextSong.playWhenReady = false;
         }

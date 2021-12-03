@@ -55,9 +55,11 @@ sealed class LoadedAssemblyPool
         foreach (var loadedAsmKvp in loadedAssemblies) {
             try {
                 Pool[loadedAsmKvp.AsmName].Descriptor.Unload();
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 progressable.Message(MessageType.Fatal, $"Failed to unload {loadedAsmKvp.AsmName}\n{e}");
-            } finally {
+            }
+            finally {
                 monomod.Unload(loadedAsmKvp.Asm);
             }
 
@@ -101,7 +103,8 @@ sealed class LoadedAssemblyPool
 
             try {
                 loadedAssemblies.Add(new(Assembly.Load(ms.ToArray()), name, asm.FileName));
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 progressable.Message(MessageType.Fatal, $"Failed to load {name}\n{e}");
             }
 
@@ -145,9 +148,11 @@ sealed class LoadedAssemblyPool
             try {
                 modAssembly.Descriptor.Initialize(loadedModAssembly);
                 progressable.Message(MessageType.Debug, $"Finished loading {lasm.AsmName}");
-            } catch (FileNotFoundException e) when (BepInEx.Utility.TryParseAssemblyName(e.FileName, out AssemblyName name)) {
+            }
+            catch (FileNotFoundException e) when (BepInEx.Utility.TryParseAssemblyName(e.FileName, out AssemblyName name)) {
                 PrintMissingDependency(progressable, lasm, name);
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 progressable.Message(MessageType.Fatal, $"Failed to initialize {lasm.AsmName}\n{e}");
             }
 

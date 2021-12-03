@@ -22,7 +22,7 @@ readonly struct RwmodFileEntry
             var name = RwmodIO.ReadStringFull(ref buffer, strm);
             var size = RwmodIO.ReadUInt32(ref buffer, strm);
             var offset = strm.Position;
-            
+
             strm.Position += size;
 
             yield return new(name, size, offset);

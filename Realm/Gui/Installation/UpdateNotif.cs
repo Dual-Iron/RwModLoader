@@ -22,7 +22,8 @@ static class UpdateNotif
                 UseShellExecute = true,
                 Verb = "open"
             }).Dispose();
-        } else {
+        }
+        else {
             orig(self, sender, message);
         }
     }

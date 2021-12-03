@@ -53,7 +53,8 @@ internal static class StaticFixes
         try {
             // Compatibility for all mods that use StaticWorld
             typeof(StaticWorld).TypeInitializer.Invoke(null, null);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             Program.Logger.LogError(e);
         }
 
@@ -87,7 +88,8 @@ internal static class StaticFixes
                     }
                 }
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             Program.Logger.LogError(e);
         }
 

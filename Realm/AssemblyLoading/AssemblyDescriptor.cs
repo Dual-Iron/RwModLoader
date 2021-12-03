@@ -149,7 +149,7 @@ sealed class AssemblyDescriptor
             mod.Initialize(assembly);
         }
     }
-    
+
     public void Unload()
     {
         foreach (var mod in mods) {
