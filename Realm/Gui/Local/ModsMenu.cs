@@ -32,7 +32,7 @@ sealed class ModsMenu : Menu.Menu
 
     private Job? performingJob;     // Current job.
     private bool shutDownMusic;     // Set false to not restart music on shutdown. Useful for refreshing.
-    private bool errors;
+    private bool forceExitGame;
 
     private bool PreventButtonClicks => manager.upcomingProcess != null || performingJob != null;
 
@@ -142,18 +142,20 @@ sealed class ModsMenu : Menu.Menu
     public override void Update()
     {
         if (performingJob?.Exception is Exception e) {
-            performingProgress.Message(MessageType.Fatal, e.ToString());
-            errors = true;
             performingJob = null;
+
+            forceExitGame = true;
+
+            performingProgress.Message(MessageType.Fatal, e.ToString());
         }
 
         foreach (var mob in Page.subObjects) {
             if (mob is ButtonTemplate button) {
-                button.GetButtonBehavior.greyedOut = PreventButtonClicks;
+                button.GetButtonBehavior.greyedOut = PreventButtonClicks || forceExitGame;
             }
         }
 
-        if (errors) {
+        if (forceExitGame) {
             cancelButton.menuLabel.text = "EXIT GAME";
             cancelButton.GetButtonBehavior.greyedOut = false;
         }
@@ -172,7 +174,7 @@ sealed class ModsMenu : Menu.Menu
     public override void Singal(MenuObject sender, string message)
     {
         if (sender == cancelButton) {
-            if (errors) {
+            if (forceExitGame) {
                 Application.Quit();
                 return;
             }
@@ -185,8 +187,13 @@ sealed class ModsMenu : Menu.Menu
 
         if (sender == saveButton && performingJob == null) {
             performingJob = Job.Start(SaveExit);
-            PlaySound(SoundID.MENU_Switch_Page_Out);
             shutDownMusic = true;
+            PlaySound(SoundID.MENU_Switch_Page_Out);
+
+            if (QuitOnSave) {
+                performingJob = null;
+                forceExitGame = true;
+            }
             return;
         }
 
@@ -239,7 +246,7 @@ sealed class ModsMenu : Menu.Menu
         State.Mods.WarnHangingMods(performingProgress);
 
         if (performingProgress.ProgressState == ProgressStateType.Failed) {
-            errors = true;
+            forceExitGame = true;
         }
         else {
             manager.RequestMainProcessSwitch(ProcessManager.ProcessID.MainMenu);
@@ -256,7 +263,7 @@ sealed class ModsMenu : Menu.Menu
             return ownerHoverable.GetHoverInfo(selectedObject);
         }
 
-        if (selectedObject == cancelButton && errors) return "Exit game";
+        if (selectedObject == cancelButton && forceExitGame) return "Exit game";
         if (selectedObject == cancelButton) return "Return to main menu";
         if (selectedObject == saveButton && QuitOnSave) return "Save changes and exit the game";
         if (selectedObject == saveButton) return "Save changes and return to main menu";
