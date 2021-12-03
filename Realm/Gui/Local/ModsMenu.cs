@@ -270,7 +270,8 @@ sealed class ModsMenu : Menu.Menu
         if (selectedObject == enableAll) return "Enable all mods";
         if (selectedObject == disableAll) return "Disable all mods";
         if (selectedObject == refresh) return "Refresh mod list";
-        if (selectedObject == openPatchesButton) return "Open folder containing patch mods";
+        if (selectedObject == openPluginsButton) return "Open plugins folder";
+        if (selectedObject == openPatchesButton) return "Open patch mods folder";
 
         return base.UpdateInfoText();
     }
