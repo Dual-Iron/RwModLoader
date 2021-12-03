@@ -36,7 +36,7 @@ static class Program
             return;
         }
 
-        State.PatchMods.AddRange(GetPatchMods());
+        State.PatchMods = GetPatchMods();
 
         State.NoHotReloading = extraPatchers || State.PatchMods.Count > 0;
 
@@ -59,7 +59,7 @@ static class Program
         GuiHandler.Hook();
     }
 
-    private static List<string> GetPatchMods()
+    public static List<string> GetPatchMods()
     {
         const string prefix = "Assembly-CSharp.";
         const string suffix = ".mm.dll";

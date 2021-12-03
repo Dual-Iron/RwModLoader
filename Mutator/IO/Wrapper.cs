@@ -7,6 +7,10 @@ static class Wrapper
 {
     public static ExitStatus Wrap(string filePath)
     {
+        if (ExtIO.RwDir.MatchFailure(out var rwDir, out var rwDirErr)) {
+            return rwDirErr;
+        }
+
         List<string> files = new();
 
         if (File.Exists(filePath))
@@ -19,6 +23,8 @@ static class Wrapper
         files.RemoveAll(s => ExtGlobal.ModBlacklist.Contains(Path.GetFileNameWithoutExtension(s)));
 
         if (files.Count == 0) return ExitStatus.Success;
+
+        files.RemoveAll(file => CheckForMonomod(rwDir, file));
 
         RwmodHeader? header = GetAssemblyHeader(filePath) ?? new(0, new(0, 1, 0), Path.GetFileName(filePath), "", "");
 
@@ -46,6 +52,25 @@ static class Wrapper
         Console.Write(header.Name);
 
         return ExitStatus.Success;
+    }
+
+    private static bool CheckForMonomod(string rwDir, string file)
+    {
+        bool isMonomodAssembly = false;
+
+        using (AssemblyDefinition asm = AssemblyDefinition.ReadAssembly(file))
+            isMonomodAssembly = asm.MainModule.AssemblyReferences.Any(a => a.Name == "MonoMod") && asm.MainModule.Types.Any(t => t.Name.StartsWith("patch_"));
+
+        if (isMonomodAssembly) {
+            string filename = Path.GetFileNameWithoutExtension(file);
+
+            Directory.CreateDirectory(Path.Combine(rwDir, "BepInEx", "monomod"));
+
+            File.Move(file, Path.Combine(rwDir, "BepInEx", "monomod", $"Assembly-CSharp.{filename}.mm.dll"), true);
+
+            return true;
+        }
+        return false;
     }
 
     private static RwmodHeader? GetAssemblyHeader(string filePath)

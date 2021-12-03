@@ -13,6 +13,7 @@ sealed class ModsMenu : Menu.Menu
     public const ProcessManager.ProcessID ModsMenuID = (ProcessManager.ProcessID)(-666);
 
     private readonly MenuLabel quitWarning;
+    private readonly SimpleButton openPluginsButton;
     private readonly SimpleButton? openPatchesButton;
     private readonly SimpleButton cancelButton;
     private readonly SimpleButton saveButton;
@@ -35,7 +36,7 @@ sealed class ModsMenu : Menu.Menu
 
     private bool PreventButtonClicks => manager.upcomingProcess != null || performingJob != null;
 
-    private bool QuitOnSave => State.NoHotReloading;
+    private bool QuitOnSave { get; }
 
     public ModsMenu(ProcessManager manager) : base(manager, ModsMenuID)
     {
@@ -60,11 +61,23 @@ sealed class ModsMenu : Menu.Menu
         Page.subObjects.Add(refresh = new(this, Page, "REFRESH", "", new(200, 200), new(110, 30)));
         Page.subObjects.Add(disableAll = new(this, Page, "DISABLE ALL", "", new(200, 250), new(110, 30)));
         Page.subObjects.Add(enableAll = new(this, Page, "ENABLE ALL", "", new(200, 300), new(110, 30)));
+        Page.subObjects.Add(openPluginsButton = new(this, Page, "PLUGINS", "", new(200, 350), new(110, 30)));
+
+        State.CurrentRefreshCache.Refresh(new MessagingProgressable());
 
         modListing = new(Page, pos: new(1366 - ModPanel.Width - 200, 50), elementSize: new(ModPanel.Width, ModPanel.Height), elementsPerScreen: 15, edgePadding: 5);
 
-        if (State.PatchMods.Count > 0) {
-            Page.subObjects.Add(openPatchesButton = new(this, Page, "PATCH MODS", "", new(200, 350), new(110, 30)));
+        if (!Program.GetPatchMods().SequenceEqual(State.PatchMods)) {
+            QuitOnSave = true;
+
+            MenuLabel notListedNotice = new(this, Page, "restart the game to refresh patch mods", new(modListing.pos.x, modListing.pos.y - modListing.size.y / 2 - 15), modListing.size, false);
+            notListedNotice.label.color = MenuColor(MenuColors.MediumGrey).rgb;
+            Page.subObjects.Add(notListedNotice);
+        }
+        else if (State.PatchMods.Count > 0) {
+            QuitOnSave = true;
+
+            Page.subObjects.Add(openPatchesButton = new(this, Page, "PATCHES", "", new(200, 400), new(110, 30)));
 
             string s = State.PatchMods.Count > 1 ? "s" : "";
             string n = State.PatchMods.Count == 1 ? "a" : State.PatchMods.Count.ToString();
@@ -74,12 +87,10 @@ sealed class ModsMenu : Menu.Menu
             Page.subObjects.Add(notListedNotice);
         }
 
-        quitWarning = new(this, Page, "*this will close the game", new(saveButton.pos.x, saveButton.pos.y - 30), saveButton.size, false);
+        quitWarning = new(this, Page, "(this will close the game)", new(saveButton.pos.x, saveButton.pos.y - 30), saveButton.size, false);
         quitWarning.label.color = MenuColor(MenuColors.MediumGrey).rgb;
         quitWarning.label.isVisible = false;
         Page.subObjects.Add(quitWarning);
-
-        State.CurrentRefreshCache.Refresh(new MessagingProgressable());
 
         foreach (var header in State.CurrentRefreshCache.Headers) {
             modListing.subObjects.Add(new ModPanel(header, Page, default));
@@ -192,8 +203,13 @@ sealed class ModsMenu : Menu.Menu
         else if (sender == refresh) {
             manager.RequestMainProcessSwitch(ID);
         }
+        else if (sender == openPluginsButton) {
+            Process.Start("explorer", $"\"{Path.Combine(Paths.BepInExRootPath, "plugins")}\"")
+                .Dispose();
+        }
         else if (sender == openPatchesButton) {
-            Process.Start("explorer", $"\"{Path.Combine(Paths.BepInExRootPath, "monomod")}\"");
+            Process.Start("explorer", $"\"{Path.Combine(Paths.BepInExRootPath, "monomod")}\"")
+                .Dispose();
         }
 
         PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
