@@ -94,7 +94,7 @@ static class RealmInstaller
     private static void InstallSelf()
     {
         string processPath = Environment.ProcessPath ?? throw new("No process path.");
-        string copyToDirectory = ExtIO.UserPath;
+        string copyToDirectory = ExtIO.UserFolder.FullName;
         string destFileName = Path.Combine(copyToDirectory, "Mutator.exe");
 
         if (processPath != destFileName) {

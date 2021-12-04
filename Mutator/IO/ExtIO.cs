@@ -36,9 +36,9 @@ static class ExtIO
 
     public static Encoding Enc => Encoding.Unicode;
 
-    public static string UserPath { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".rw");
+    private readonly static string userPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".rw");
 
-    public static DirectoryInfo UserFolder => Directory.CreateDirectory(UserPath);
+    public static DirectoryInfo UserFolder => Directory.CreateDirectory(userPath);
     public static DirectoryInfo ModsFolder => UserFolder.CreateSubdirectory("mods");
     public static DirectoryInfo BackupsFolder => UserFolder.CreateSubdirectory("patch-backups");
 

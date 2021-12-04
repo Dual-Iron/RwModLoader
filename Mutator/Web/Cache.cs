@@ -8,7 +8,7 @@ static class Cache
 
     public static async Task<Result<string, E>> Fetch<E>(string key, GetCacheValueDelegate<E> getValue)
     {
-        FileInfo webcache = new(Path.Combine(ExtIO.UserPath, "webcache.dat"));
+        FileInfo webcache = new(Path.Combine(ExtIO.UserFolder.FullName, "webcache.dat"));
 
         if (webcache.CreationTimeUtc < DateTime.UtcNow - new TimeSpan(hours: 1, 0, 0)) {
             webcache.Delete();
