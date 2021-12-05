@@ -1,6 +1,7 @@
 ﻿using BepInEx;
 using Menu;
 using Realm.Assets;
+using Realm.Gui.Installation;
 using Realm.Jobs;
 using Realm.Logging;
 using System.Diagnostics;
@@ -241,6 +242,8 @@ sealed class ModsMenu : Menu.Menu
             Application.Quit();
             return;
         }
+
+        FailedLoadNotif.UndoHooks();
 
         State.Mods.Reload(performingProgress);
         State.Mods.WarnHangingMods(performingProgress);

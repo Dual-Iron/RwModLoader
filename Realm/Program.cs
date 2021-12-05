@@ -52,7 +52,14 @@ static class Program
             State.Prefs.Load();
             State.Prefs.Enable(earlyWrappedAsms);
             State.Prefs.Save();
-            State.Mods.Reload(new Progressable());
+
+            Progressable prog = new();
+
+            State.Mods.Reload(prog);
+            
+            if (prog.ProgressState == ProgressStateType.Failed) {
+                FailedLoadNotif.ApplyHooks();
+            }
         }
 
         GuiHandler.Hook();
