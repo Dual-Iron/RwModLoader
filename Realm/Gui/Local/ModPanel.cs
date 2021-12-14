@@ -37,18 +37,11 @@ sealed class ModPanel : RectangularMenuObject, CheckBox.IOwnCheckBox, IListable,
         }
 
         subObjects.Add(deleteButton = new(menu, this, "Menu_Symbol_Clear_All", "", new(size.x - 34, size.y / 2 - 12)));
-
-        subObjects.Add(bar = new MenuSprite(this, new(60, 0), new("pixel") {
-            scaleX = size.x - 120,
-            scaleY = 1,
-            alpha = 0.5f
-        }));
     }
 
     public readonly RwmodFileHeader FileHeader;
     private readonly CheckBox enabledCheckBox;
     private readonly SymbolButton deleteButton;
-    private readonly MenuSprite bar;
 
     public bool IsBelow { get; set; }
     public bool BlockInteraction { get; set; }
@@ -104,10 +97,6 @@ sealed class ModPanel : RectangularMenuObject, CheckBox.IOwnCheckBox, IListable,
         base.GrafUpdate(timeStacker);
 
         Container.alpha = Visibility;
-
-        if (IsBelow) {
-            bar.sprite.isVisible = false;
-        }
 
         if (WillDelete) {
             Color color = deleteButton.symbolSprite.color;
