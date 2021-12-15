@@ -2,10 +2,10 @@
 
 namespace Rwml.IO;
 
-// RWMOD file format: https://gist.github.com/Dual-Iron/b28590195548cb382874f0040ec96b78
+// RWMOD file format: https://gist.github.com/Dual-Iron/ecc9c366d33adcb4d7f319d2c18d9062
 sealed class RwmodHeader
 {
-    private const ushort CurrentVersion = 0;
+    private const ushort CurrentVersion = 1;
 
     [Flags]
     public enum FileFlags : byte
@@ -51,11 +51,12 @@ sealed class RwmodHeader
         }
 
         int version = ReadUInt16(ref b, s);
-        if (version == CurrentVersion) {
-            return ReadV0(b, s);
-        }
 
-        return "can't read future version; upgrade Realm";
+        return version switch {
+            CurrentVersion => ReadV0(b, s),
+            0 => "older version; delete your mods folder in \"%appdata%\\.rw\"",
+            _ => "newer version; upgrade Realm"
+        };
     }
 
     static Result<RwmodHeader, string> ReadV0(byte[] b, Stream s)

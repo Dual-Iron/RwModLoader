@@ -37,7 +37,7 @@ static class RwmodIO
     public static string ReadString(ref byte[] buffer, Stream strm, int count)
     {
         Read(ref buffer, strm, count);
-        return Encoding.Unicode.GetString(buffer, 0, count);
+        return Encoding.UTF8.GetString(buffer, 0, count);
     }
 
     public static string ReadStringFull(ref byte[] buffer, Stream strm)
@@ -62,14 +62,13 @@ static class RwmodIO
 
     public static void WriteString(Stream strm, string str)
     {
-        byte[] bytes = Encoding.Unicode.GetBytes(str);
+        byte[] bytes = Encoding.UTF8.GetBytes(str);
         strm.Write(bytes, 0, bytes.Length);
     }
 
     public static void WriteStringFull(Stream strm, string str)
     {
-        byte[] bytes = Encoding.Unicode.GetBytes(str);
-
+        byte[] bytes = Encoding.UTF8.GetBytes(str);
         WriteUInt16(strm, bytes.Length);
         strm.Write(bytes, 0, bytes.Length);
     }

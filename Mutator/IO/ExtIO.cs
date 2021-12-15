@@ -40,7 +40,7 @@ static class ExtIO
 
     public static DirectoryInfo UserFolder => Directory.CreateDirectory(userPath);
     public static DirectoryInfo ModsFolder => UserFolder.CreateSubdirectory("mods");
-    public static DirectoryInfo BackupsFolder => UserFolder.CreateSubdirectory("patch-backups");
+    public static DirectoryInfo BackupsFolder => UserFolder.CreateSubdirectory("backups");
 
     public static string GetModPath(string name) => Path.Combine(ModsFolder.FullName, Path.ChangeExtension(name, ".rwmod"));
 
