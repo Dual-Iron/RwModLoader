@@ -49,7 +49,8 @@ return 0;
 
 static ExitStatus PrintHelp()
 {
-    Console.WriteLine($@"\nMutator v{typeof(ExitStatus).Assembly.GetName().Version}
+    Console.WriteLine();
+    Console.WriteLine($@"Mutator v{typeof(ExitStatus).Assembly.GetName().Version}
 -?        prints this help screen
 -i        installs Realm
 -u        uninstalls Realm
