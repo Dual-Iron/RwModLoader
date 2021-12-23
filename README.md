@@ -1,7 +1,7 @@
 ## What is it?
-Realm is a modloader for [Rain World](https://rainworldgame.com/) that lets you reload mods without closing the game. For users, this means less troubleshooting. For developers, this means you can test features rapidly.
+Realm is an in-game modloader for [Rain World](https://rainworldgame.com/) that lets you reload mods without closing the game. For users, this means less troubleshooting. For developers, this means you can test features rapidly.
 
-To add mods, just drop them in the `Rain World/BepInEx/plugins` folder like usual. Realm will handle the rest.
+The mod menu can be found on the title screen. To add mods, drop them in the plugins folder and refresh.
 
 https://user-images.githubusercontent.com/31146412/137647603-6034790d-cfcb-40b0-a425-fe113ce7481f.mp4
 
