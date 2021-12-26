@@ -8,7 +8,7 @@ https://user-images.githubusercontent.com/31146412/137647603-6034790d-cfcb-40b0-
 ## How do I install it?
 Before you install Realm, please understand:
 - Realm doesn't support AutoUpdate. That's coming soon™.
-- Don't use BOI after you've installed Realm.
+- You shouldn't use BOI after installing Realm.
 
 To install Realm, go to the [releases](https://github.com/Dual-Iron/RwModLoader/releases/latest) page.
 
