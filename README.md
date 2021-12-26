@@ -1,22 +1,22 @@
 ## What is it?
-Realm is an in-game modloader for [Rain World](https://rainworldgame.com/) that lets you reload mods without closing the game. For users, this means less troubleshooting. For developers, this means you can test features rapidly.
+Realm is an in-game modloader for [Rain World](https://rainworldgame.com/) that lets you reload mods without closing the game. It aims to promote ease of use and rapid mod development.
 
-The mod menu can be found on the title screen. To add mods, drop them in the plugins folder and refresh.
+Install mods by putting .dll and .zip files in the "plugins" folder, found in the mod menu. The mod menu is on the title screen.
 
 https://user-images.githubusercontent.com/31146412/137647603-6034790d-cfcb-40b0-a425-fe113ce7481f.mp4
 
 ## How do I install it?
-Some important information before you install Realm:
-- Realm frequently deletes the BepInEx folder. Move valuable files out of there.
-- Realm doesn't support AutoUpdate for mods yet. That's coming soon™.
-- Don't use BlepOutIn (BOI) after you've installed Realm.
+Before you install Realm, please understand:
+- Realm doesn't support AutoUpdate. That's coming soon™.
+- Don't use BOI after you've installed Realm.
 
 To install Realm, go to the [releases](https://github.com/Dual-Iron/RwModLoader/releases/latest) page.
 
 ## Resources and help
-- [Usage and support](.github/SUPPORT.md)
-- [Modder guide](MODDERS.md)
-- [Known issues](https://github.com/Dual-Iron/RwModLoader/issues)
+- Overview [usage and support](.github/SUPPORT.md)
+- Read [dev guide](MODDERS.md)
+- Browse [known issues](https://github.com/Dual-Iron/RwModLoader/issues)
+- Submit a [support](https://github.com/Dual-Iron/RwModLoader/issues/new?assignees=&labels=support&template=support-needed.md), [bug report](https://github.com/Dual-Iron/RwModLoader/issues/new?assignees=&labels=bug&template=bug_report.md), or [feature request](https://github.com/Dual-Iron/RwModLoader/issues/new?assignees=&labels=bug&template=feature_request.md) ticket.
 
 ## Credits
 - Dual
