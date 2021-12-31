@@ -25,7 +25,7 @@ You don't have to undo any MonoMod hooks when unloading. Realm undoes them autom
     // You needn't reset `num` because that frees no memory. You can if you want to, though.
     // num = default;
   
-    // You should reset `num` because that frees a lot of memory.
+    // You should reset `player` because that frees a lot of memory.
     player = default;
   }
   ```
