@@ -2,7 +2,7 @@
 ### Preface
 Some mods might not play nice with hot reloading. That's on them. That's also why this feature is opt-in and unstable.
 
-The game will consume more memory each reload. You can alleviate this by setting your mod's static fields to `default` in OnDisable.
+The game will consume more memory each reload. You can alleviate this by setting your mod's static fields to `default` in OnDisable. Note that you don't have to reset [unmanaged](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/unmanaged-types) fields because that wouldn't free any memory.
 
 You don't have to undo any MonoMod hooks when unloading. Realm undoes them automatically.
 
