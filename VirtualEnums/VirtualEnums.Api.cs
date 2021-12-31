@@ -61,7 +61,7 @@ public static partial class VirtualEnumApi
     /// <param name="type">The type.</param>
     public static void UseType(Type type)
     {
-        foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.Static)) {
+        foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)) {
             if (field.FieldType.IsEnum) {
                 long declared = AddDeclaration(field.FieldType, field.Name);
                 object declaredAsEnumType = AsEnum(field.FieldType, declared);
