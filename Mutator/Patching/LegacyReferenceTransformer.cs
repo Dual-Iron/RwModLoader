@@ -7,8 +7,8 @@ sealed class LegacyReferenceTransformer
     struct NameDetails
     {
         public PrefixType prefixType;
-        public int fnIndex;
-        public int numberSeparatorIndex;
+        public int memberIndex;
+        public int memberSeparatorIndex;
     }
 
     enum PrefixType
@@ -16,7 +16,7 @@ sealed class LegacyReferenceTransformer
         None, Orig, Hook, Add, Remove
     }
 
-    private readonly Dictionary<string, string> types = new();
+    private readonly Dictionary<string, string> cache = new();
     private readonly AssemblyDefinition hooksAsm;
 
     public LegacyReferenceTransformer(AssemblyDefinition hooksAsm)
@@ -123,42 +123,46 @@ sealed class LegacyReferenceTransformer
 
     public void DoTransform(MemberReference member)
     {
-        if (member.DeclaringType != null && ShouldTransform(member.Name, out var details)) {
-            if (types.TryGetValue(member.Name, out var ret)) {
+        if (member.DeclaringType != null && ShouldTransform(member, out var details)) {
+            if (cache.TryGetValue(member.Name, out var ret)) {
                 member.Name = ret;
             }
             else {
-                member.Name = types[member.Name] = Transform(member, details);
+                member.Name = cache[member.Name] = Transform(member, details);
             }
         }
     }
 
-    private static bool ShouldTransform(string name, out NameDetails details)
+    private bool ShouldTransform(MemberReference member, out NameDetails details)
     {
         details = default;
 
-        // Scan backwards for digits.
-        for (int i = name.Length - 1; i >= 0; i--) {
-            // Continue scanning if there's digits.
-            if (char.IsDigit(name[i])) {
-                continue;
-            }
-            // If we reach an underscore, it might be significant! The hooks always used to end in _XXX where XXX is a number.
-            if (name[i] == '_' && int.TryParse(name[(i + 1)..], out details.fnIndex)) {
-                details.numberSeparatorIndex = i;
-                break;
-            }
-            // Otherwise, no, it's not special.
+        // Check for telltale MonoMod prefixes.
+        if (member.Name.StartsWith("orig_")) details.prefixType = PrefixType.Orig;
+        else if (member.Name.StartsWith("hook_")) details.prefixType = PrefixType.Hook;
+        else if (member.Name.StartsWith("add_")) details.prefixType = PrefixType.Add;
+        else if (member.Name.StartsWith("remove_")) details.prefixType = PrefixType.Remove;
+        else return false;
+
+        // Only transform MonoMod signatures.
+        if (member is TypeReference t && t.Scope.Name != "HOOKS-Assembly-CSharp" || member.DeclaringType.Scope.Name != "HOOKS-Assembly-CSharp") {
             return false;
         }
 
-        // Check for telltale MonoMod prefixes.
-        if (name.StartsWith("orig_")) details.prefixType = PrefixType.Orig;
-        else if (name.StartsWith("hook_")) details.prefixType = PrefixType.Hook;
-        else if (name.StartsWith("add_")) details.prefixType = PrefixType.Add;
-        else if (name.StartsWith("remove_")) details.prefixType = PrefixType.Remove;
+        // Check if `member` exists in the updated MonoMod assembly. If not, `member` needs transformed.
+        var sharedParent = hooksAsm.MainModule.GetType(member.DeclaringType.FullName);
+        var transform = sharedParent == null 
+            || member is TypeReference && !sharedParent.NestedTypes.Any(t => t.Name == member.Name)
+            || member is MethodReference && !sharedParent.Methods.Any(m => m.Name == member.Name);
 
-        return details.prefixType != PrefixType.None;
+        if (transform) {
+            int underscoreIndex = member.Name.LastIndexOf('_');
+            details.memberSeparatorIndex = underscoreIndex > 0 ? underscoreIndex : member.Name.Length;
+            details.memberIndex = underscoreIndex > 0 ? int.Parse(member.Name[(underscoreIndex + 1)..]) : 0;
+            return true;
+        }
+
+        return false;
     }
 
     // Tries to find the right new member name for the deprecated reference.
@@ -167,13 +171,13 @@ sealed class LegacyReferenceTransformer
     {
         TypeDefinition newHooksType = hooksAsm.MainModule.GetType(member.DeclaringType.FullName);
 
-        string culledName = member.Name[..details.numberSeparatorIndex];
+        string culledName = member.Name[..details.memberSeparatorIndex];
 
         // Start with an index of 0. Count up with each identical hook name we find, and once the number matches the old number, we have the right overload.
         if (member is TypeReference) {
             int index = 0;
             foreach (var type in newHooksType.NestedTypes)
-                if (type.Name.StartsWith(culledName) && index++ == details.fnIndex)
+                if (type.Name.StartsWith(culledName) && index++ == details.memberIndex)
                     return type.Name;
         }
         else if (member is MethodReference) {
@@ -181,13 +185,13 @@ sealed class LegacyReferenceTransformer
             if (details.prefixType == PrefixType.Add) {
                 foreach (var @event in newHooksType.Events)
                     if (@event.AddMethod.Name.StartsWith(culledName))
-                        if (index++ == details.fnIndex)
+                        if (index++ == details.memberIndex)
                             return @event.AddMethod.Name;
             }
             else {
                 foreach (var @event in newHooksType.Events)
                     if (@event.RemoveMethod.Name.StartsWith(culledName))
-                        if (index++ == details.fnIndex)
+                        if (index++ == details.memberIndex)
                             return @event.RemoveMethod.Name;
             }
         }
