@@ -9,8 +9,14 @@ https://user-images.githubusercontent.com/31146412/137647603-6034790d-cfcb-40b0-
 Before you install Realm, please understand:
 - Realm doesn't support AutoUpdate. That's coming soon™.
 - You shouldn't use BOI after installing Realm.
+- EnumExtender is included within Realm. You don't need to use it as a dependency.
 
 To install Realm, go to the [releases](https://github.com/Dual-Iron/RwModLoader/releases/latest) page.
+
+## How do I uninstall it?
+1. Close the game.
+2. Open the Rain World [folder](https://savelocation.net/steam-game-folder).
+3. Delete the `BepInEx` folder.
 
 ## Resources and help
 - Overview [usage and support](.github/SUPPORT.md)
