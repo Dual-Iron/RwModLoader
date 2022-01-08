@@ -21,10 +21,9 @@ static class Wrapper
         if (files.Count == 0) return ExitStatus.FileNotFound(filePath);
 
         files.RemoveAll(s => ExtGlobal.ModBlacklist.Contains(Path.GetFileNameWithoutExtension(s)));
+        files.RemoveAll(file => CheckForMonomod(rwDir, file));
 
         if (files.Count == 0) return ExitStatus.Success;
-
-        files.RemoveAll(file => CheckForMonomod(rwDir, file));
 
         RwmodHeader? header = GetAssemblyHeader(filePath) ?? new(0, new(0, 1, 0), Path.GetFileName(filePath), "", "");
 
