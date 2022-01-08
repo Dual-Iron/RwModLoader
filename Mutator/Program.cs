@@ -27,7 +27,6 @@ while (argEnumerator.MoveNext()) {
     ExitStatus status = argEnumerator.Current switch {
         "-?" => PrintHelp(),
         "-i" => RealmInstaller.Install(),
-        "-u" => RealmInstaller.Uninstall(),
         "-q" => SelfUpdater.QuerySelfUpdate().Result,
         "-p" => argEnumerator.MoveNext() ? Patcher.Patch(argEnumerator.Current) : ExitStatus.ExpectedArg,
         "-w" => argEnumerator.MoveNext() ? Wrapper.Wrap(argEnumerator.Current) : ExitStatus.ExpectedArg,

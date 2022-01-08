@@ -48,30 +48,6 @@ static class RealmInstaller
         return ExitStatus.Success;
     }
 
-    public static ExitStatus Uninstall()
-    {
-        if (ExtIO.RwDir.MatchFailure(out var rwDir, out var err)) {
-            return err;
-        }
-
-        try {
-            File.Delete(Path.Combine(rwDir, "winhttp.dll"));
-            File.Delete(Path.Combine(rwDir, "doorstop_config.ini"));
-
-            if (Directory.Exists(Path.Combine(rwDir, "BepInEx"))) {
-                Directory.Delete(Path.Combine(rwDir, "BepInEx"), true);
-            }
-
-            File.WriteAllText("uninstall.bat", "timeout /T 1 /NOBREAK && rmdir \"%appdata%/.rw\" /s /q");
-            Process.Start("uninstall.bat")?.Dispose();
-        }
-        catch (Exception e) {
-            return ExitStatus.IOError(e.Message);
-        }
-
-        return ExitStatus.Success;
-    }
-
     public static ExitStatus Install()
     {
         if (ExtIO.RwDir.MatchFailure(out var rwDir, out var err)) {

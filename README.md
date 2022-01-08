@@ -14,9 +14,8 @@ While Realm is installed:
 To install Realm, go to the [releases](https://github.com/Dual-Iron/RwModLoader/releases/latest) page.
 
 ## How do I uninstall it?
-1. Close the game.
-2. Open the Rain World [folder](https://savelocation.net/steam-game-folder).
-3. Delete the `BepInEx` folder.
+1. Open the Rain World [folder](https://savelocation.net/steam-game-folder).
+2. Run `uninstall_realm.bat` while the game is closed.
 
 ## Resources and help
 - Overview [usage and support](.github/SUPPORT.md)
