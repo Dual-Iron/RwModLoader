@@ -28,9 +28,16 @@ static class ExtIO
         {
             if (rwDir != null) return rwDir;
 
-            var result = GetRwDir();
-            result.MatchSuccess(out rwDir, out _);
-            return result;
+            try {
+                var result = GetRwDir();
+                if (result.MatchSuccess(out var dir, out _)) {
+                    rwDir = dir;
+                }
+                return result;
+            }
+            catch (IOException) {
+                return ExitStatus.RwFolderNotFound;
+            }
         }
     }
 
