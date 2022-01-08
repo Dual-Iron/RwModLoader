@@ -6,10 +6,10 @@ Install mods by putting .dll and .zip files in the "plugins" folder, found in th
 https://user-images.githubusercontent.com/31146412/137647603-6034790d-cfcb-40b0-a425-fe113ce7481f.mp4
 
 ## How do I install it?
-Before you install Realm, please understand:
-- Realm doesn't support AutoUpdate. That's coming soon™.
-- You shouldn't use BOI after installing Realm.
-- EnumExtender is included within Realm. You don't need to use it as a dependency.
+While Realm is installed:
+- You don't need to install AutoUpdate, EnumExtender, PublicityStunt, or LogFix.
+- You shouldn't use BOI.
+- Logs are sent to `BepInEx/LogOutput.log`.
 
 To install Realm, go to the [releases](https://github.com/Dual-Iron/RwModLoader/releases/latest) page.
 

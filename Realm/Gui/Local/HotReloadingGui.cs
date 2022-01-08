@@ -36,7 +36,6 @@ static class HotReloadingGui
 
                 MessagingProgressable progressable = new();
                 State.Mods.Reload(progressable);
-                State.Mods.WarnHangingMods(progressable);
             });
             self.PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
             return;

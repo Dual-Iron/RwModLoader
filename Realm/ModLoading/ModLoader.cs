@@ -1,33 +1,11 @@
 ﻿using Realm.AssemblyLoading;
 using Realm.Logging;
-using System.Threading;
 
 namespace Realm.ModLoading;
 
 sealed class ModLoader
 {
-    private readonly List<WeakReference> hangingMods = new();
-
     public LoadedAssemblyPool? LoadedAssemblyPool { get; private set; }
-
-    public void WarnHangingMods(IProgressable progressable)
-    {
-        Thread.MemoryBarrier();
-        GC.Collect();
-        GC.WaitForPendingFinalizers();
-
-        List<string> names = new();
-
-        foreach (var weakRef in hangingMods) {
-            if (weakRef.Target is object mod) {
-                names.Add(mod.GetType().ToString());
-            }
-        }
-
-        if (names.Count > 0) {
-            progressable.Message(MessageType.Warning, $"The following mods aren't fully unloaded: [{string.Join(", ", names.ToArray())}]");
-        }
-    }
 
     public void Reload(IProgressable progressable)
     {
@@ -45,12 +23,6 @@ sealed class ModLoader
         progressable.Message(MessageType.Info, "Disabling mods");
 
         if (LoadedAssemblyPool == null) return;
-
-        hangingMods.Clear();
-
-        foreach (var asm in LoadedAssemblyPool.Pool.Assemblies) {
-            hangingMods.AddRange(asm.Descriptor.GetModObjects().Select(m => new WeakReference(m)));
-        }
 
         LoadedAssemblyPool.Unload(progressable);
         LoadedAssemblyPool = null;

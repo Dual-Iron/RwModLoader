@@ -37,7 +37,6 @@ static class Program
         }
 
         State.PatchMods = GetPatchMods();
-
         State.NoHotReloading = extraPatchers || State.PatchMods.Count > 0;
 
         ConfigFile file = new(configPath: Path.Combine(Paths.ConfigPath, "Realm.cfg"), saveOnInit: true);
@@ -46,6 +45,7 @@ static class Program
 
         if (!skip) CheckForSelfUpdate();
         NeuterPartiality();
+        UpdateOldLogs();
         StaticFixes.Hook();
 
         if (!skip) {
@@ -84,6 +84,21 @@ static class Program
         }
 
         return ret;
+    }
+
+    private static void UpdateOldLogs()
+    {
+        string rw = Paths.GameRootPath;
+        string[] files = { Path.Combine(rw, "consoleLog.txt"), Path.Combine(rw, "exceptionLog.txt") };
+
+        foreach (string file in files) {
+            try {
+                if (File.Exists(file)) {
+                    File.WriteAllText(file, "Check \"LogOutput.log\" in the BepInEx folder instead");
+                }
+            }
+            catch { }
+        }
     }
 
     private static void CheckForSelfUpdate()

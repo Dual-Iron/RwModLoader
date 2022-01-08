@@ -246,7 +246,6 @@ sealed class ModsMenu : Menu.Menu
         FailedLoadNotif.UndoHooks();
 
         State.Mods.Reload(performingProgress);
-        State.Mods.WarnHangingMods(performingProgress);
 
         if (performingProgress.ProgressState == ProgressStateType.Failed) {
             forceExitGame = true;
