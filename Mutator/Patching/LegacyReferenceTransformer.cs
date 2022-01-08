@@ -31,7 +31,7 @@ sealed class LegacyReferenceTransformer
     public void Transform(ModuleDefinition module)
     {
         if (module.AssemblyReferences.Any(asmName => asmName.Name == "HOOKS-Assembly-CSharp"))
-            foreach (var type in module.Types)
+            foreach (TypeDefinition type in module.GetTypes())
                 TransformType(type);
     }
 

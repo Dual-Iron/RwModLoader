@@ -161,7 +161,7 @@ static class Patcher
                     typeScanner.Transform(module);
                 }
 
-                foreach (TypeDefinition type in module.Types) {
+                foreach (TypeDefinition type in module.GetTypes()) {
                     if (!type.IsInterface && !type.IsAbstract && !type.IsValueType) {
                         if (type.SeekTree(t => t.FullName is "BepInEx.BaseUnityPlugin" or "Partiality.Modloader.PartialityMod", out var targetType)) {
                             modTypes.Add(type.FullName);

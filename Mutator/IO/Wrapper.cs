@@ -59,7 +59,7 @@ static class Wrapper
         bool isMonomodAssembly = false;
 
         using (AssemblyDefinition asm = AssemblyDefinition.ReadAssembly(file))
-            isMonomodAssembly = asm.MainModule.AssemblyReferences.Any(a => a.Name == "MonoMod") && asm.MainModule.Types.Any(t => t.Name.StartsWith("patch_"));
+            isMonomodAssembly = asm.MainModule.AssemblyReferences.Any(a => a.Name == "MonoMod") && asm.MainModule.GetTypes().Any(t => t.Name.StartsWith("patch_"));
 
         if (isMonomodAssembly) {
             string filename = Path.GetFileNameWithoutExtension(file);
