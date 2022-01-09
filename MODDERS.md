@@ -79,7 +79,7 @@ Some mods pass information between reloads (e.g. [SlugBase](https://github.com/S
 # Interop with rdb (Realm db)
 To add any mod to rdb, you must:
   1. Have a GitHub repository dedicated to the mod.
-  2. Have one or more releases with binaries. The binaries should include your mod's DLL and its dependencies' DLLs.
+  2. Have one or more releases with binaries. You should include all .dll binaries needed to run your mod out of the box: your mod's DLL and its dependencies' DLLs.
 
 Then, you can add it to rdb via:
   - GitHub webhook (see the video below). Creating, editing, and deleting repository/release info upserts the info to rdb.
