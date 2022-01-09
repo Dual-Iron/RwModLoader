@@ -67,10 +67,22 @@ Some mods pass information between reloads (e.g. [SlugBase](https://github.com/S
   
   As long as this contract is fulfilled, you can expect the following behavior:
   1. You reload your mods.
-  2. Just before your mod's disable method is called, GetReloadState() is called.
-  3. A new copy of your mod is enabled.
-  4. The result from GetReloadState() is passed into the new mod through Reload(object).
+  2. GetReloadState() is called.
+  3. Your mod's Disable method is called.
+  4. A new copy of your mod is enabled.
+  5. The result from GetReloadState() is passed into the new mod through Reload(object).
   
   I suggest copy-pasting the examples above into your mod class and editing their method bodies to suit your needs.
   
 </details>
+
+# Interop with rdb (Realm db)
+To add any mod to rdb, you must:
+  1. Have a GitHub repository dedicated to the mod.
+  2. Have one or more releases with binaries. The binaries should include your mod's DLL and its dependencies' DLLs.
+
+Then, you can add it to rdb via:
+  - GitHub webhook (see the video below). Creating, editing, and deleting repository/release info upserts the info to rdb.
+  - The [mod hooker](https://github.com/Dual-Iron/mod-hooker). Running this upserts your latest release to rdb.
+
+https://user-images.githubusercontent.com/31146412/148670657-5e3f7b43-7389-46d4-9547-96668406eead.mp4
