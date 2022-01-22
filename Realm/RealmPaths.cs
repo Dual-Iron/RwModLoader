@@ -2,7 +2,7 @@
 
 internal static class RealmPaths
 {
-    public static DirectoryInfo UserFolder => Directory.CreateDirectory(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).CreateSubdirectory(".rw");
+    public static DirectoryInfo UserFolder => new FileInfo(Path.GetFullPath(BepInEx.Preloader.EnvVars.DOORSTOP_INVOKE_DLL_PATH)).Directory.Parent.CreateSubdirectory("realm");
     public static string ModsFolder => UserFolder.CreateSubdirectory("mods").FullName;
-    public static string MutatorPath => Path.Combine(UserFolder.FullName, "Mutator.exe");
+    public static string MutatorPath => Path.Combine(UserFolder.FullName, "backend.exe");
 }

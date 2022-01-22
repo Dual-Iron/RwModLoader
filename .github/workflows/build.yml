@@ -13,17 +13,8 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: '6.0.x'
-        include-prerelease: true
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Build VirtualEnums
-      run: dotnet build VirtualEnums -c Release --no-restore
-    - name: Build Realm
-      run: dotnet build Realm -c Release --no-restore
-    - name: Package Mutator
-      run: dotnet publish Mutator -c Release -f net6.0 -r win-x64 --self-contained -p:PublishReadyToRun=true -p:PublishSingleFile=true -p:PublishTrimmed=true -p:TrimMode=link -p:TrimmerDefaultAction=link -p:EnableCompressionInSingleFile=true
-    - name: Create UserInstaller
-      run: mv "Mutator/bin/Release/net6.0/win-x64/publish/Mutator.exe" "UserInstaller.exe"
+    - name: Publish files
+      run: ./publish.sh
     - name: Upload artifacts
       uses: actions/upload-artifact@v2
       with:

@@ -4,7 +4,7 @@ using Mutator.Patching;
 using Mutator.Web;
 
 if (args.Length == 0) {
-    if (Path.GetFileName(Environment.ProcessPath) != "Mutator.exe") {
+    if (Path.GetFileName(Environment.ProcessPath) != "backend.exe") {
         var result = RealmInstaller.UserInstall();
         if (!result.Successful) {
             Console.ForegroundColor = ConsoleColor.Red;

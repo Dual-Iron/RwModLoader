@@ -66,20 +66,19 @@ static class RealmInstaller
 
     private static void DoInstall(string rwDir)
     {
-        InstallSelf();
+        if (InstallSelf(rwDir)) {
+            if (IsPartialityInstalled(rwDir)) {
+                UninstallPartiality(rwDir);
+            }
 
-        if (IsPartialityInstalled(rwDir)) {
-            UninstallPartiality(rwDir);
+            InstallBepInEx(rwDir);
         }
-
-        InstallBepInEx(rwDir);
     }
 
-    private static void InstallSelf()
+    private static bool InstallSelf(string rwDir)
     {
         string processPath = Environment.ProcessPath ?? throw new("No process path.");
-        string copyToDirectory = ExtIO.UserFolder.FullName;
-        string destFileName = Path.Combine(copyToDirectory, "Mutator.exe");
+        string destFileName = Path.Combine(rwDir, "BepInEx", "realm", "backend.exe");
 
         if (processPath != destFileName) {
             // Make sure we're not installing an older version
@@ -87,15 +86,14 @@ static class RealmInstaller
                 var versionInfo = FileVersionInfo.GetVersionInfo(destFileName);
                 var version = new Version(versionInfo.ProductMajorPart, versionInfo.ProductMinorPart, versionInfo.ProductBuildPart, versionInfo.ProductPrivatePart);
                 if (version >= typeof(Program).Assembly.GetName().Version) {
-                    return;
+                    return false;
                 }
             }
 
+            Directory.CreateDirectory(Path.GetDirectoryName(destFileName)!);
             File.Copy(processPath, destFileName, true);
-
-            if (File.Exists("path.txt"))
-                File.Copy("path.txt", Path.Combine(copyToDirectory, "path.txt"), true);
         }
+        return true;
     }
 
     private static bool IsPartialityInstalled(string rwDir)
@@ -108,7 +106,7 @@ static class RealmInstaller
     private static void UninstallPartiality(string rwDir)
     {
         Directory.Delete(Path.Combine(rwDir, "RainWorld_Data", "Managed"), true);
-        MoveDirs(Path.Combine(rwDir, "RainWorld_Data", "Managed_backup"), Path.Combine(rwDir, "RainWorld_Data", "Managed"));
+        CopyDir(Path.Combine(rwDir, "RainWorld_Data", "Managed_backup"), Path.Combine(rwDir, "RainWorld_Data", "Managed"));
 
         File.Delete(Path.Combine(rwDir, "consoleLog.txt"));
         File.Delete(Path.Combine(rwDir, "exceptionLog.txt"));
@@ -147,25 +145,20 @@ static class RealmInstaller
         // Move BepInEx/config dir only on fresh installs. This prevents overwriting people's configs.
         var freshInstall = !File.Exists(Path.Combine(rwDir, "BepInEx", "patchers", "Realm.dll"));
         if (freshInstall) {
-            MoveDirs(D(tempDir, "BepInEx", "config"), D(rwDir, "BepInEx", "config"));
-        }
-        else {
-            Directory.Delete(D(tempDir, "BepInEx", "config"), true);
+            CopyDir(D(tempDir, "BepInEx", "config"), D(rwDir, "BepInEx", "config"));
         }
 
-        MoveDirs(tempDir, rwDir);
+        CopyDir(tempDir, rwDir);
+        CopyDir(D(tempDir, "BepInEx", "core"), D(rwDir, "BepInEx", "core"));
+        CopyDir(D(tempDir, "BepInEx", "patchers"), D(rwDir, "BepInEx", "patchers"));
     }
 
-    private static void MoveDirs(string source, string destination)
+    private static void CopyDir(string source, string destination)
     {
         Directory.CreateDirectory(destination);
-        foreach (var subdir in Directory.EnumerateDirectories(source, "*", SearchOption.TopDirectoryOnly)) {
-            MoveDirs(subdir, Path.Combine(destination, Path.GetFileName(subdir)));
-        }
         foreach (var file in Directory.EnumerateFiles(source, "*", SearchOption.TopDirectoryOnly)) {
-            File.Move(file, Path.Combine(destination, Path.GetFileName(file)), true);
+            File.Copy(file, Path.Combine(destination, Path.GetFileName(file)), true);
         }
-        Directory.Delete(source);
     }
 
     private static string QueryUserForRwDir()

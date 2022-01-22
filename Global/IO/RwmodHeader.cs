@@ -53,13 +53,13 @@ sealed class RwmodHeader
         int version = ReadUInt16(ref b, s);
 
         return version switch {
-            CurrentVersion => ReadV0(b, s),
-            0 => "older version; delete your mods folder in \"%appdata%\\.rw\"",
+            CurrentVersion => Read(b, s),
+            0 => "older version; delete the BepInEx folder and reinstall Realm",
             _ => "newer version; upgrade Realm"
         };
     }
 
-    static Result<RwmodHeader, string> ReadV0(byte[] b, Stream s)
+    static Result<RwmodHeader, string> Read(byte[] b, Stream s)
     {
         var flags = s.ReadByte();
         if (flags > 1) {

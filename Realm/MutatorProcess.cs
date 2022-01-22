@@ -11,6 +11,7 @@ sealed class MutatorProcess
         }
 
         return Process.Start(new ProcessStartInfo(RealmPaths.MutatorPath, args) {
+            WorkingDirectory = RealmPaths.UserFolder.FullName,
             CreateNoWindow = true,
             RedirectStandardOutput = true,
             RedirectStandardError = true,

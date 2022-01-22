@@ -41,11 +41,9 @@ static class ExtIO
         }
     }
 
-    public static Encoding Enc => Encoding.Unicode;
+    public static Encoding Enc => Encoding.UTF8;
 
-    private readonly static string userPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".rw");
-
-    public static DirectoryInfo UserFolder => Directory.CreateDirectory(userPath);
+    public static DirectoryInfo UserFolder => Directory.CreateDirectory(Environment.CurrentDirectory);
     public static DirectoryInfo ModsFolder => UserFolder.CreateSubdirectory("mods");
     public static DirectoryInfo BackupsFolder => UserFolder.CreateSubdirectory("backups");
 
@@ -62,12 +60,13 @@ static class ExtIO
     {
         const int AppID = 312520;
 
-        // Check for explicit path override
-        if (File.Exists("path.txt")) {
-            if (File.ReadLines("path.txt").FirstOrDefault() is string firstLine && CleanRwDir(firstLine) is string rwDir) {
+        // Check for parent dirs
+        DirectoryInfo? dir = UserFolder;
+        while (dir != null) {
+            if (CleanRwDir(dir.FullName) is string rwDir) {
                 return rwDir;
             }
-            return ExitStatus.RwPathInvalid;
+            dir = dir.Parent;
         }
 
         // Check simple, common paths
@@ -82,7 +81,9 @@ static class ExtIO
             }
         }
 
-        if (!OperatingSystem.IsWindows()) return ExitStatus.RwFolderNotFound;
+        if (!OperatingSystem.IsWindows()) {
+            return ExitStatus.RwFolderNotFound;
+        }
 
         // Find path rigorously
         object? value =
@@ -90,14 +91,22 @@ static class ExtIO
             Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Valve\Steam", "InstallPath", null);
 
         if (value is string steamPath) {
-            string appState = File.ReadAllText(Path.Combine(steamPath, "steamapps", $"appmanifest_{AppID}.acf"));
-            var installNameMatch = Regex.Match(appState, @"""installdir""\s*""(.*?)""", RegexOptions.IgnoreCase);
-            if (installNameMatch.Success && installNameMatch.Groups.Count == 2) {
-                string installName = installNameMatch.Groups[1].Value;
-                string path = Path.Combine(steamPath, "steamapps", "common", installName);
+            try {
+                string appState = File.ReadAllText(Path.Combine(steamPath, "steamapps", $"appmanifest_{AppID}.acf"));
+                var installNameMatch = Regex.Match(appState, @"""installdir""\s*""(.*?)""", RegexOptions.IgnoreCase);
+                if (installNameMatch.Success && installNameMatch.Groups.Count == 2) {
+                    string installName = installNameMatch.Groups[1].Value;
+                    string path = Path.Combine(steamPath, "steamapps", "common", installName);
 
-                if (CleanRwDir(path) is string rwDir) {
-                    File.WriteAllText("path.txt", rwDir + "\n");
+                    if (CleanRwDir(path) is string rwDir) {
+                        return rwDir;
+                    }
+                }
+            }
+            catch {
+                string fullPath = Path.Combine(steamPath, "steamapps", "common", "Rain World");
+
+                if (CleanRwDir(fullPath) is string rwDir) {
                     return rwDir;
                 }
             }

@@ -47,7 +47,7 @@ readonly struct ExitStatus
     public static ExitStatus FolderNotFound(string path) => new(Codes.FolderNotFound, $"folder \"{path}\" not found");
     public static ExitStatus CorruptRwmod(string name, string reason) => new(Codes.CorruptRwmod, $"rwmod \"{name}\" is corrupt: {reason}");
     public static ExitStatus RwFolderNotFound =>
-        new(Codes.RwFolderNotFound, $"couldn't find the Rain World directory; create a \"path.txt\" file in \"{Path.GetDirectoryName(Environment.ProcessPath)}\" that contains the path to the Rain World folder");
+        new(Codes.RwFolderNotFound, $"couldn't find the Rain World directory");
     public static ExitStatus RwPathInvalid =>
         new(Codes.RwPathInvalid, $"the file \"path.txt\" doesn't contain the path to the Rain World folder");
     public static ExitStatus IOError(string message) => new(Codes.IOError, $"an IO error occurred; message: {message}");

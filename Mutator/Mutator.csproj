@@ -8,6 +8,7 @@
     <WarningsAsErrors>nullable</WarningsAsErrors>
     <PublishSingleFile>true</PublishSingleFile>
     <ImplicitUsings>true</ImplicitUsings>
+    <AssemblyName>backend</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,7 +27,8 @@
     </EmbeddedResource>
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition=" '$(BuildingInsideVisualStudio)' == 'true' And Exists('$(AppData)') ">
-    <Exec Command="dotnet publish -c Release -f net6.0 -r win-x64 --no-self-contained -o &quot;%appdata%/.rw&quot;" />
+  <!--Just a utility for quick testing-->
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition=" '$(BuildingInsideVisualStudio)' == 'true' And Exists('$(RainWorldDir)') ">
+    <Exec Command="dotnet publish -c Release -f net6.0 -r win-x64 --no-self-contained -o &quot;$(RainWorldDir)/BepInEx/realm&quot;" />
   </Target>
 </Project>
