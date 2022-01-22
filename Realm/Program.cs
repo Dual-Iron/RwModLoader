@@ -36,6 +36,8 @@ static class Program
             return;
         }
 
+        AddPathFile();
+
         State.PatchMods = GetPatchMods();
         State.NoHotReloading = extraPatchers || State.PatchMods.Count > 0;
 
@@ -84,6 +86,18 @@ static class Program
         }
 
         return ret;
+    }
+
+    private static void AddPathFile()
+    {
+        try {
+            string path = Path.Combine(RealmPaths.UserFolder.FullName, "path.txt");
+            string contents = Paths.GameRootPath + "\n";
+
+            File.WriteAllText(path, contents);
+        } catch (Exception e) {
+            Logger.LogDebug("There was an error while writing path.txt: " + e.Message);
+        }
     }
 
     private static void UpdateOldLogs()
