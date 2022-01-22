@@ -12,7 +12,6 @@ readonly struct ExitStatus
         FileNotFound = 0x20,
         FolderNotFound,
         RwFolderNotFound,
-        RwPathInvalid,
         FileTooLarge,
         IOError = 0x30,
         ConnectionFailed
@@ -48,7 +47,5 @@ readonly struct ExitStatus
     public static ExitStatus CorruptRwmod(string name, string reason) => new(Codes.CorruptRwmod, $"rwmod \"{name}\" is corrupt: {reason}");
     public static ExitStatus RwFolderNotFound =>
         new(Codes.RwFolderNotFound, $"couldn't find the Rain World directory");
-    public static ExitStatus RwPathInvalid =>
-        new(Codes.RwPathInvalid, $"the file \"path.txt\" doesn't contain the path to the Rain World folder");
     public static ExitStatus IOError(string message) => new(Codes.IOError, $"an IO error occurred; message: {message}");
 }

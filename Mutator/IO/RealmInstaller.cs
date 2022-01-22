@@ -9,7 +9,6 @@ static class RealmInstaller
     {
         if (ExtIO.RwDir.MatchFailure(out var rwDir, out _)) {
             rwDir = QueryUserForRwDir();
-            File.WriteAllText("path.txt", rwDir + "\n");
         }
 
         var procs = Process.GetProcessesByName("RainWorld");
