@@ -1,3 +1,5 @@
+#!/bin/sh
+cd "$(dirname "$0")"
 dotnet restore
 dotnet build VirtualEnums -c Release --no-restore
 dotnet build Realm -c Release --no-restore
