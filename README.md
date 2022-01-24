@@ -1,7 +1,7 @@
 ## What is it?
 Realm is an in-game modloader for [Rain World](https://rainworldgame.com/) that lets you reload mods without closing the game. It aims to promote ease of use and rapid mod development.
 
-Install mods by putting .dll and .zip files in the "plugins" folder, found in the mod menu. The mod menu is on the title screen.
+Install mods by putting .dll files in the "plugins" folder, found in the mod menu. The mod menu is on the title screen.
 
 https://user-images.githubusercontent.com/31146412/137647603-6034790d-cfcb-40b0-a425-fe113ce7481f.mp4
 
