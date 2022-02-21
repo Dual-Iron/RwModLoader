@@ -73,13 +73,13 @@ public static partial class VirtualEnumApi
         var values = orig(type);
         if (virtualEnums.TryGetValue(type, out var data)) {
             var underlyingType = Enum.GetUnderlyingType(type);
-            var valuesExtended = new object[values.Length + data.EnumValues.Count];
+            var valuesExtended = Array.CreateInstance(type, values.Length + data.EnumValues.Count);
 
             values.CopyTo(valuesExtended, 0);
 
             int count = values.Length;
             foreach (var kvp in data.EnumValues.Forward) {
-                valuesExtended[count++] = Convert.ChangeType(kvp.Value, underlyingType);
+                valuesExtended.SetValue(Convert.ChangeType(kvp.Value, underlyingType), count++);
             }
 
             return valuesExtended;
