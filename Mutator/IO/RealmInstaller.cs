@@ -84,7 +84,7 @@ static class RealmInstaller
             if (File.Exists(destFileName)) {
                 var versionInfo = FileVersionInfo.GetVersionInfo(destFileName);
                 var version = new Version(versionInfo.ProductMajorPart, versionInfo.ProductMinorPart, versionInfo.ProductBuildPart, versionInfo.ProductPrivatePart);
-                if (version >= typeof(Program).Assembly.GetName().Version) {
+                if (version > typeof(Program).Assembly.GetName().Version) {
                     return false;
                 }
             }
