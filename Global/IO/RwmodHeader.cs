@@ -30,7 +30,7 @@ sealed class RwmodHeader
 
     public void Write(Stream s)
     {
-        s.Write(new byte[] { 0x5, 0x57, 0x4d, 0x4f, 0x44 }, 0, 5);
+        s.Write(new byte[] { 0x52, 0x57, 0x4d, 0x4f, 0x44 }, 0, 5);
         WriteUInt16(s, CurrentVersion);
 
         s.WriteByte((byte)Flags);
@@ -46,7 +46,10 @@ sealed class RwmodHeader
 
         s.Read(b, 0, 5);
 
-        if (b[0] != 0x5 || b[1] != 0x57 || b[2] != 0x4d || b[3] != 0x4f || b[4] != 0x44) {
+        // TODO in a future version (probably 1.0), remove `b[0] != 0x5`
+        // allowing 0x5 was a bug, but removing it would break backwards compatibility, so it must stay
+
+        if (b[0] != 0x5 && b[0] != 0x52 || b[1] != 0x57 || b[2] != 0x4d || b[3] != 0x4f || b[4] != 0x44) {
             return "not a rwmod file";
         }
 
