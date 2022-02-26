@@ -89,7 +89,7 @@ static class Wrapper
         try {
             using var asm = AssemblyDefinition.ReadAssembly(filePath);
 
-            return new RwmodHeader(0, new SemVer(asm.Name.Version), asm.Name.Name, GetAuthor(asm), "");
+            return new RwmodHeader(0, new SemVer(asm.Name.Version), Path.GetFileNameWithoutExtension(filePath), GetAuthor(asm), "");
         }
         catch {
             return null;

@@ -1,3 +1,6 @@
+![Number of downloads](https://img.shields.io/github/downloads/Dual-Iron/RwModLoader/total?style=flat&color=blue)
+![Latest version](https://img.shields.io/github/v/release/Dual-Iron/RwModLoader?display_name=tag&sort=semver)
+
 ## What is it?
 Realm is an in-game modloader for [Rain World](https://rainworldgame.com/) that lets you reload mods without closing the game. It aims to promote ease of use and rapid mod development.
 
