@@ -151,7 +151,7 @@ sealed class LegacyReferenceTransformer
 
         // Check if `member` exists in the updated MonoMod assembly. If not, `member` needs transformed.
         var sharedParent = hooksAsm.MainModule.GetType(member.DeclaringType.FullName);
-        var transform = sharedParent == null 
+        var transform = sharedParent == null
             || member is TypeReference && !sharedParent.NestedTypes.Any(t => t.Name == member.Name)
             || member is MethodReference && !sharedParent.Methods.Any(m => m.Name == member.Name);
 

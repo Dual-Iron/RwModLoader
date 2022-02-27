@@ -130,8 +130,7 @@ static class RealmInstaller
 
         string tempDir = ExtIO.GetTempDir().FullName;
 
-        using var clearTempDir = new Disposable(() =>
-        {
+        using var clearTempDir = new Disposable(() => {
             if (Directory.Exists(tempDir)) {
                 Directory.Delete(tempDir, true);
             }

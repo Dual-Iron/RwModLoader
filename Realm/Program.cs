@@ -1,21 +1,20 @@
 ﻿global using Rwml.IO;
 global using System;
-global using System.IO;
-global using System.Text;
-global using System.Linq;
 global using System.Collections.Generic;
-
+global using System.IO;
+global using System.Linq;
+global using System.Text;
 using BepInEx;
-using BepInEx.Logging;
-using MonoMod.RuntimeDetour;
-using MonoMod.Cil;
-using Mono.Cecil.Cil;
-using Partiality.Modloader;
-using Realm.Gui;
-using Realm.Logging;
-using Realm.AssemblyLoading;
 using BepInEx.Configuration;
+using BepInEx.Logging;
+using Mono.Cecil.Cil;
+using MonoMod.Cil;
+using MonoMod.RuntimeDetour;
+using Partiality.Modloader;
+using Realm.AssemblyLoading;
+using Realm.Gui;
 using Realm.Gui.Installation;
+using Realm.Logging;
 
 namespace Realm;
 
@@ -56,7 +55,7 @@ static class Program
             Progressable prog = new();
 
             State.Mods.Reload(prog);
-            
+
             if (prog.ProgressState == ProgressStateType.Failed) {
                 FailedLoadNotif.ApplyHooks();
             }

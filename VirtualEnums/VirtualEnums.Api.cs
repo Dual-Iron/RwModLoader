@@ -47,7 +47,8 @@ public static partial class VirtualEnumApi
         {
             try {
                 return asm.GetTypes();
-            } catch (ReflectionTypeLoadException e) {
+            }
+            catch (ReflectionTypeLoadException e) {
                 reflError = e;
                 return e.Types.Where(t => t != null);
             }

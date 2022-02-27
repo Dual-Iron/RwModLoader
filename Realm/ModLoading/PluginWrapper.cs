@@ -48,7 +48,8 @@ static class PluginWrapper
                 }
 
                 progressable.Message(MessageType.Info, $"Wrapped {wrappedMods.Count} mods.");
-            } else {
+            }
+            else {
                 progressable.Message(MessageType.Fatal, $"Failed to wrap mods. {proc}");
             }
         }

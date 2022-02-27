@@ -1,8 +1,8 @@
-﻿using Realm.Logging;
+﻿using MonoMod.RuntimeDetour;
+using Realm.Logging;
 using System.Collections.ObjectModel;
 using System.Reflection;
 using UnityEngine;
-using MonoMod.RuntimeDetour;
 
 namespace Realm.AssemblyLoading;
 

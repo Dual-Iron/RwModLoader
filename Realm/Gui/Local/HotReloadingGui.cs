@@ -30,8 +30,7 @@ static class HotReloadingGui
     private static void PauseMenuSingal(On.Menu.PauseMenu.orig_Singal orig, PauseMenu self, MenuObject sender, string message)
     {
         if (reloadingJob == null && message == HOT_RELOAD) {
-            reloadingJob = Job.Start(() =>
-            {
+            reloadingJob = Job.Start(() => {
                 State.Prefs.Load();
 
                 MessagingProgressable progressable = new();

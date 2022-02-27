@@ -32,7 +32,8 @@ public static partial class VirtualEnumApi
             if (!ignoreCase) {
                 if (data.EnumValues.Forward.TryGetValue(value, out var ret))
                     return Enum.ToObject(type, ret);
-            } else {
+            }
+            else {
                 foreach (var kvp in data.EnumValues.Forward) {
                     if (string.Compare(kvp.Key, value, true, CultureInfo.InvariantCulture) == 0)
                         return Enum.ToObject(type, kvp.Value);

@@ -22,10 +22,8 @@ static class ExtIO
         return null;
     }
 
-    public static Result<string, ExitStatus> RwDir
-    {
-        get
-        {
+    public static Result<string, ExitStatus> RwDir {
+        get {
             if (rwDir != null) return rwDir;
 
             try {

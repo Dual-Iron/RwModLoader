@@ -6,8 +6,7 @@ static class SelfUpdater
 {
     private static async Task<Result<SemVer, ExitStatus>> GetRepoVersion(string user, string repo)
     {
-        var result = await Cache.Fetch<ExitStatus>($"tagname-{user}-{repo}", async () =>
-        {
+        var result = await Cache.Fetch<ExitStatus>($"tagname-{user}-{repo}", async () => {
             using var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.github.com/repos/{user}/{repo}/releases/latest");
             request.Headers.Add("Accept", "application/vnd.github.v3+json");
             request.Headers.Add("User-Agent", "downloader-" + Environment.ProcessId);

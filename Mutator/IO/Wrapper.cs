@@ -24,9 +24,11 @@ static class Wrapper
 
         if (temp != null) {
             files.AddRange(Directory.GetFiles(temp, "*", SearchOption.AllDirectories));
-        } else if (File.Exists(filePath)) {
+        }
+        else if (File.Exists(filePath)) {
             files.Add(filePath);
-        } else if (Directory.Exists(filePath))
+        }
+        else if (Directory.Exists(filePath))
             files.AddRange(Directory.GetFiles(filePath, "*", SearchOption.AllDirectories));
 
         if (files.Count == 0) return ExitStatus.FileNotFound(filePath);
@@ -100,7 +102,8 @@ static class Wrapper
 
             // Return those files
             return temp;
-        } catch {
+        }
+        catch {
             if (Directory.Exists(temp)) {
                 Directory.Delete(temp, true);
             }
