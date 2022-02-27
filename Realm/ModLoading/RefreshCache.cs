@@ -11,7 +11,7 @@ sealed class RefreshCache
         headers = RwmodFileHeader.GetRwmodHeaders();
     }
 
-    public void Refresh(IProgressable progressable)
+    public void Refresh(Progressable progressable)
     {
         State.Prefs.Load();
 

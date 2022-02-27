@@ -4,6 +4,6 @@ sealed class MessagingProgressable : Progressable
 {
     public override float Progress {
         get => base.Progress;
-        set => Message(MessageType.Info, $"Progress: {base.Progress = value:p}");
+        set => Message(MessageType.Debug, $"Progress: {base.Progress = value:p}");
     }
 }

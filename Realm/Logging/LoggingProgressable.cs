@@ -4,27 +4,18 @@ namespace Realm.Logging;
 
 sealed class LoggingProgressable : Progressable
 {
-    public ReadOnlyCollection<MessageInfo> Messages {
-        get {
-            lock (messages) {
-                return messagesWrapper;
-            }
-        }
-    }
+    public ReadOnlyCollection<MessageInfo> Messages { get; }
 
-    private readonly ReadOnlyCollection<MessageInfo> messagesWrapper;
     private readonly List<MessageInfo> messages = new();
 
     public LoggingProgressable()
     {
-        messagesWrapper = new(messages);
+        Messages = new(messages);
     }
 
     public override void Message(MessageType messageType, string message)
     {
-        lock (messages) {
-            messages.Add(new(messageType, message));
-        }
+        messages.Add(new(messageType, message));
 
         base.Message(messageType, message);
     }

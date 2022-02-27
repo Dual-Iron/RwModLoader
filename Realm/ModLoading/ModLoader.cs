@@ -7,7 +7,7 @@ sealed class ModLoader
 {
     public LoadedAssemblyPool? LoadedAssemblyPool { get; private set; }
 
-    public void Reload(IProgressable progressable)
+    public void Reload(Progressable progressable)
     {
         List<ModReloadState> reloadState = GetReloadState(progressable);
 
@@ -18,7 +18,7 @@ sealed class ModLoader
         Load(progressable, reloadState);
     }
 
-    private void Unload(IProgressable progressable)
+    private void Unload(Progressable progressable)
     {
         progressable.Message(MessageType.Info, "Disabling mods");
 
@@ -28,7 +28,7 @@ sealed class ModLoader
         LoadedAssemblyPool = null;
     }
 
-    private void Load(IProgressable progressable, List<ModReloadState> reloadState)
+    private void Load(Progressable progressable, List<ModReloadState> reloadState)
     {
         PluginWrapper.WrapPlugins(progressable, out var wrappedAsms);
 
@@ -80,7 +80,7 @@ sealed class ModLoader
         CallReload(progressable, reloadState);
     }
 
-    private void CallReload(IProgressable progressable, List<ModReloadState> reloadState)
+    private void CallReload(Progressable progressable, List<ModReloadState> reloadState)
     {
         foreach (var state in reloadState) {
             LoadedModAssembly? newMod = LoadedAssemblyPool!.LoadedAssemblies.FirstOrDefault(m => m.AsmName == state.AsmName);
@@ -96,7 +96,7 @@ sealed class ModLoader
         }
     }
 
-    private List<ModReloadState> GetReloadState(IProgressable progressable)
+    private List<ModReloadState> GetReloadState(Progressable progressable)
     {
         if (LoadedAssemblyPool == null) {
             return new();

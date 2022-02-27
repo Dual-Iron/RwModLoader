@@ -16,7 +16,7 @@ sealed class AssemblyPool
     /// <summary>
     /// Reads assemblies and stores their assembly definitions. Never calls <see cref="IDisposable.Dispose"/> on the assembly streams.
     /// </summary>
-    public static AssemblyPool Read(IProgressable progressable, IList<RwmodFile> rwmods)
+    public static AssemblyPool Read(Progressable progressable, IList<RwmodFile> rwmods)
     {
         DefaultAssemblyResolver resolver = new();
         resolver.AddSearchDirectory(Paths.BepInExAssemblyDirectory);

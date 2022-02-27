@@ -11,9 +11,9 @@ sealed class LoadedAssemblyPool
     private static readonly DetourModManager monomod = new();
 
     /// <summary>
-    /// Loads the assemblies in <paramref name="asmPool"/>. Call <see cref="InitializeMods(IProgressable, Action{float})"/> to initialize them. Never calls <see cref="IDisposable.Dispose"/> on the assembly streams.
+    /// Loads the assemblies in <paramref name="asmPool"/>. Call <see cref="InitializeMods(Progressable, Action{float})"/> to initialize them. Never calls <see cref="IDisposable.Dispose"/> on the assembly streams.
     /// </summary>
-    public static LoadedAssemblyPool Load(IProgressable progressable, AssemblyPool asmPool)
+    public static LoadedAssemblyPool Load(Progressable progressable, AssemblyPool asmPool)
     {
         LoadedAssemblyPool ret = new(asmPool);
 
@@ -47,7 +47,7 @@ sealed class LoadedAssemblyPool
         LoadedAssemblies = new(loadedAssemblies);
     }
 
-    public void Unload(IProgressable progressable)
+    public void Unload(Progressable progressable)
     {
         int complete = 0;
         int count = loadedAssemblies.Count;
@@ -70,7 +70,7 @@ sealed class LoadedAssemblyPool
         VirtualEnums.VirtualEnumApi.Clear();
     }
 
-    private void LoadAssemblies(IProgressable progressable, Action<float> setTaskProgress)
+    private void LoadAssemblies(Progressable progressable, Action<float> setTaskProgress)
     {
         IEnumerable<ModAssembly> GetDependencies(ModAssembly asm)
         {
@@ -112,7 +112,7 @@ sealed class LoadedAssemblyPool
         }
     }
 
-    public void InitializeMods(IProgressable progressable)
+    public void InitializeMods(Progressable progressable)
     {
         foreach (var loadedAsm in loadedAssemblies) {
             VirtualEnums.VirtualEnumApi.UseAssembly(loadedAsm.Asm, out var err);
@@ -163,7 +163,7 @@ sealed class LoadedAssemblyPool
         StaticFixes.PostLoad();
     }
 
-    private static void PrintMissingDependency(IProgressable progressable, LoadedModAssembly lasm, AssemblyName name)
+    private static void PrintMissingDependency(Progressable progressable, LoadedModAssembly lasm, AssemblyName name)
     {
         progressable.Message(MessageType.Fatal, $"The mod {lasm.AsmName} v{lasm.Asm.GetName().Version.ToString(2)} is missing a dependency: {name.Name} v{name.Version.ToString(2)}");
     }

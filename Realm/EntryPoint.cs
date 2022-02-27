@@ -39,7 +39,7 @@ static class EntryPoint
         extraPatchers = AssemblyPatcher.PatcherPlugins.Count > 3;
 
         // Have to use EmptyProgressable and can't log the result here.
-        ModLoading.PluginWrapper.WrapPlugins(new EmptyProgressable(), out earlyWrappedAsms);
+        ModLoading.PluginWrapper.WrapPlugins(new Progressable(), out earlyWrappedAsms);
 
         // Can't reference or hook Chainloader before it's been initialized on its own or the game bluescreens
         // So, instead, just track the logger that Chainloader uses.

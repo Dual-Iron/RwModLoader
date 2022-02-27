@@ -11,3 +11,8 @@ struct MessageInfo
         Message = message;
     }
 }
+
+enum MessageType
+{
+    Debug, Info, Warning, Fatal
+}

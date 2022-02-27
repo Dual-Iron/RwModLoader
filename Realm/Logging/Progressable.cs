@@ -2,7 +2,7 @@
 
 namespace Realm.Logging;
 
-class Progressable : IProgressable
+class Progressable
 {
     public virtual float Progress { get; set; }
     public ProgressStateType ProgressState { get; set; }

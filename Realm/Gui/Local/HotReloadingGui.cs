@@ -32,9 +32,7 @@ static class HotReloadingGui
         if (reloadingJob == null && message == HOT_RELOAD) {
             reloadingJob = Job.Start(() => {
                 State.Prefs.Load();
-
-                MessagingProgressable progressable = new();
-                State.Mods.Reload(progressable);
+                State.Mods.Reload(new MessagingProgressable());
             });
             self.PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
             return;
