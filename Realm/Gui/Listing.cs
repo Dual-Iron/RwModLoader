@@ -29,6 +29,16 @@ sealed class Listing : RectangularMenuObject, Slider.ISliderOwner
         this.edgePadding = edgePadding;
     }
 
+    public void ClearListElements()
+    {
+        for (int i = subObjects.Count - 1; i >= 0; i--) {
+            if (subObjects[i] is IListable) {
+                subObjects[i].RemoveSprites();
+                RemoveSubObject(subObjects[i]);
+            }
+        }
+    }
+
     public override void Update()
     {
         float depth = edgePadding;

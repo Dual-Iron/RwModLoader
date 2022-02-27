@@ -13,10 +13,24 @@ sealed class Job
 
     private readonly object o = new();
     private Action? action;
+    private JobStatus status;
+    private Exception? exception;
 
-    public JobStatus Status { get; private set; }
-    public Exception? Exception { get; private set; }
-    public bool Ok => Exception == null;
+    public JobStatus Status {
+        get {
+            lock (o) {
+                return status;
+            }
+        }
+    }
+
+    public Exception? Exception {
+        get {
+            lock (o) {
+                return exception;
+            }
+        }
+    }
 
     public Job(Action callback)
     {
@@ -28,15 +42,8 @@ sealed class Job
         if (Status != JobStatus.Unstarted) {
             throw new InvalidOperationException("Already started");
         }
-        Status = JobStatus.InProgress;
+        status = JobStatus.InProgress; // No need to lock yet, this is the same thread as the caller.
         ThreadPool.QueueUserWorkItem(Work);
-    }
-
-    public void Wait()
-    {
-        while (Status != JobStatus.Finished) {
-            Thread.Sleep(0);
-        }
     }
 
     private void Work(object _)
@@ -54,8 +61,8 @@ sealed class Job
     private void Finish(Exception? e)
     {
         lock (o) {
-            Status = JobStatus.Finished;
-            Exception = e;
+            status = JobStatus.Finished;
+            exception = e;
         }
     }
 }

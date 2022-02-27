@@ -47,15 +47,15 @@ static class PluginWrapper
                     wrappedMods.AddRange(wrapped);
                 }
 
-                progressable.Message(MessageType.Info, $"Wrapped {wrappedMods.Count} mods.");
+                progressable.Message(MessageType.Info, $"Wrapped {wrappedMods.Count} mods");
             }
             else {
                 progressable.Message(MessageType.Fatal, $"Failed to wrap mods. {proc}");
             }
         }
         catch (Exception e) {
-            progressable.Message(MessageType.Fatal, "An exception was thrown while wrapping plugins.");
             progressable.Message(MessageType.Debug, e.ToString());
+            progressable.Message(MessageType.Fatal, "An error occurred while wrapping plugins. Exception details logged.");
         }
 
         if (progressable.ProgressState == ProgressStateType.Failed) {

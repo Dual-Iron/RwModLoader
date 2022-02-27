@@ -13,31 +13,37 @@ sealed class ModsMenu : Menu.Menu
 {
     public const ProcessManager.ProcessID ModsMenuID = (ProcessManager.ProcessID)(-666);
 
+    // Buttons that are always available
     private readonly MenuLabel quitWarning;
     private readonly SimpleButton openPluginsButton;
-    private readonly SimpleButton? openPatchesButton;
     private readonly SimpleButton cancelButton;
     private readonly SimpleButton saveButton;
     private readonly SimpleButton enableAll;
     private readonly SimpleButton disableAll;
     private readonly SimpleButton refresh;
-    private readonly Listing modListing;
 
-    private readonly MenuContainer progDisplayContainer;
-    private readonly LoggingProgressable performingProgress = new();
+    // Mod list
+    private readonly Listing modListing;
+    private readonly MenuContainer modListingGroup;
+    private SimpleButton? openPatchesButton;
+
+    // Logging progress
+    private readonly LoggingProgressable progress = new();
+    private readonly MenuContainer? progressContainer;
+    private readonly ProgressableDisplay progressDisplay;
 
     private readonly FSprite headerSprite;
     private readonly FSprite headerShadowSprite;
 
     private Page Page => pages[0];
 
-    private Job? performingJob;     // Current job.
-    private bool shutDownMusic;     // Set false to not restart music on shutdown. Useful for refreshing.
+    private Job? reloadJob;
+    private Job? refreshJob;
+    private bool shutDownMusic;
     private bool forceExitGame;
+    private bool quitOnSave;
 
-    private bool PreventButtonClicks => manager.upcomingProcess != null || performingJob != null;
-
-    private bool QuitOnSave { get; }
+    private bool PreventButtonClicks => manager.upcomingProcess != null || reloadJob != null || refreshJob != null;
 
     public ModsMenu(ProcessManager manager) : base(manager, ModsMenuID)
     {
@@ -64,47 +70,23 @@ sealed class ModsMenu : Menu.Menu
         Page.subObjects.Add(enableAll = new(this, Page, "ENABLE ALL", "", new(200, 300), new(110, 30)));
         Page.subObjects.Add(openPluginsButton = new(this, Page, "PLUGINS", "", new(200, 350), new(110, 30)));
 
-        State.CurrentRefreshCache.Refresh(new MessagingProgressable());
-
         modListing = new(Page, pos: new(1366 - ModPanel.Width - 200, 50), elementSize: new(ModPanel.Width, ModPanel.Height), elementsPerScreen: 15, edgePadding: 5);
+        Page.subObjects.Add(modListing);
+        Page.subObjects.Add(modListingGroup = new(Page));
 
-        if (!Program.GetPatchMods().SequenceEqual(State.PatchMods)) {
-            QuitOnSave = true;
+        Page.subObjects.Add(progressContainer = new(Page));
+        progressContainer.subObjects.Add(
+            progressDisplay = new(progress, progressContainer, modListing.pos, modListing.size)
+        );
 
-            MenuLabel notListedNotice = new(this, Page, "restart the game to refresh patch mods", new(modListing.pos.x, modListing.pos.y - modListing.size.y / 2 - 15), modListing.size, false);
-            notListedNotice.label.color = MenuColor(MenuColors.MediumGrey).rgb;
-            Page.subObjects.Add(notListedNotice);
-        }
-        else if (State.PatchMods.Count > 0) {
-            QuitOnSave = true;
-
-            Page.subObjects.Add(openPatchesButton = new(this, Page, "PATCHES", "", new(200, 400), new(110, 30)));
-
-            string s = State.PatchMods.Count > 1 ? "s" : "";
-            string n = State.PatchMods.Count == 1 ? "a" : State.PatchMods.Count.ToString();
-
-            MenuLabel notListedNotice = new(this, Page, $"and {n} patch mod{s}", new(modListing.pos.x, modListing.pos.y - modListing.size.y / 2 - 15), modListing.size, false);
-            notListedNotice.label.color = MenuColor(MenuColors.MediumGrey).rgb;
-            Page.subObjects.Add(notListedNotice);
-        }
+        // This method must come after `progressDisplay` is set.
+        // This comment exists because I forgot this once.
+        StartRefreshJob();
 
         quitWarning = new(this, Page, "(this will close the game)", new(saveButton.pos.x, saveButton.pos.y - 30), saveButton.size, false);
         quitWarning.label.color = MenuColor(MenuColors.MediumGrey).rgb;
         quitWarning.label.isVisible = false;
         Page.subObjects.Add(quitWarning);
-
-        foreach (var header in State.CurrentRefreshCache.Headers) {
-            modListing.subObjects.Add(new ModPanel(header, Page, default));
-        }
-
-        Page.subObjects.Add(modListing);
-
-        Page.subObjects.Add(
-            progDisplayContainer = new(Page)
-        );
-        progDisplayContainer.subObjects.Add(
-            new ProgressableDisplay(performingProgress, progDisplayContainer, modListing.pos, modListing.size)
-        );
 
         ModsMenuMusic.Start(manager.musicPlayer);
 
@@ -119,6 +101,44 @@ sealed class ModsMenu : Menu.Menu
         headerSprite.y = headerShadowSprite.y = headerY;
 
         headerSprite.shader = manager.rainWorld.Shaders["MenuText"];
+    }
+
+    private void StartRefreshJob()
+    {
+        progressDisplay.ShowProgressPercent = false;
+        progress.Message(MessageType.Info, "Loading mods");
+        refreshJob = Job.Start(() => State.CurrentRefreshCache.Refresh(progress));
+    }
+
+    private void UpdateModListing()
+    {
+        modListingGroup.ClearSubObjects();
+
+        if (!Program.GetPatchMods().SequenceEqual(State.PatchMods)) {
+            quitOnSave = true;
+
+            MenuLabel notListedNotice = new(this, Page, "restart the game to refresh patch mods", new(modListing.pos.x, modListing.pos.y - modListing.size.y / 2 - 15), modListing.size, false);
+            notListedNotice.label.color = MenuColor(MenuColors.MediumGrey).rgb;
+            modListingGroup.subObjects.Add(notListedNotice);
+        }
+        else if (State.PatchMods.Count > 0) {
+            quitOnSave = true;
+
+            modListingGroup.subObjects.Add(openPatchesButton = new(this, Page, "PATCHES", "", new(200, 400), new(110, 30)));
+
+            string s = State.PatchMods.Count > 1 ? "s" : "";
+
+            MenuLabel notListedNotice = new(this, Page, $"and {State.PatchMods.Count} patch mod{s}", new(modListing.pos.x, modListing.pos.y - modListing.size.y / 2 - 15), modListing.size, false);
+            notListedNotice.label.color = MenuColor(MenuColors.MediumGrey).rgb;
+            modListingGroup.subObjects.Add(notListedNotice);
+        }
+
+        // Reset mod listing with new panels
+        modListing.ClearListElements();
+
+        foreach (var header in State.CurrentRefreshCache.Headers) {
+            modListing.subObjects.Add(new ModPanel(header, Page, default));
+        }
     }
 
     private IEnumerable<ModPanel> GetPanels()
@@ -142,12 +162,19 @@ sealed class ModsMenu : Menu.Menu
 
     public override void Update()
     {
-        if (performingJob?.Exception is Exception e) {
-            performingJob = null;
+        var e = reloadJob?.Exception ?? refreshJob?.Exception;
+        if (e != null) {
+            reloadJob = null;
+            refreshJob = null;
 
             forceExitGame = true;
 
-            performingProgress.Message(MessageType.Fatal, e.ToString());
+            progress.Message(MessageType.Fatal, e.ToString());
+        }
+
+        if (refreshJob?.Status == JobStatus.Finished) {
+            refreshJob = null;
+            UpdateModListing();
         }
 
         foreach (var mob in Page.subObjects) {
@@ -166,8 +193,11 @@ sealed class ModsMenu : Menu.Menu
 
     public override void GrafUpdate(float timeStacker)
     {
-        progDisplayContainer.Container.alpha = performingJob != null ? 1 : 0;
-        quitWarning.label.isVisible = QuitOnSave;
+        if (progressContainer != null) {
+            progressContainer.Container.alpha = reloadJob != null || refreshJob != null ? 1 : 0;
+        }
+
+        quitWarning.label.isVisible = quitOnSave;
 
         base.GrafUpdate(timeStacker);
     }
@@ -186,13 +216,14 @@ sealed class ModsMenu : Menu.Menu
             return;
         }
 
-        if (sender == saveButton && performingJob == null) {
-            performingJob = Job.Start(SaveExit);
+        if (sender == saveButton && reloadJob == null) {
+            progressDisplay.ShowProgressPercent = true;
+            reloadJob = Job.Start(SaveExit);
             shutDownMusic = true;
             PlaySound(SoundID.MENU_Switch_Page_Out);
 
-            if (QuitOnSave) {
-                performingJob = null;
+            if (quitOnSave) {
+                reloadJob = null;
                 forceExitGame = true;
             }
             return;
@@ -209,7 +240,7 @@ sealed class ModsMenu : Menu.Menu
             }
         }
         else if (sender == refresh) {
-            manager.RequestMainProcessSwitch(ID);
+            StartRefreshJob();
         }
         else if (sender == openPluginsButton) {
             Process.Start("explorer", $"\"{Path.Combine(Paths.BepInExRootPath, "plugins")}\"")
@@ -238,16 +269,16 @@ sealed class ModsMenu : Menu.Menu
 
         State.Prefs.Save();
 
-        if (QuitOnSave) {
+        if (quitOnSave) {
             Application.Quit();
             return;
         }
 
         FailedLoadNotif.UndoHooks();
 
-        State.Mods.Reload(performingProgress);
+        State.Mods.Reload(progress);
 
-        if (performingProgress.ProgressState == ProgressStateType.Failed) {
+        if (progress.ProgressState == ProgressStateType.Failed) {
             forceExitGame = true;
         }
         else {
@@ -267,7 +298,7 @@ sealed class ModsMenu : Menu.Menu
 
         if (selectedObject == cancelButton && forceExitGame) return "Exit game";
         if (selectedObject == cancelButton) return "Return to main menu";
-        if (selectedObject == saveButton && QuitOnSave) return "Save changes and exit the game";
+        if (selectedObject == saveButton && quitOnSave) return "Save changes and exit the game";
         if (selectedObject == saveButton) return "Save changes and return to main menu";
         if (selectedObject == enableAll) return "Enable all mods";
         if (selectedObject == disableAll) return "Disable all mods";

@@ -119,4 +119,16 @@ static class StringExtensions
     {
         return text.MeasureWidth(Futile.atlasManager.GetFontWithName(font) ?? throw new ArgumentException("No font.", nameof(font)));
     }
+
+    /// <summary>
+    /// Clears all sub objects from a <see cref="MenuObject"/> and clears their sprites.
+    /// </summary>
+    public static void ClearSubObjects(this Menu.MenuObject menuObject)
+    {
+        foreach (var subObj in menuObject.subObjects) {
+            subObj.RemoveSprites();
+            menuObject.RecursiveRemoveSelectables(subObj);
+        }
+        menuObject.subObjects.Clear();
+    }
 }
