@@ -1,5 +1,6 @@
 ﻿using Mono.Cecil;
 using Mutator.Patching;
+using System.IO.Compression;
 
 namespace Mutator.IO;
 
@@ -13,9 +14,19 @@ static class Wrapper
 
         List<string> files = new();
 
-        if (File.Exists(filePath))
+        string? temp = TryReadZip(filePath);
+
+        using Disposable deleteTemp = new(delegate {
+            if (Directory.Exists(temp)) {
+                Directory.Delete(temp, true);
+            }
+        });
+
+        if (temp != null) {
+            files.AddRange(Directory.GetFiles(temp, "*", SearchOption.AllDirectories));
+        } else if (File.Exists(filePath)) {
             files.Add(filePath);
-        else if (Directory.Exists(filePath))
+        } else if (Directory.Exists(filePath))
             files.AddRange(Directory.GetFiles(filePath, "*", SearchOption.AllDirectories));
 
         if (files.Count == 0) return ExitStatus.FileNotFound(filePath);
@@ -25,7 +36,7 @@ static class Wrapper
 
         if (files.Count == 0) return ExitStatus.Success;
 
-        RwmodHeader? header = GetAssemblyHeader(filePath) ?? new(0, new(0, 1, 0), Path.GetFileName(filePath), "", "");
+        RwmodHeader? header = GetAssemblyHeader(filePath) ?? new(0, new(0, 1, 0), Path.GetFileNameWithoutExtension(filePath), "", "");
 
         using Stream rwmodStream = File.Create(ExtIO.GetModPath(header.Name));
 
@@ -48,7 +59,7 @@ static class Wrapper
             RwmodIO.CopyStream(fileStream, rwmodStream, fileStream.Length);
         }
 
-        Console.Write(header.Name);
+        Console.WriteLine(header.Name);
 
         return ExitStatus.Success;
     }
@@ -70,6 +81,31 @@ static class Wrapper
             return true;
         }
         return false;
+    }
+
+    private static string? TryReadZip(string filePath)
+    {
+        string? temp = null;
+
+        try {
+            var file = ZipFile.OpenRead(filePath);
+
+            // Create temporary directory
+            temp = Path.GetTempFileName();
+            File.Delete(temp);
+            Directory.CreateDirectory(temp);
+
+            // Extract to temporary directory
+            file.ExtractToDirectory(temp);
+
+            // Return those files
+            return temp;
+        } catch {
+            if (Directory.Exists(temp)) {
+                Directory.Delete(temp, true);
+            }
+            return null;
+        }
     }
 
     private static RwmodHeader? GetAssemblyHeader(string filePath)

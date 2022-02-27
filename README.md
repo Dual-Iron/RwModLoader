@@ -2,9 +2,9 @@
 ![Latest version](https://img.shields.io/github/v/release/Dual-Iron/RwModLoader?display_name=tag&sort=semver)
 
 ## What is it?
-Realm is an in-game modloader for [Rain World](https://rainworldgame.com/) that lets you reload mods without closing the game. It aims to promote ease of use and rapid mod development.
+Realm is an in-game modloader for [Rain World](https://rainworldgame.com/) that lets you reload mods without closing the game. It aims for ease-of-use and rapid mod development.
 
-Install mods by putting .dll files in the "plugins" folder, found in the mod menu. The mod menu is on the title screen.
+To install a mod, download its files (which can be folders, `.zip` files, or `.dll` files) and put them in the plugins folder. You can find the plugins folder through the mod menu in-game.
 
 https://user-images.githubusercontent.com/31146412/137647603-6034790d-cfcb-40b0-a425-fe113ce7481f.mp4
 
@@ -28,6 +28,6 @@ To install Realm, go to the [releases](https://github.com/Dual-Iron/RwModLoader/
 
 ## Credits
 - Dual
-- Rain World's cozy little modding community, for supporting the journey
-- [Rain World](https://rainworldgame.com) itself, for making this worthwhile
-- [BepInEx](https://github.com/BepInEx/BepInEx/tree/v5-lts) and its dependencies, for making this possible
+- Rain World's cozy little modding community
+- [Rain World](https://rainworldgame.com)
+- [BepInEx](https://github.com/BepInEx/BepInEx/tree/v5-lts) and its dependencies

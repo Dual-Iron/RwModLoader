@@ -20,28 +20,41 @@ static class PluginWrapper
             return;
         }
 
-        string[] pluginFiles = Directory.GetFiles(pluginPath, "*.dll", SearchOption.TopDirectoryOnly);
+        var pluginFiles = Directory.GetFiles(pluginPath, "*.dll", SearchOption.TopDirectoryOnly)
+                          .Concat(Directory.GetFiles(pluginPath, "*.zip", SearchOption.TopDirectoryOnly))
+                          .Concat(Directory.GetDirectories(pluginPath, "*", SearchOption.TopDirectoryOnly));
 
-        if (pluginFiles.Length == 0) {
+        if (!pluginFiles.Any()) {
             return;
         }
 
+        // Create args to pass to backend
+        StringBuilder args = new();
         foreach (string pluginFile in pluginFiles) {
-            try {
-                // TODO pass all args in at once to increase performance
-                MutatorProcess proc = MutatorProcess.Execute($"-w \"{pluginFile}\"");
+            args.Append("-w \"");
+            args.Append(pluginFile);
+            args.Append("\" ");
+        }
 
-                if (proc.ExitCode == 0) {
-                    if (proc.Output.Length > 0)
-                        wrappedMods.Add(proc.Output);
+        try {
+            // Run mutator and read its output
+            MutatorProcess proc = MutatorProcess.Execute(args.ToString());
 
-                    progressable.Message(MessageType.Info, $"Wrapped {Path.GetFileName(pluginFile)}.");
+            if (proc.ExitCode == 0) {
+                if (proc.Output.Length > 0) {
+                    var wrapped = proc.Output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+
+                    wrappedMods.AddRange(wrapped);
                 }
-                else {
-                    progressable.Message(MessageType.Fatal, $"Failed to wrap {Path.GetFileName(pluginFile)}. {proc}");
-                }
+
+                progressable.Message(MessageType.Info, $"Wrapped {wrappedMods.Count} mods.");
+            } else {
+                progressable.Message(MessageType.Fatal, $"Failed to wrap mods. {proc}");
             }
-            catch { }
+        }
+        catch (Exception e) {
+            progressable.Message(MessageType.Fatal, "An exception was thrown while wrapping plugins.");
+            progressable.Message(MessageType.Debug, e.ToString());
         }
 
         if (progressable.ProgressState == ProgressStateType.Failed) {

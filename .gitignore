@@ -361,7 +361,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-Mutator/Properties/launchSettings.json
+launchSettings.json
 RwBep/BepInEx/patchers/Realm.dll
 RwBep/BepInEx/core/EnumExtender.dll
 RwBep.zip

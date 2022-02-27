@@ -42,7 +42,7 @@ static class Patcher
             return PatchSafe(filePath, rwDir);
         }
         catch (IOException e) {
-            return ExitStatus.IOError(e.Message);
+            return ExitStatus.IOError($"while patching {Path.GetFileName(filePath)}: {e.Message}");
         }
     }
 
