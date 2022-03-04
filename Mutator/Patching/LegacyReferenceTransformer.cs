@@ -156,9 +156,15 @@ sealed class LegacyReferenceTransformer
             || member is MethodReference && !sharedParent.Methods.Any(m => m.Name == member.Name);
 
         if (transform) {
+            // If `member.Name` has an underscore (not including the prefix), note that.
             int underscoreIndex = member.Name.LastIndexOf('_');
-            details.memberSeparatorIndex = underscoreIndex > 0 ? underscoreIndex : member.Name.Length;
-            details.memberIndex = underscoreIndex > 0 ? int.Parse(member.Name[(underscoreIndex + 1)..]) : 0;
+            if (underscoreIndex > details.prefixType.ToString().Length) {
+                details.memberSeparatorIndex = underscoreIndex;
+                details.memberIndex = int.Parse(member.Name[(underscoreIndex + 1)..]);
+            }
+            else {
+                details.memberSeparatorIndex = member.Name.Length;
+            }
             return true;
         }
 

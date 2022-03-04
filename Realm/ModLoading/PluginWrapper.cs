@@ -63,7 +63,18 @@ static class PluginWrapper
         }
 
         foreach (var pluginFile in pluginFiles) {
-            File.Delete(pluginFile);
+            try {
+                if (File.Exists(pluginFile)) {
+                    File.Delete(pluginFile);
+                }
+                else if (Directory.Exists(pluginFile)) {
+                    Directory.Delete(pluginFile, true);
+                }
+            }
+            catch (Exception e) {
+                progressable.Message(MessageType.Debug, e.ToString());
+                progressable.Message(MessageType.Warning, "An error occurred while deleting wrapped plugins. Exception details logged.");
+            }
         }
     }
 }
