@@ -68,20 +68,24 @@ static class Wrapper
 
     private static bool CheckForMonomod(string rwDir, string file)
     {
-        bool isMonomodAssembly = false;
+        try {
+            bool isMonomodAssembly = false;
 
-        using (AssemblyDefinition asm = AssemblyDefinition.ReadAssembly(file))
-            isMonomodAssembly = asm.MainModule.AssemblyReferences.Any(a => a.Name == "MonoMod") && asm.MainModule.GetTypes().Any(t => t.Name.StartsWith("patch_"));
+            using (AssemblyDefinition asm = AssemblyDefinition.ReadAssembly(file))
+                isMonomodAssembly = asm.MainModule.AssemblyReferences.Any(a => a.Name == "MonoMod") && asm.MainModule.GetTypes().Any(t => t.Name.StartsWith("patch_"));
 
-        if (isMonomodAssembly) {
-            string filename = Path.GetFileNameWithoutExtension(file);
+            if (isMonomodAssembly) {
+                string filename = Path.GetFileNameWithoutExtension(file);
 
-            Directory.CreateDirectory(Path.Combine(rwDir, "BepInEx", "monomod"));
+                Directory.CreateDirectory(Path.Combine(rwDir, "BepInEx", "monomod"));
 
-            File.Move(file, Path.Combine(rwDir, "BepInEx", "monomod", $"Assembly-CSharp.{filename}.mm.dll"), true);
+                File.Move(file, Path.Combine(rwDir, "BepInEx", "monomod", $"Assembly-CSharp.{filename}.mm.dll"), true);
 
-            return true;
+                return true;
+            }
         }
+        catch (BadImageFormatException) { }
+
         return false;
     }
 
