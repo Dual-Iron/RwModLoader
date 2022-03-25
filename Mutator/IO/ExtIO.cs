@@ -10,11 +10,19 @@ static class ExtIO
 
     public static string? CleanRwDir(string rwDir)
     {
-        try {
-            rwDir = Path.GetFullPath(rwDir.Trim());
+        if (CleanDir(rwDir) is string dir && File.Exists(Path.Combine(dir, "RainWorld.exe"))) {
+            return dir;
+        }
+        return null;
+    }
 
-            if (Directory.Exists(rwDir) && File.Exists(Path.Combine(rwDir, "RainWorld.exe"))) {
-                return rwDir;
+    public static string? CleanDir(string dir)
+    {
+        try {
+            dir = Path.GetFullPath(dir.Trim());
+
+            if (Directory.Exists(dir)) {
+                return dir;
             }
         }
         catch { }
