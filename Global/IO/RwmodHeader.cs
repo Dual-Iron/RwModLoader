@@ -10,7 +10,7 @@ sealed class RwmodHeader
     [Flags]
     public enum FileFlags : byte
     {
-        IsModEntry
+        IsRdbEntry = 1
     }
 
     public RwmodHeader(FileFlags flags, SemVer version, string modName, string modOwner, string homepage)

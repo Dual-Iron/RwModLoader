@@ -37,8 +37,8 @@ static class PluginWrapper
         }
 
         try {
-            // Run mutator and read its output
-            MutatorProcess proc = MutatorProcess.Execute(args.ToString());
+            // Run backend and read its output
+            BackendProcess proc = BackendProcess.Execute(args.ToString());
 
             if (proc.ExitCode == 0) {
                 if (proc.Output.Length > 0) {

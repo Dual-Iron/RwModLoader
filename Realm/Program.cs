@@ -27,10 +27,8 @@ static class Program
     {
         Logger.LogDebug("Debug logging enabled.");
 
-        GuiFix.Fix();
-
-        if (!File.Exists(RealmPaths.MutatorPath)) {
-            Logger.LogFatal("Mutator not present. Please reinstall Realm!");
+        if (!File.Exists(RealmPaths.BackendPath)) {
+            Logger.LogFatal("Backend.exe was not found. Please reinstall Realm!");
             ReinstallNotif.ApplyHooks();
             return;
         }
@@ -46,6 +44,7 @@ static class Program
         NeuterPartiality();
         UpdateOldLogs();
         StaticFixes.Hook();
+        GuiHooks.Hook();
 
         if (!skip) {
             State.Prefs.Load();
@@ -60,8 +59,6 @@ static class Program
                 FailedLoadNotif.ApplyHooks();
             }
         }
-
-        GuiHandler.Hook();
     }
 
     public static List<string> GetPatchMods()
@@ -102,7 +99,7 @@ static class Program
 
     private static void CheckForSelfUpdate()
     {
-        MutatorProcess proc = MutatorProcess.Execute("-q", 1000);
+        BackendProcess proc = BackendProcess.Execute("-q", 1000);
 
         if (proc.ExitCode == 0) {
             if (proc.Output == "y") {

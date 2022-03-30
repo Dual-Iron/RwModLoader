@@ -121,7 +121,7 @@ sealed class AssemblyDescriptor
             }
         }
 
-        Program.Logger.LogError($"Mutator's patcher provided a type name that wasn't a plugin or a partmod: {modType} from {definition.Name}.");
+        Program.Logger.LogError($"Patcher provided a type name that wasn't a plugin or a partmod: {modType} from {definition.Name}.");
         return new Lib();
     }
 

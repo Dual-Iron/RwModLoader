@@ -32,7 +32,7 @@ sealed class ProgressableDisplay : RectangularMenuObject
             lastCount = prog.Messages.Count;
 
             MessageInfo latestMessage = prog.Messages[prog.Messages.Count - 1];
-            message.text = string.Join("\n", latestMessage.Message.SplitLongLines(size.x, message.label._font).ToArray());
+            message.text = latestMessage.Message.SplitLongLines(message.label._font, size.x).JoinStr("\n");
             message.label.color = latestMessage.Type switch {
                 MessageType.Info => Color.white,
                 MessageType.Warning => Color.yellow,

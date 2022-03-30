@@ -4,5 +4,5 @@ namespace Realm.Gui;
 
 interface IHoverable
 {
-    string GetHoverInfo(MenuObject selected);
+    string? GetHoverInfo(MenuObject selected);
 }

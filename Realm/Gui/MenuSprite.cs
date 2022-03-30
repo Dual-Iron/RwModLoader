@@ -10,12 +10,16 @@ sealed class MenuSprite : RectangularMenuObject
     public MenuSprite(MenuObject owner, Vector2 pos, FSprite sprite) : base(owner.menu, owner, pos, new Vector2(sprite.width, sprite.height))
     {
         this.sprite = sprite;
+        sprite.x = -10000;
+        sprite.y = -10000;
+
         Container.AddChild(sprite);
     }
 
     public override void GrafUpdate(float timeStacker)
     {
         base.GrafUpdate(timeStacker);
+
         Vector2 drawSize = DrawSize(timeStacker);
         sprite.SetPosition(DrawPos(timeStacker) + new Vector2(drawSize.x * sprite.anchorX, drawSize.y * sprite.anchorY));
         sprite.scaleX = Mathf.Max(1, size.x / sprite.textureRect.width);

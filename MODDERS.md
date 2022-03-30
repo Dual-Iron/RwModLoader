@@ -75,8 +75,3 @@ Some mods pass information between reloads (e.g. [SlugBase](https://github.com/S
   I suggest copy-pasting the examples above into your mod class and editing their method bodies to suit your needs.
   
 </details>
-
-# Interop with rdb (Realm db)
-For now, create a webhook using the video below. Then, create or edit your latest release to push it to rdb.
-
-https://user-images.githubusercontent.com/31146412/148865236-a5947045-c4a9-472c-8e53-7c8bd16bf336.mp4

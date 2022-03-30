@@ -5,9 +5,9 @@ namespace Realm.ModLoading;
 
 sealed class RwmodFile
 {
-    public static string[] GetRwmodFilePaths() => Directory.GetFiles(RealmPaths.ModsFolder, "*.rwmod", SearchOption.TopDirectoryOnly);
+    public static string[] GetRwmodFilePaths() => Directory.GetFiles(RealmPaths.ModsFolder.FullName, "*.rwmod", SearchOption.TopDirectoryOnly);
 
-    public static Result<ICollection<RwmodFile>, string> GetRwmodFiles()
+    public static Result<List<RwmodFile>, string> GetRwmodFiles()
     {
         List<RwmodFile> ret = new();
 

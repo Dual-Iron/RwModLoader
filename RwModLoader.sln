@@ -7,14 +7,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Realm", "Realm\Realm.csproj
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VirtualEnums", "VirtualEnums\VirtualEnums.csproj", "{6BF516EF-38B7-429A-A76F-F9B066F61942}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mutator", "Mutator\Mutator.csproj", "{2281A839-CF11-407E-8E43-DC4367D97FEC}"
-	ProjectSection(ProjectDependencies) = postProject
-		{11996870-9E20-4921-A273-8C779576FD6C} = {11996870-9E20-4921-A273-8C779576FD6C}
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E0B21D61-A6E3-452A-8F94-E20FC2D8378D}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Backend", "Backend\Backend.csproj", "{31C52925-7A75-4641-9925-39C6382E1BB4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{11996870-9E20-4921-A273-8C779576FD6C} = {11996870-9E20-4921-A273-8C779576FD6C}
+		{6BF516EF-38B7-429A-A76F-F9B066F61942} = {6BF516EF-38B7-429A-A76F-F9B066F61942}
 	EndProjectSection
 EndProject
 Global
@@ -31,10 +32,10 @@ Global
 		{6BF516EF-38B7-429A-A76F-F9B066F61942}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6BF516EF-38B7-429A-A76F-F9B066F61942}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6BF516EF-38B7-429A-A76F-F9B066F61942}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2281A839-CF11-407E-8E43-DC4367D97FEC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2281A839-CF11-407E-8E43-DC4367D97FEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2281A839-CF11-407E-8E43-DC4367D97FEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2281A839-CF11-407E-8E43-DC4367D97FEC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{31C52925-7A75-4641-9925-39C6382E1BB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{31C52925-7A75-4641-9925-39C6382E1BB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{31C52925-7A75-4641-9925-39C6382E1BB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{31C52925-7A75-4641-9925-39C6382E1BB4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

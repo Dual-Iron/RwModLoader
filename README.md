@@ -27,7 +27,8 @@ To install Realm, go to the [releases](https://github.com/Dual-Iron/RwModLoader/
 - Submit a [support](https://github.com/Dual-Iron/RwModLoader/issues/new?assignees=&labels=support&template=support-needed.md), [bug report](https://github.com/Dual-Iron/RwModLoader/issues/new?assignees=&labels=bug&template=bug_report.md), or [feature request](https://github.com/Dual-Iron/RwModLoader/issues/new?assignees=&labels=bug&template=feature_request.md) ticket.
 
 ## Credits
-- Dual
-- Rain World's cozy little modding community
-- [Rain World](https://rainworldgame.com)
+- @Dual-Iron
+- @Moonburm for [the download icon](Realm/Assets/DOWNLOAD.png)
+- @henpemaz for [the homepage icon](Realm/Assets/LINK.png)
+- [Rain World](https://rainworldgame.com) and its community
 - [BepInEx](https://github.com/BepInEx/BepInEx/tree/v5-lts) and its dependencies

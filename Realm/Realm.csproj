@@ -28,13 +28,8 @@
       <HintPath>lib/refstub-Assembly-CSharp.dll</HintPath>
     </Reference>
     
-    <EmbeddedResource Include="Assets/header-MODS.png">
-      <Visible>false</Visible>
-      <LogicalName>ASSETS.MODS</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Assets/header-MODS-shadow.png">
-      <Visible>false</Visible>
-      <LogicalName>ASSETS.MODS.SHADOW</LogicalName>
+    <EmbeddedResource Include="Assets/*.png">
+      <LogicalName>%(Filename)</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
   
