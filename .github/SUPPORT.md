@@ -1,19 +1,16 @@
 ## How do I install mods?
-Put files that end with .dll into the "plugins" folder in the mods menu. Then, refresh the mods page.
+Explained in the [readme](README.md).
+
+Just make sure that all your mod's files, including all its dependencies, are included in one file/folder. Then, put that in the plugins folder.
 
 ## How do I uninstall mods?
-- For hook mods, disable or uninstall them in the mods menu.
-- For patch mods, open the "patch mods" folder in the mods menu and delete files manually.
+- For plugins, uninstall them in the mod menu.
+- For patch mods, open the "patch mods" folder in the mod menu and delete files manually.
 
 ## Why do I have to restart my game to save my changes?
 Realm will force you to restart the game when you have patch mods installed or when an error occurs.
 
-## Technical difficulties?
-1. [Look for existing solutions](https://github.com/Dual-Iron/RwModLoader/issues?q=label%3Asupport).
-2. If there are none, [create a support ticket](https://github.com/Dual-Iron/RwModLoader/issues/new?assignees=&labels=support&template=support-needed.md). Be patient.
-3. If you need immediate help, check out the [Rain World Discord server](https://discord.gg/rainworld).
-
-## Think you found a bug?
+## Found a bug?
 1. [Look for existing reports](https://github.com/Dual-Iron/RwModLoader/issues?q=label%3Abug).
 2. If there are none, [create a bug report](https://github.com/Dual-Iron/RwModLoader/issues/new?assignees=&labels=bug&template=bug_report.md).
 
