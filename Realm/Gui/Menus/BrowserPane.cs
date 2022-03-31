@@ -199,6 +199,8 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
         }
     }
 
+    static float prefixWidth = "Click again to visit [".MeasureWidth("font");
+
     public override void Singal(MenuObject sender, string message)
     {
         if (sender == downloadBtn) {
@@ -213,8 +215,14 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
             if (!previewingHomepage) {
                 previewingHomepage = true;
 
+                string homepage = entry.Homepage;
+                if (homepage.StartsWith("https://"))
+                    homepage = homepage.Substring("https://".Length);
+                else if (homepage.StartsWith("http://"))
+                    homepage = homepage.Substring("http://".Length);
+
                 status.SetLabel(MenuRGB(MenuColors.MediumGrey), "Click again to visit [");
-                status.AddLabel(new(0.5f, 0.9f, 1f), entry.Homepage.CullLong("font", Width - status.pos.x - 116));
+                status.AddLabel(new(0.5f, 0.9f, 1f), homepage.CullLong("font", Width - status.pos.x - prefixWidth - 12));
                 status.AddLabel(MenuRGB(MenuColors.MediumGrey), "]");
             }
             else {
