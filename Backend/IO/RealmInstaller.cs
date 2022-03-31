@@ -138,11 +138,12 @@ static class RealmInstaller
         using (ZipArchive archive = new(rwbep, ZipArchiveMode.Read, true))
             archive.ExtractToDirectory(tempDir);
 
-        // Delete BepInEx folder and overwrite BepInEx config on fresh installs
+        // Only overwrite BepInEx config on fresh installs
         var freshInstall = !File.Exists(Path.Combine(rwDir, "BepInEx", "patchers", "Realm.dll"));
         if (freshInstall) {
-            if (Directory.Exists(D(rwDir, "BepInEx")))
-                Directory.Delete(D(rwDir, "BepInEx"), true);
+            // Slay dragons
+            if (Directory.Exists(D(rwDir, "BepInEx", "patchers")))
+                Directory.Delete(D(rwDir, "BepInEx", "patchers"), true);
 
             CopyDir(D(tempDir, "BepInEx", "config"), D(rwDir, "BepInEx", "config"));
         }

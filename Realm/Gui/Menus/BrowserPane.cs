@@ -199,7 +199,7 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
         }
     }
 
-    static float prefixWidth = "Click again to visit [".MeasureWidth("font");
+    static readonly float prefixWidth = "Click again to visit [".MeasureWidth("font");
 
     public override void Singal(MenuObject sender, string message)
     {
