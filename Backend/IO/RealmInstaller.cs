@@ -68,7 +68,11 @@ static class RealmInstaller
                 UninstallPartiality(rwDir);
             }
 
-            InstallBepInEx(rwDir);
+            if (IsBeepInExInstalled(rwDir)) {
+                UninstallBeepInEx(rwDir);
+            }
+
+            InstallRwBep(rwDir);
         }
     }
 
@@ -122,8 +126,31 @@ static class RealmInstaller
             }
     }
 
-    private static void InstallBepInEx(string rwDir)
+    private static bool IsBeepInExInstalled(string rwDir)
     {
+        return Directory.Exists(Path.Combine(rwDir, "BepInEx")) && !File.Exists(Path.Combine(rwDir, "BepInEx", "patchers", "Realm.dll"));
+    }
+
+
+    private static void UninstallBeepInEx(string rwDir)
+    {
+        if (Directory.Exists(Path.Combine(rwDir, "BepInEx", "config")))
+            Directory.Delete(Path.Combine(rwDir, "BepInEx", "config"), true);
+    }
+
+    private static void InstallRwBep(string rwDir)
+    {
+        // Delete old installation files
+        if (Directory.Exists(Path.Combine(rwDir, "BepInEx", "patchers")))
+            Directory.Delete(Path.Combine(rwDir, "BepInEx", "patchers"), true);
+
+        if (Directory.Exists(Path.Combine(rwDir, "BepInEx", "plugins")))
+            Directory.Delete(Path.Combine(rwDir, "BepInEx", "plugins"), true);
+
+        if (Directory.Exists(Path.Combine(rwDir, "BepInEx", "core")))
+            Directory.Delete(Path.Combine(rwDir, "BepInEx", "core"), true);
+
+        // Copy existing ones
         static string D(params string[] paths) => Directory.CreateDirectory(Path.Combine(paths)).FullName;
 
         string tempDir = ExtIO.GetTempDir().FullName;
@@ -137,16 +164,6 @@ static class RealmInstaller
         using (Stream rwbep = typeof(RealmInstaller).Assembly.GetManifestResourceStream("RwBep") ?? throw new("No stream!"))
         using (ZipArchive archive = new(rwbep, ZipArchiveMode.Read, true))
             archive.ExtractToDirectory(tempDir);
-
-        // Only overwrite BepInEx config on fresh installs
-        var freshInstall = !File.Exists(Path.Combine(rwDir, "BepInEx", "patchers", "Realm.dll"));
-        if (freshInstall) {
-            // Slay dragons
-            if (Directory.Exists(D(rwDir, "BepInEx", "patchers")))
-                Directory.Delete(D(rwDir, "BepInEx", "patchers"), true);
-
-            CopyDir(D(tempDir, "BepInEx", "config"), D(rwDir, "BepInEx", "config"));
-        }
 
         CopyDir(tempDir, rwDir);
         CopyDir(D(tempDir, "BepInEx", "core"), D(rwDir, "BepInEx", "core"));
