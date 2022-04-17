@@ -22,7 +22,10 @@ sealed class ModPane : RectangularMenuObject, CheckBox.IOwnCheckBox, IListable, 
 
         subObjects.Add(enabledCheckBox = new CheckBox(menu, this, this, new(posX += 10, size.y / 2 - 12), 0, "", ""));
 
-        string display = $"{header.Name} v{header.Version.Major}.{header.Version.Minor}";
+        string display = $"{header.Name}";
+        if (header.Version.HasValue) {
+            display += $" v{header.Version.Value.Major}.{header.Version.Value.Minor}";
+        }
         float displayWidth = display.MeasureWidth("DisplayFont");
         MenuLabel displayLabel = new(menu, this, display, new(posX += 34, 2), new(displayWidth, size.y), true);
         subObjects.Add(displayLabel);

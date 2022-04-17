@@ -8,7 +8,12 @@ static class Wrapper
 {
     public static ExitStatus Wrap(string filePath)
     {
-        return Wrap(filePath, () => GetAssemblyHeader(filePath) ?? new(0, new(0, 1, 0), Path.GetFileNameWithoutExtension(filePath), "", ""));
+        RwmodHeader GenerateHeader()
+        {
+            return GetAssemblyHeader(filePath) ?? new(0, null, Path.GetFileNameWithoutExtension(filePath), "", "");
+        }
+
+        return Wrap(filePath, GenerateHeader);
     }
 
     public static ExitStatus Wrap(string filePath, Func<RwmodHeader> getHeader)
@@ -21,7 +26,7 @@ static class Wrapper
 
         string? temp = TryReadZip(filePath);
 
-        using Disposable deleteTemp = new(delegate {
+        using Disposable deleteTemp = new(() => {
             if (Directory.Exists(temp)) {
                 Directory.Delete(temp, true);
             }

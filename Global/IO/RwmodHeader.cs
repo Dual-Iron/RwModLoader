@@ -5,7 +5,7 @@ namespace Rwml.IO;
 // RWMOD file format: https://gist.github.com/Dual-Iron/ecc9c366d33adcb4d7f319d2c18d9062
 sealed class RwmodHeader
 {
-    private const ushort CurrentVersion = 1;
+    private const ushort CurrentVersion = 2;
 
     [Flags]
     public enum FileFlags : byte
@@ -13,7 +13,7 @@ sealed class RwmodHeader
         IsRdbEntry = 1
     }
 
-    public RwmodHeader(FileFlags flags, SemVer version, string modName, string modOwner, string homepage)
+    public RwmodHeader(FileFlags flags, SemVer? version, string modName, string modOwner, string homepage)
     {
         Flags = flags;
         Version = version;
@@ -23,7 +23,7 @@ sealed class RwmodHeader
     }
 
     public readonly FileFlags Flags;
-    public readonly SemVer Version;
+    public readonly SemVer? Version;
     public readonly string Name;
     public readonly string Owner;
     public readonly string Homepage;
@@ -34,7 +34,7 @@ sealed class RwmodHeader
         WriteUInt16(s, CurrentVersion);
 
         s.WriteByte((byte)Flags);
-        WriteStringFull(s, Version.ToString());
+        WriteStringFull(s, Version.HasValue ? Version.Value.ToString() : "");
         WriteStringFull(s, Name);
         WriteStringFull(s, Owner);
         WriteStringFull(s, Homepage);
@@ -53,16 +53,16 @@ sealed class RwmodHeader
             return "not a rwmod file";
         }
 
-        int version = ReadUInt16(ref b, s);
+        int rwmodVersion = ReadUInt16(ref b, s);
 
-        return version switch {
-            CurrentVersion => Read(b, s),
+        return rwmodVersion switch {
+            CurrentVersion or 1 => Read(rwmodVersion, b, s),
             0 => "older version; delete the BepInEx folder and reinstall Realm",
             _ => "newer version; upgrade Realm"
         };
     }
 
-    static Result<RwmodHeader, string> Read(byte[] b, Stream s)
+    static Result<RwmodHeader, string> Read(int rwmodVersion, byte[] b, Stream s)
     {
         var flags = s.ReadByte();
         if (flags > 1) {
@@ -70,9 +70,17 @@ sealed class RwmodHeader
         }
 
         try {
-            var semVer = ReadStringFull(ref b, s);
+            SemVer? ver;
 
-            if (SemVer.Parse(semVer) is not SemVer version) {
+            string verStr = ReadStringFull(ref b, s);
+
+            if (rwmodVersion > 1 && verStr.Length == 0) {
+                ver = null;
+            }
+            else if (SemVer.Parse(verStr) is SemVer version) {
+                ver = version;
+            }
+            else {
                 return "invalid semantic version";
             }
 
@@ -80,7 +88,7 @@ sealed class RwmodHeader
             var modOwner = ReadStringFull(ref b, s);
             var homepage = ReadStringFull(ref b, s);
 
-            return new RwmodHeader((FileFlags)flags, version, modName, modOwner, homepage);
+            return new RwmodHeader((FileFlags)flags, ver, modName, modOwner, homepage);
         }
         catch {
             return "corrupt file";
