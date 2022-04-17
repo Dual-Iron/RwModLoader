@@ -1,4 +1,5 @@
 ﻿using Menu;
+using System.Net;
 using UnityEngine;
 
 namespace Realm.Gui;
@@ -14,6 +15,7 @@ static class GuiExt
     {
         return Futile.atlasManager.GetFontWithName(font) ?? throw new ArgumentException("No font.", nameof(font));
     }
+
     /// <summary>
     /// Join a string sequence. Because I'm tired of using this <see cref="string.Join(string, string[])"/> junk.
     /// </summary>
@@ -32,6 +34,34 @@ static class GuiExt
         }
 
         return result.ToString();
+    }
+
+    // God this would suck to localize
+    /// <summary>
+    /// Join a string sequence using English grammar. ["x", "y", "z"] will become "x, y, and z".
+    /// </summary>
+    public static string JoinStrEnglish(this IEnumerable<string> strings)
+    {
+        List<string> strs = strings.ToList();
+
+        return strs.Count switch {
+            0 => "",
+            1 => strs[0],
+            2 => $"{strs[0]} and {strs[1]}",
+            _ => JoinStrLong()
+        };
+
+        string JoinStrLong()
+        {
+            StringBuilder ret = new();
+            for (int i = 0; i < strs.Count - 1; i++) {
+                ret.Append(strs[i]);
+                ret.Append(", ");
+            }
+            ret.Append("and ");
+            ret.Append(strs.Last());
+            return ret.ToString();
+        }
     }
 
     /// <summary>

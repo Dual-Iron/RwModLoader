@@ -12,6 +12,10 @@ namespace Realm.Gui.Menus;
 
 sealed class LocalMods : PositionedMenuObject, IHoverable, IMenuPage
 {
+    static readonly string[] ReloadingIssues = {
+        "DevConsole", "Beastmaster", "Sharpener", "Expedition", "SeamlessLevels"
+    };
+
     public bool BlockMenuInteraction => menu.manager.upcomingProcess != null || reloadJob != null || refreshJob != null || forceExitGame;
 
     readonly MenuLabel quitWarning;
@@ -79,11 +83,13 @@ sealed class LocalMods : PositionedMenuObject, IHoverable, IMenuPage
     {
         modListingGroup.ClearSubObjects();
 
+        Vector2 notifPos = new(modListing.pos.x, modListing.pos.y - modListing.size.y / 2 - 15);
+
         // Check if there are patch mods that aren't currently loaded, or patch mods that should be unloaded
         if (!Program.GetPatchMods().SequenceEqual(State.PatchMods)) {
             quitOnSave = true;
 
-            MenuLabel notListedNotice = new(menu, this, "restart the game to refresh patch mods", new(modListing.pos.x, modListing.pos.y - modListing.size.y / 2 - 15), modListing.size, false);
+            MenuLabel notListedNotice = new(menu, this, "restart the game to refresh patch mods", notifPos, modListing.size, false);
             notListedNotice.label.color = MenuColor(MenuColors.MediumGrey).rgb;
             modListingGroup.subObjects.Add(notListedNotice);
         }
@@ -95,9 +101,22 @@ sealed class LocalMods : PositionedMenuObject, IHoverable, IMenuPage
 
             string s = State.PatchMods.Count > 1 ? "s" : "";
 
-            MenuLabel notListedNotice = new(menu, this, $"and {State.PatchMods.Count} patch mod{s}", new(modListing.pos.x, modListing.pos.y - modListing.size.y / 2 - 15), modListing.size, false);
+            MenuLabel notListedNotice = new(menu, this, $"and {State.PatchMods.Count} patch mod{s}", notifPos, modListing.size, false);
             notListedNotice.label.color = MenuColor(MenuColors.MediumGrey).rgb;
             modListingGroup.subObjects.Add(notListedNotice);
+        }
+        // Check if there are any mods that are blacklisted from reloading (https://github.com/Dual-Iron/RwModLoader/issues/7)
+        else if (State.Mods.LoadedAssemblyPool != null) {
+            var cantReload = State.Mods.LoadedAssemblyPool.LoadedAssemblies.Where(l => ReloadingIssues.Contains(l.AsmName)).ToList();
+            if (cantReload.Count > 0) {
+                quitOnSave = true;
+
+                string s = cantReload.Count > 1 ? "s" : "";
+
+                MenuLabel notListedNotice = new(menu, this, $"the mod{s} {cantReload.Select(l => l.AsmName).JoinStrEnglish()} can't be reloaded", notifPos, modListing.size, false);
+                notListedNotice.label.color = MenuColor(MenuColors.MediumGrey).rgb;
+                modListingGroup.subObjects.Add(notListedNotice);
+            }
         }
 
         // Reset mod listing with new panels
@@ -167,11 +186,12 @@ sealed class LocalMods : PositionedMenuObject, IHoverable, IMenuPage
         }
 
         if (sender == saveButton && reloadJob == null) {
+            SaveChanges();
             if (quitOnSave) {
                 Application.Quit();
             }
             else {
-                reloadJob = Job.Start(SaveExit);
+                reloadJob = Job.Start(SaveExitJob);
                 progressDisplay.ShowProgressPercent = true;
                 menu.PlaySound(SoundID.MENU_Switch_Page_Out);
             }
@@ -203,7 +223,7 @@ sealed class LocalMods : PositionedMenuObject, IHoverable, IMenuPage
         menu.PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
     }
 
-    private void SaveExit()
+    private void SaveChanges()
     {
         State.Prefs.Save();
 
@@ -212,7 +232,10 @@ sealed class LocalMods : PositionedMenuObject, IHoverable, IMenuPage
                 File.Delete(panel.FileHeader.FilePath);
             }
         }
+    }
 
+    private void SaveExitJob()
+    {
         FailedLoadNotif.UndoHooks();
 
         State.Mods.Reload(progress);
