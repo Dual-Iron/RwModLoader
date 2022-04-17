@@ -126,48 +126,54 @@ static class RealmInstaller
             }
     }
 
-    private static bool IsBeepInExInstalled(string rwDir)
+    static void Try(Action a)
     {
-        return Directory.Exists(Path.Combine(rwDir, "BepInEx")) && !File.Exists(Path.Combine(rwDir, "BepInEx", "patchers", "Realm.dll"));
+        try { a(); } catch { }
     }
 
+    private static bool IsBeepInExInstalled(string rwDir)
+    {
+        bool ret = false;
+        Try(() => ret = Directory.Exists(Path.Combine(rwDir, "BepInEx")) && !File.Exists(Path.Combine(rwDir, "BepInEx", "patchers", "Realm.dll")));
+        return ret;
+    }
 
     private static void UninstallBeepInEx(string rwDir)
     {
-        if (Directory.Exists(Path.Combine(rwDir, "BepInEx", "config")))
-            Directory.Delete(Path.Combine(rwDir, "BepInEx", "config"), true);
+        Try(() => Directory.Delete(Path.Combine(rwDir, "BepInEx", "config"), true));
     }
 
     private static void InstallRwBep(string rwDir)
     {
         // Delete old installation files
         if (Directory.Exists(Path.Combine(rwDir, "BepInEx", "patchers")))
-            Directory.Delete(Path.Combine(rwDir, "BepInEx", "patchers"), true);
+            Try(() => Directory.Delete(Path.Combine(rwDir, "BepInEx", "patchers"), true));
 
         if (Directory.Exists(Path.Combine(rwDir, "BepInEx", "plugins")))
-            Directory.Delete(Path.Combine(rwDir, "BepInEx", "plugins"), true);
+            Try(() => Directory.Delete(Path.Combine(rwDir, "BepInEx", "plugins"), true));
 
         if (Directory.Exists(Path.Combine(rwDir, "BepInEx", "core")))
-            Directory.Delete(Path.Combine(rwDir, "BepInEx", "core"), true);
+            Try(() => Directory.Delete(Path.Combine(rwDir, "BepInEx", "core"), true));
 
         // Copy existing ones
         static string D(params string[] paths) => Directory.CreateDirectory(Path.Combine(paths)).FullName;
 
         string tempDir = ExtIO.GetTempDir().FullName;
 
-        using var clearTempDir = new Disposable(() => {
+        try {
+            using (Stream rwbep = typeof(RealmInstaller).Assembly.GetManifestResourceStream("RwBep") ?? throw new("No stream!"))
+            using (ZipArchive archive = new(rwbep, ZipArchiveMode.Read, true))
+                archive.ExtractToDirectory(tempDir);
+
+            CopyDir(tempDir, rwDir);
+            CopyDir(D(tempDir, "BepInEx", "core"), D(rwDir, "BepInEx", "core"));
+            CopyDir(D(tempDir, "BepInEx", "patchers"), D(rwDir, "BepInEx", "patchers"));
+        }
+        finally {
             if (Directory.Exists(tempDir)) {
                 Directory.Delete(tempDir, true);
             }
-        });
-
-        using (Stream rwbep = typeof(RealmInstaller).Assembly.GetManifestResourceStream("RwBep") ?? throw new("No stream!"))
-        using (ZipArchive archive = new(rwbep, ZipArchiveMode.Read, true))
-            archive.ExtractToDirectory(tempDir);
-
-        CopyDir(tempDir, rwDir);
-        CopyDir(D(tempDir, "BepInEx", "core"), D(rwDir, "BepInEx", "core"));
-        CopyDir(D(tempDir, "BepInEx", "patchers"), D(rwDir, "BepInEx", "patchers"));
+        }
     }
 
     private static void CopyDir(string source, string destination)

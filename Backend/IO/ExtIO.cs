@@ -58,9 +58,12 @@ static class ExtIO
 
     public static DirectoryInfo GetTempDir()
     {
-        string temp = Path.GetTempFileName();
-        File.Delete(temp);
-        return Directory.CreateDirectory(temp);
+        long id = DateTime.Now.Ticks;
+        while (Directory.Exists(Path.Combine(TempFolder.FullName, id.ToString()))) {
+            // a collision here is basically impossible but whatever
+            id += 1;
+        }
+        return TempFolder.CreateSubdirectory($"tmp~{id}");
     }
 
     private static Result<string, ExitStatus> GetRwDir()
