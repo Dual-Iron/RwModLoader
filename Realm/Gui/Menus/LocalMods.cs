@@ -89,7 +89,7 @@ sealed class LocalMods : PositionedMenuObject, IHoverable, IMenuPage
         if (!Program.GetPatchMods().SequenceEqual(State.PatchMods)) {
             quitOnSave = true;
 
-            MenuLabel notListedNotice = new(menu, this, "must restart the game to refresh patch mods", notifPos, modListing.size, false);
+            MenuLabel notListedNotice = new(menu, this, "restart the game to refresh patch mods", notifPos, modListing.size, false);
             notListedNotice.label.color = MenuColor(MenuColors.MediumGrey).rgb;
             modListingGroup.subObjects.Add(notListedNotice);
         }
@@ -101,7 +101,7 @@ sealed class LocalMods : PositionedMenuObject, IHoverable, IMenuPage
 
             string s = State.PatchMods.Count > 1 ? "s" : "";
 
-            MenuLabel notListedNotice = new(menu, this, $"and {State.PatchMods.Count} patch mod{s} that can't be reloaded", notifPos, modListing.size, false);
+            MenuLabel notListedNotice = new(menu, this, $"and {State.PatchMods.Count} patch mod{s} that prevent you from reloading", notifPos, modListing.size, false);
             notListedNotice.label.color = MenuColor(MenuColors.MediumGrey).rgb;
             modListingGroup.subObjects.Add(notListedNotice);
         }
@@ -112,8 +112,9 @@ sealed class LocalMods : PositionedMenuObject, IHoverable, IMenuPage
                 quitOnSave = true;
 
                 string s = cantReload.Count > 1 ? "s" : "";
+                string S = cantReload.Count > 1 ? "" : "s";
 
-                MenuLabel notListedNotice = new(menu, this, $"the mod{s} {cantReload.Select(l => l.AsmName).JoinStrEnglish()} can't be reloaded", notifPos, modListing.size, false);
+                MenuLabel notListedNotice = new(menu, this, $"the mod{s} {cantReload.Select(l => l.AsmName).JoinStrEnglish()} prevent{S} you from reloading", notifPos, modListing.size, false);
                 notListedNotice.label.color = MenuColor(MenuColors.MediumGrey).rgb;
                 modListingGroup.subObjects.Add(notListedNotice);
             }
