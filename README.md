@@ -11,7 +11,7 @@ To compare Realm with other similar projects:
 
 Realm loads and manages your mods in-game, so you can manage mods **without closing the game**. It's a minor miracle this works at all, and there are [a few](#7) mods it breaks. If a mod doesn't work after reloading in-game, restart and avoid reloading while that mod is installed.
 
-There's a **mod browser** to make installing mods easier. You can still install them manually though: Drop the mod's files and dependencies into the plugins folder as one `.zip` file, `.dll` file, or folder. You can find the plugins folder within the mod menu.[<sup>?</sup>](SUPPORT.md)
+There's a **mod browser** to make installing mods easier. You can still install them manually though: Drop the mod's files and dependencies into the plugins folder as one `.zip` file, `.dll` file, or folder. You can find the plugins folder within the mod menu.[<sup>?</sup>](.github/SUPPORT.md)
 
 <details open>
   <summary>Video of reloading</summary>
@@ -35,7 +35,7 @@ Click [here](https://github.com/Dual-Iron/RwModLoader/releases/latest) to instal
 ## Resources
 - Skim the [dev guide](DEVELOPERS.md) to enable "hot reloading" while playing in story/arena mode.
 - Run the [rdb client](https://github.com/Dual-Iron/rdb-client#readme) to submit mods to the browser.
-- Visit the [support page](SUPPORT.md) to report bugs, suggest features, or get technical support.
+- Visit the [support page](.github/SUPPORT.md) to report bugs, suggest features, or get technical support.
 
 ## Credits
 - @Dual-Iron
