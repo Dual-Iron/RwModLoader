@@ -16,12 +16,31 @@ internal static class StaticFixes
 
     public static void Hook()
     {
+        On.FAtlasManager.AddAtlas += PreventAtlasLoadExceptions;
         On.RainWorld.Start += RainWorld_Start;
         On.RainWorld.LoadResources += RainWorld_LoadResources;
         On.RainWorldGame.ctor += RainWorldGame_ctor;
         On.ProcessManager.ctor += ProcessManager_ctor;
 
         new Hook(typeof(Assembly).GetProperty("Location").GetGetMethod(), HookGetLocation).Apply();
+    }
+
+    private static void PreventAtlasLoadExceptions(On.FAtlasManager.orig_AddAtlas orig, FAtlasManager self, FAtlas atlas)
+    {
+        // Futile will throw if you call AddAtlas with a duplicate name,
+        // so remove older versions of the atlas when loading.
+        if (stubbed) {
+            bool removed = false;
+
+            foreach (var element in atlas.elements) {
+                removed |= self._allElementsByName.Remove(element.name);
+            }
+
+            if (removed) {
+                Program.Logger.LogDebug($"Replaced old atlas elements from atlas {atlas.name}");
+            }
+        }
+        orig(self, atlas);
     }
 
     private static string HookGetLocation(Func<Assembly, string> orig, Assembly self)
@@ -37,7 +56,7 @@ internal static class StaticFixes
 
                 foreach (var lasm in lasmPool.LoadedAssemblies) {
                     if (lasm.AsmName == name) {
-                        Program.Logger.LogDebug($"Using a fake Assembly.Location value for {name}.");
+                        Program.Logger.LogDebug($"Using a fake Assembly.Location value for {name}");
 
                         return Path.Combine(Paths.PluginPath, lasm.FileName);
                     }
