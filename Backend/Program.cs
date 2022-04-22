@@ -20,7 +20,7 @@ if (args.Length == 0) {
     return 0;
 }
 
-using var webClient = new Disposable(ExtWeb.DisposeClient);
+using var onExit = new Disposable(ExtGlobal.Exit);
 using var argEnumerator = ((IEnumerable<string>)args).GetEnumerator();
 
 while (argEnumerator.MoveNext()) {

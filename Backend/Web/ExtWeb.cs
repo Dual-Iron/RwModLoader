@@ -2,15 +2,17 @@
 
 static class ExtWeb
 {
+    public static HttpClient Client => client ??= GetClient();
+
     private static HttpClient? client;
 
-    public static HttpClient Client => client ??= new(new HttpClientHandler {
-        AllowAutoRedirect = true,
-        MaxAutomaticRedirections = 10
-    });
-
-    public static void DisposeClient()
+    private static HttpClient GetClient()
     {
-        client?.Dispose();
+        HttpClient client = new(new HttpClientHandler {
+            AllowAutoRedirect = true,
+            MaxAutomaticRedirections = 10
+        });
+        ExtGlobal.OnExit(client.Dispose);
+        return client;
     }
 }

@@ -1,4 +1,5 @@
 ﻿using BepInEx.Preloader;
+using Realm.Gui;
 using Realm.Logging;
 
 namespace Realm.ModLoading;
@@ -47,7 +48,7 @@ static class PluginWrapper
                     wrappedMods.AddRange(wrapped);
                 }
 
-                progressable.Message(MessageType.Info, $"Wrapped {wrappedMods.Count} mods");
+                progressable.Message(MessageType.Info, $"Wrapped {wrappedMods.JoinStrEnglish()}");
             }
             else {
                 progressable.Message(MessageType.Fatal, $"Failed to wrap mods. {proc}");
@@ -56,25 +57,6 @@ static class PluginWrapper
         catch (Exception e) {
             progressable.Message(MessageType.Debug, e.ToString());
             progressable.Message(MessageType.Fatal, "An error occurred while wrapping plugins. Exception details logged.");
-        }
-
-        if (progressable.ProgressState == ProgressStateType.Failed) {
-            return;
-        }
-
-        foreach (var pluginFile in pluginFiles) {
-            try {
-                if (File.Exists(pluginFile)) {
-                    File.Delete(pluginFile);
-                }
-                else if (Directory.Exists(pluginFile)) {
-                    Directory.Delete(pluginFile, true);
-                }
-            }
-            catch (Exception e) {
-                progressable.Message(MessageType.Debug, e.ToString());
-                progressable.Message(MessageType.Warning, "An error occurred while deleting wrapped plugins. Exception details logged.");
-            }
         }
     }
 }

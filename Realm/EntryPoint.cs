@@ -36,7 +36,7 @@ static class EntryPoint
         }
 
         initialized = true;
-        extraPatchers = AssemblyPatcher.PatcherPlugins.Count > 3;
+        extraPatchers = AssemblyPatcher.PatcherPlugins.Count > 3; // Realm, Monomodder, Chainloader
 
         // Have to use EmptyProgressable and can't log the result here.
         ModLoading.PluginWrapper.WrapPlugins(new Progressable(), out earlyWrappedAsms);

@@ -43,8 +43,7 @@ static class Wrapper
 
         if (files.Count == 0) return ExitStatus.FileNotFound(filePath);
 
-        files.RemoveAll(s => ExtGlobal.ModBlacklist.Contains(Path.GetFileNameWithoutExtension(s)));
-        files.RemoveAll(file => CheckForMonomod(rwDir, file));
+        files.RemoveAll(f => !CanWrap(rwDir, f));
 
         if (files.Count == 0) return ExitStatus.Success;
 
@@ -73,17 +72,31 @@ static class Wrapper
 
         Console.WriteLine(header.Name);
 
+        // Delete files after they're wrapped. Wait until the program closes before making these changes,
+        // because other dependent files may have yet to be patched.
+        ExtGlobal.OnExit(() => {
+            if (File.Exists(filePath)) {
+                File.Delete(filePath);
+            }
+            else {
+                Directory.Delete(filePath, true);
+            }
+        });
+        
         return ExitStatus.Success;
     }
 
-    private static bool CheckForMonomod(string rwDir, string file)
+    private static bool CanWrap(string rwDir, string file)
     {
+        if (ExtGlobal.ModBlacklist.Contains(Path.GetFileNameWithoutExtension(file))) {
+            return false;
+        }
+
         try {
-            bool isMonomodAssembly = false;
+            using AssemblyDefinition asm = AssemblyDefinition.ReadAssembly(file);
 
-            using (AssemblyDefinition asm = AssemblyDefinition.ReadAssembly(file))
-                isMonomodAssembly = asm.MainModule.AssemblyReferences.Any(a => a.Name == "MonoMod") && asm.MainModule.GetTypes().Any(t => t.Name.StartsWith("patch_"));
-
+            // Move monomod assemblies to the `monomod` folder instead of wrapping them.
+            bool isMonomodAssembly = asm.MainModule.AssemblyReferences.Any(a => a.Name == "MonoMod") && asm.MainModule.GetTypes().Any(t => t.Name.StartsWith("patch_"));
             if (isMonomodAssembly) {
                 string filename = Path.GetFileNameWithoutExtension(file);
 
@@ -91,11 +104,12 @@ static class Wrapper
 
                 File.Move(file, Path.Combine(rwDir, "BepInEx", "monomod", $"Assembly-CSharp.{filename}.mm.dll"), true);
 
-                return true;
+                return false;
             }
+            // Wrap other assemblies.
+            return true;
         }
         catch (BadImageFormatException) { }
-
         return false;
     }
 
