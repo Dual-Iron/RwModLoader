@@ -12,23 +12,30 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Using Include="Rwml"/>
-    <Using Include="Rwml.IO"/>
-    <Using Include="System.Linq"/>
+    <Using Include="Rwml" />
+    <Using Include="Rwml.IO" />
+    <Using Include="System.Linq" />
 
     <Compile Include="../Global/**/*.cs" />
     
     <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
     <PackageReference Include="Mono.Cecil" Version="0.11.4" />
     
+    <!--Include RwBep.zip, which should include Realm and VirtualEnums freshly compiled-->
     <EmbeddedResource Include="../RwBep.zip">
       <Visible>false</Visible>
       <LogicalName>RwBep</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
 
-  <!--Just a utility for quick testing-->
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition=" '$(BuildingInsideVisualStudio)' == 'true' And Exists('$(RainWorldDir)') ">
-    <Exec Command="dotnet publish -c Release -f net6.0 -r win-x64 --no-self-contained -o &quot;$(RainWorldDir)/BepInEx/realm&quot;" />
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <!--Utility to copy `backend.exe` to Rain World dir after building, ignored when publishing-->
+    <Exec
+      Condition="'$(BuildingInsideVisualStudio)' == 'true' And Exists('$(RainWorldDir)'"
+      Command="dotnet publish -c Release -f net6.0 -r win-x64 --no-self-contained -o &quot;$(RainWorldDir)/BepInEx/realm&quot;"
+      />
+    <!--Overwrite RwBep with final `backend.exe` file for publishing-->
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="../RwBep/BepInEx/realm" />
+    <ZipDirectory SourceDirectory="../RwBep" DestinationFile="../RwBep.zip" Overwrite="true" />
   </Target>
 </Project>
