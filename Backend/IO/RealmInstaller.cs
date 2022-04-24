@@ -68,10 +68,6 @@ static class RealmInstaller
                 UninstallPartiality(rwDir);
             }
 
-            if (IsBeepInExInstalled(rwDir)) {
-                UninstallBeepInEx(rwDir);
-            }
-
             InstallRwBep(rwDir);
         }
     }
@@ -131,18 +127,6 @@ static class RealmInstaller
         try { a(); } catch { }
     }
 
-    private static bool IsBeepInExInstalled(string rwDir)
-    {
-        bool ret = false;
-        Try(() => ret = Directory.Exists(Path.Combine(rwDir, "BepInEx")) && !File.Exists(Path.Combine(rwDir, "BepInEx", "patchers", "Realm.dll")));
-        return ret;
-    }
-
-    private static void UninstallBeepInEx(string rwDir)
-    {
-        Try(() => Directory.Delete(Path.Combine(rwDir, "BepInEx", "config"), true));
-    }
-
     private static void InstallRwBep(string rwDir)
     {
         // Delete old installation files
@@ -158,21 +142,20 @@ static class RealmInstaller
         // Copy existing ones
         static string D(params string[] paths) => Directory.CreateDirectory(Path.Combine(paths)).FullName;
 
-        string tempDir = ExtIO.GetTempDir().FullName;
+        using TempDir temp = new();
 
-        try {
-            using (Stream rwbep = typeof(RealmInstaller).Assembly.GetManifestResourceStream("RwBep") ?? throw new("No stream!"))
-            using (ZipArchive archive = new(rwbep, ZipArchiveMode.Read, true))
-                archive.ExtractToDirectory(tempDir);
+        bool freshInstall = !File.Exists(Path.Combine(rwDir, "BepInEx", "patchers", "Realm.dll"));
 
-            CopyDir(tempDir, rwDir);
-            CopyDir(D(tempDir, "BepInEx", "core"), D(rwDir, "BepInEx", "core"));
-            CopyDir(D(tempDir, "BepInEx", "patchers"), D(rwDir, "BepInEx", "patchers"));
-        }
-        finally {
-            if (Directory.Exists(tempDir)) {
-                Directory.Delete(tempDir, true);
-            }
+        using (Stream rwbep = typeof(RealmInstaller).Assembly.GetManifestResourceStream("RwBep") ?? throw new("No stream!"))
+        using (ZipArchive archive = new(rwbep, ZipArchiveMode.Read, true))
+            archive.ExtractToDirectory(temp.Path);
+
+        CopyDir(temp.Path, rwDir);
+        CopyDir(D(temp.Path, "BepInEx", "core"), D(rwDir, "BepInEx", "core"));
+        CopyDir(D(temp.Path, "BepInEx", "patchers"), D(rwDir, "BepInEx", "patchers"));
+
+        if (freshInstall) {
+            CopyDir(D(temp.Path, "BepInEx", "config"), D(rwDir, "BepInEx", "config"));
         }
     }
 

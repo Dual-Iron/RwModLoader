@@ -24,16 +24,10 @@ static class Wrapper
 
         List<string> files = new();
 
-        string? temp = TryReadZip(filePath);
-
-        using Disposable deleteTemp = new(() => {
-            if (Directory.Exists(temp)) {
-                Directory.Delete(temp, true);
-            }
-        });
+        using TempDir? temp = TryReadZip(filePath);
 
         if (temp != null) {
-            files.AddRange(Directory.GetFiles(temp, "*", SearchOption.AllDirectories));
+            files.AddRange(Directory.GetFiles(temp.Value.Path, "*", SearchOption.AllDirectories));
         }
         else if (File.Exists(filePath)) {
             files.Add(filePath);
@@ -117,28 +111,15 @@ static class Wrapper
         return false;
     }
 
-    private static string? TryReadZip(string filePath)
+    private static TempDir? TryReadZip(string filePath)
     {
-        string? temp = null;
-
         try {
-            var file = ZipFile.OpenRead(filePath);
-
-            // Create temporary directory
-            temp = Path.GetTempFileName();
-            File.Delete(temp);
-            Directory.CreateDirectory(temp);
-
-            // Extract to temporary directory
-            file.ExtractToDirectory(temp);
-
-            // Return those files
+            var archive = ZipFile.OpenRead(filePath);
+            var temp = new TempDir();
+            archive.ExtractToDirectory(temp.Path);
             return temp;
         }
         catch {
-            if (Directory.Exists(temp)) {
-                Directory.Delete(temp, true);
-            }
             return null;
         }
     }

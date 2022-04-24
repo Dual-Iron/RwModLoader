@@ -39,10 +39,14 @@ static class Downloader
 
             using var stream = await content.ReadAsStreamAsync();
 
-            RdbEntry? doc = Try(() => JsonSerializer.Deserialize(stream, SourceGenerationContext.Default.RdbEntry),
-                                   _ => null);
-
-            return doc == null ? ExitStatus.OutdatedClient : await Rdb(doc);
+            try {
+                RdbEntry doc = JsonSerializer.Deserialize(stream, SourceGenerationContext.Default.RdbEntry) ?? throw new();
+                return await Rdb(doc);
+            }
+            catch {
+                // Failed to read JSON so we're probably using an outdated client.
+                return ExitStatus.OutdatedClient;
+            }
         }
         catch (HttpRequestException e) {
             return ExitStatus.ConnectionFailed(e.Message);
@@ -59,29 +63,15 @@ static class Downloader
             return ExitStatus.ConnectionFailed($"{response.StatusCode}; {await content.ReadAsStringAsync()}");
         }
 
-        string path = Path.Combine(ExtIO.TempFolder.FullName, Path.GetRandomFileName());
-
-        using var deleteTemp = new Disposable(() => File.Delete(path));
-
-        using (var outStream = File.Create(path))
-        using (var inStream = await content.ReadAsStreamAsync())
-            await inStream.CopyToAsync(outStream);
+        using var o = new TempFile();
+        using (var i = await content.ReadAsStreamAsync())
+            await i.CopyToAsync(o.Stream);
 
         if (SemVer.Parse(entry.version) is not SemVer ver) {
             return ExitStatus.InvalidVersion;
         }
 
-        return Wrapper.Wrap(path, () => new(RwmodHeader.FileFlags.IsRdbEntry, ver, entry.name, entry.owner, entry.homepage));
-    }
-
-    static TOut Try<TOut>(Func<TOut> @try, Func<Exception, TOut> @catch)
-    {
-        try {
-            return @try();
-        }
-        catch (Exception e) {
-            return @catch(e);
-        }
+        return Wrapper.Wrap(o.Path, () => new(RwmodHeader.FileFlags.IsRdbEntry, ver, entry.name, entry.owner, entry.homepage));
     }
 }
 

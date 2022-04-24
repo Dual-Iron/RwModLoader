@@ -52,7 +52,7 @@ sealed class ModLoader
             return;
         }
 
-        using Disposable disposeStreams = new(() => { foreach (var r in rwmods) r.Stream.Dispose(); });
+        using Disposable disposeStreams = new(() => rwmods.ForEach(r => r.Stream.Dispose()));
 
         foreach (var rwmod in rwmods) {
             if (State.Prefs.EnabledMods.Contains(rwmod.Header.Name)) {

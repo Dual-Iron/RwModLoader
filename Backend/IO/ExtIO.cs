@@ -51,20 +51,9 @@ static class ExtIO
 
     public static DirectoryInfo UserFolder => Directory.CreateDirectory(Environment.CurrentDirectory);
     public static DirectoryInfo ModsFolder => UserFolder.CreateSubdirectory("mods");
-    public static DirectoryInfo TempFolder => UserFolder.CreateSubdirectory("temp");
     public static DirectoryInfo BackupsFolder => UserFolder.CreateSubdirectory("backups");
 
     public static string GetModPath(string name) => Path.Combine(ModsFolder.FullName, Path.ChangeExtension(name, ".rwmod"));
-
-    public static DirectoryInfo GetTempDir()
-    {
-        long id = DateTime.Now.Ticks;
-        while (Directory.Exists(Path.Combine(TempFolder.FullName, id.ToString()))) {
-            // a collision here is basically impossible but whatever
-            id += 1;
-        }
-        return TempFolder.CreateSubdirectory($"tmp~{id}");
-    }
 
     private static Result<string, ExitStatus> GetRwDir()
     {
