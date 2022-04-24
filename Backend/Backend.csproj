@@ -31,7 +31,7 @@
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <!--Utility to copy `backend.exe` to Rain World dir after building, ignored when publishing-->
     <Exec
-      Condition="'$(BuildingInsideVisualStudio)' == 'true' And Exists('$(RainWorldDir)'"
+      Condition="'$(BuildingInsideVisualStudio)' == 'true' And Exists('$(RainWorldDir)')"
       Command="dotnet publish -c Release -f net6.0 -r win-x64 --no-self-contained -o &quot;$(RainWorldDir)/BepInEx/realm&quot;"
       />
     <!--Overwrite RwBep with final `backend.exe` file for publishing-->

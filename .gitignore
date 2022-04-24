@@ -8,6 +8,7 @@ obj/
 launchSettings.json
 
 # These are added after running publish.sh
+RwBep/BepInEx/realm
 RwBep/BepInEx/patchers/Realm.dll
 RwBep/BepInEx/core/EnumExtender.dll
 RwBep.zip
