@@ -46,12 +46,13 @@ static class PluginWrapper
                     var wrapped = proc.Output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
 
                     wrappedMods.AddRange(wrapped);
-                }
 
-                progressable.Message(MessageType.Info, $"Wrapped {wrappedMods.JoinStrEnglish()}");
+                    progressable.Message(MessageType.Debug, $"Wrapped {wrappedMods.JoinStrEnglish()}");
+                }
             }
             else {
-                progressable.Message(MessageType.Fatal, $"Failed to wrap mods. {proc}");
+                progressable.Message(MessageType.Fatal, $"Failed to wrap {pluginFiles.Select(s => Path.GetFileName(s)).JoinStrEnglish()}");
+                progressable.Message(MessageType.Fatal, proc.ToString());
             }
         }
         catch (Exception e) {

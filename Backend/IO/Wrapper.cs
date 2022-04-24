@@ -93,11 +93,15 @@ static class Wrapper
         }
 
         try {
-            using AssemblyDefinition asm = AssemblyDefinition.ReadAssembly(file);
+            bool isMonoModAssembly;
+
+            // `using` block cannot extend past here, because of the File.Move below.
+            using (AssemblyDefinition asm = AssemblyDefinition.ReadAssembly(file)) {
+                isMonoModAssembly = asm.MainModule.AssemblyReferences.Any(a => a.Name == "MonoMod") && asm.MainModule.GetTypes().Any(t => t.Name.StartsWith("patch_"));
+            }
 
             // Move monomod assemblies to the `monomod` folder instead of wrapping them.
-            bool isMonomodAssembly = asm.MainModule.AssemblyReferences.Any(a => a.Name == "MonoMod") && asm.MainModule.GetTypes().Any(t => t.Name.StartsWith("patch_"));
-            if (isMonomodAssembly) {
+            if (isMonoModAssembly) {
                 string filename = Path.GetFileNameWithoutExtension(file);
 
                 Directory.CreateDirectory(Path.Combine(rwDir, "BepInEx", "monomod"));
