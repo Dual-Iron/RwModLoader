@@ -13,7 +13,7 @@ namespace Realm.Gui.Menus;
 sealed class LocalMods : PositionedMenuObject, IHoverable, IMenuPage
 {
     static readonly string[] ReloadingIssues = {
-        "Beastmaster", "Sharpener", "SeamlessLevels"
+        "Sharpener", "SeamlessLevels"
     };
 
     public bool BlockMenuInteraction => menu.manager.upcomingProcess != null || reloadJob != null || refreshJob != null || forceExitGame;
