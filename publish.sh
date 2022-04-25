@@ -8,3 +8,6 @@ cp -a output/backend.exe UserInstaller.exe
 cp -a RwBep ManualInstall
 mkdir "ManualInstall/BepInEx/realm"
 cp -a output/backend.exe ManualInstall/BepInEx/realm/backend.exe
+cd ManualInstall
+zip -r ../ManualInstall.zip *
+cd ..

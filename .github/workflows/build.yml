@@ -15,10 +15,6 @@ jobs:
         dotnet-version: '6.0.x'
     - name: Compile projects
       run: ./publish.sh
-    - name: Zip manual install
-      uses: montudor/action-zip@v1
-      with:
-        args: zip -qq -r ManualInstall.zip . -i ManualInstall/*
     - name: Upload artifacts
       uses: actions/upload-artifact@v2
       with:
