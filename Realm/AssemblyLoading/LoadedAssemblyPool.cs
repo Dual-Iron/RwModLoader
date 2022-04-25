@@ -153,13 +153,17 @@ sealed class LoadedAssemblyPool
             }
             catch (FileNotFoundException e) when (BepInEx.Utility.TryParseAssemblyName(e.FileName, out AssemblyName name)) {
                 PrintMissingDependency(progressable, lasm, name);
+                break;
             }
             catch (Exception e) {
                 progressable.Message(MessageType.Fatal, $"Failed to initialize {lasm.AsmName}\n{e}");
+                break;
             }
 
             progressable.Progress = ++finished / (float)total;
         }
+
+        if (progressable.ProgressState == ProgressStateType.Failed) return;
 
         StaticFixes.PostLoad();
     }
