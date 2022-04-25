@@ -14,13 +14,17 @@ jobs:
       with:
         dotnet-version: '6.0.x'
     - name: Compile projects
-      run: ./publish.sh
+      run: publish.sh
+    - name: Zip manual install
+      uses: montudor/action-zip@v1
+      with:
+        args: zip -qq -r ManualInstall.zip ManualInstall
     - name: Upload artifacts
       uses: actions/upload-artifact@v2
       with:
         path: |
           UserInstaller.exe
-          RwBep.zip
+          ManualInstall.zip
     - name: Upload release
       if: startsWith(github.ref, 'refs/tags/0.' )
       uses: "marvinpinto/action-automatic-releases@latest"
@@ -29,4 +33,4 @@ jobs:
         prerelease: false
         files: |
           UserInstaller.exe
-          RwBep.zip
+          ManualInstall.zip
