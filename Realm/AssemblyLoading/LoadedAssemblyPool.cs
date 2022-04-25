@@ -118,20 +118,21 @@ sealed class LoadedAssemblyPool
             VirtualEnums.VirtualEnumApi.UseAssembly(loadedAsm.Asm, out var err);
 
             if (err != null) {
+                bool dependencyIssue = false;
                 foreach (var e in err.LoaderExceptions) {
                     if (e is FileNotFoundException fnf && BepInEx.Utility.TryParseAssemblyName(fnf.FileName, out AssemblyName name)) {
                         PrintMissingDependency(progressable, loadedAsm, name);
-                        goto Cont;
+                        dependencyIssue = true;
                     }
                 }
-                foreach (var e in err.LoaderExceptions) {
-                    progressable.Message(MessageType.Debug, e.ToString());
+                if (!dependencyIssue) {
+                    foreach (var e in err.LoaderExceptions) {
+                        progressable.Message(MessageType.Debug, e.ToString());
+                    }
+                    progressable.Message(MessageType.Debug, err.ToString());
+                    progressable.Message(MessageType.Fatal, $"Failed to register enums for {loadedAsm.AsmName}, exception details logged\n\nThis is usually because the mod is missing a dependency. Did you forget to download or enable a mod?");
                 }
-                progressable.Message(MessageType.Debug, err.ToString());
-                progressable.Message(MessageType.Fatal, $"Failed to register enums for {loadedAsm.AsmName}, exception details logged\n\nThis is usually because the mod is missing a dependency. Did you forget to download or enable a mod?");
             }
-
-        Cont:;
         }
 
         if (progressable.ProgressState == ProgressStateType.Failed) return;
