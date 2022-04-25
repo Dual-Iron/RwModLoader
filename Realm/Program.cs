@@ -45,9 +45,9 @@ static class Program
         UpdateOldLogs();
         StaticFixes.Hook();
         GuiHooks.Hook();
+        State.Prefs.Load();
 
         if (!skip) {
-            State.Prefs.Load();
             State.Prefs.Enable(earlyWrappedAsms);
             State.Prefs.Save();
 
