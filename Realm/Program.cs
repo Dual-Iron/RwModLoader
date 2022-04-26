@@ -36,18 +36,18 @@ static class Program
         State.PatchMods = GetPatchMods();
         State.NoHotReloading = extraPatchers || State.PatchMods.Count > 0;
 
-        ConfigFile file = new(configPath: Path.Combine(Paths.ConfigPath, "Realm.cfg"), saveOnInit: true);
-        State.DeveloperMode = file.Bind("General", "HotReloading", false, "While enabled, Realm will allow hot reloading assemblies in-game. This feature is unstable.").Value;
-        bool skip = file.Bind("General", "SkipLoading", false, "While enabled, Realm won't self-update or load mods when starting the game.").Value;
-
-        if (!skip) CheckForSelfUpdate();
         NeuterPartiality();
         UpdateOldLogs();
         StaticFixes.Hook();
         GuiHooks.Hook();
         State.Prefs.Load();
 
+        ConfigFile file = new(configPath: Path.Combine(Paths.ConfigPath, "Realm.cfg"), saveOnInit: true);
+        State.DeveloperMode = file.Bind("General", "HotReloading", false, "While enabled, Realm will allow hot reloading assemblies in-game. This feature is unstable.").Value;
+        bool skip = file.Bind("General", "SkipLoading", false, "While enabled, Realm won't self-update or load mods when starting the game.").Value;
+
         if (!skip) {
+            CheckForSelfUpdate();
             State.Prefs.Enable(earlyWrappedAsms);
             State.Prefs.Save();
 
