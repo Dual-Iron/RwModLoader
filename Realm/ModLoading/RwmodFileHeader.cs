@@ -31,7 +31,7 @@ readonly struct RwmodFileHeader
     {
         public int Compare(RwmodFileHeader x, RwmodFileHeader y)
         {
-            return StringComparer.Ordinal.Compare(x.Header.Name, y.Header.Name);
+            return StringComparer.OrdinalIgnoreCase.Compare(x.Header.Name, y.Header.Name);
         }
     }
 }
