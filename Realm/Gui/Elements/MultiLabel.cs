@@ -1,13 +1,13 @@
 ﻿using Menu;
 using UnityEngine;
 
-namespace Realm.Gui;
+namespace Realm.Gui.Elements;
 
 sealed class MultiLabel : RectangularMenuObject
 {
     readonly List<FLabel> labels = new();
     readonly string font;
-    
+
     public float LineHeight { get; set; }
 
     public MultiLabel(MenuObject owner, Vector2 pos, Vector2 size, string font = "font") : base(owner.menu, owner, pos, size)
@@ -28,7 +28,8 @@ sealed class MultiLabel : RectangularMenuObject
         if (labels.Count == 1) {
             labels[0].color = color;
             labels[0].text = text;
-        } else {
+        }
+        else {
             if (labels.Count > 1) {
                 ClearLabels();
             }

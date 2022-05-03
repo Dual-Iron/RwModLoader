@@ -137,7 +137,7 @@ sealed class LoadedAssemblyPool
 
         if (progressable.ProgressState == ProgressStateType.Failed) return;
 
-        StaticFixes.PreLoad();
+        ReloadFixes.PreLoad();
 
         int total = loadedAssemblies.Count;
         int finished = 0;
@@ -165,7 +165,7 @@ sealed class LoadedAssemblyPool
 
         if (progressable.ProgressState == ProgressStateType.Failed) return;
 
-        StaticFixes.PostLoad();
+        ReloadFixes.PostLoad();
     }
 
     private static void PrintMissingDependency(Progressable progressable, LoadedModAssembly lasm, AssemblyName name)

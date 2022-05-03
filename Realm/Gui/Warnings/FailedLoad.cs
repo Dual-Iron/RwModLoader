@@ -1,12 +1,12 @@
 ﻿using Menu;
 
-namespace Realm.Gui.Installation;
+namespace Realm.Gui.Warnings;
 
-static class FailedLoadNotif
+static class FailedLoad
 {
     static bool applied;
 
-    public static void ApplyHooks()
+    public static void Hook()
     {
         applied = true;
         On.Menu.MainMenu.ctor += AddWarningLabel;

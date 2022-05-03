@@ -1,10 +1,10 @@
 ﻿using Menu;
 
-namespace Realm.Gui.Installation;
+namespace Realm.Gui.Warnings;
 
-static class ReinstallNotif
+static class Reinstall
 {
-    public static void ApplyHooks()
+    public static void Hook()
     {
         On.Menu.MainMenu.ctor += AddReinstallLabel;
     }

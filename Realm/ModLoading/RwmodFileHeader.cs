@@ -24,4 +24,14 @@ readonly struct RwmodFileHeader
 
         return ret;
     }
+
+    public static IComparer<RwmodFileHeader> AlphabeticSort => default(AlphabeticSorter);
+
+    struct AlphabeticSorter : IComparer<RwmodFileHeader>
+    {
+        public int Compare(RwmodFileHeader x, RwmodFileHeader y)
+        {
+            return StringComparer.Ordinal.Compare(x.Header.Name, y.Header.Name);
+        }
+    }
 }

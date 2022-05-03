@@ -66,7 +66,7 @@ static class ModMenuHooks
     private static void MainMenuSingal(On.Menu.MainMenu.orig_Singal orig, MainMenu self, MenuObject sender, string message)
     {
         if (message == MODS_MENU) {
-            self.manager.RequestMainProcessSwitch(ModMenu.ModsMenuID);
+            self.manager.RequestMainProcessSwitch(ModMenu.ModMenuID);
             self.PlaySound(SoundID.MENU_Switch_Page_In);
             return;
         }
@@ -88,7 +88,7 @@ static class ModMenuHooks
 
     private static void SwitchToCustomProcess(ProcessManager pm, ProcessManager.ProcessID pid)
     {
-        if (pid == ModMenu.ModsMenuID) {
+        if (pid == ModMenu.ModMenuID) {
             pm.currentMainLoop = new ModMenu(pm);
         }
     }

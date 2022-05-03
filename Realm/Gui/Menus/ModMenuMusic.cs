@@ -1,8 +1,8 @@
 ﻿using Music;
 
-namespace Realm.Gui;
+namespace Realm.Gui.Menus;
 
-static class ModsMenuMusic
+static class ModMenuMusic
 {
     private static string TimedSong => DateTime.Now.Hour switch {
         < 4 => "NA_39 - Cracked Earth",

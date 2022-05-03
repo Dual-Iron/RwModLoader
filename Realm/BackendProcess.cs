@@ -64,6 +64,6 @@ sealed class BackendProcess
         if (ExitCode == null) {
             return "Process timed out.";
         }
-        return $"Process exited with code {ExitCode}: {Error}";
+        return $"Process exited with code {ExitCode}. {Error}";
     }
 }

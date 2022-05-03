@@ -16,6 +16,16 @@ static class Wrapper
         return Wrap(filePath, GenerateHeader);
     }
 
+    public static ExitStatus WrapAutoUpdate(string filePath, int version)
+    {
+        RwmodHeader GenerateHeader()
+        {
+            return GetAssemblyHeader(filePath) ?? new(RwmodHeader.FileFlags.AudbEntry, new(1, version, 0), Path.GetFileNameWithoutExtension(filePath), "", "");
+        }
+
+        return Wrap(filePath, GenerateHeader);
+    }
+
     public static ExitStatus Wrap(string filePath, Func<RwmodHeader> getHeader)
     {
         if (ExtIO.RwDir.MatchFailure(out var rwDir, out var rwDirErr)) {

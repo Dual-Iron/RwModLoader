@@ -6,7 +6,7 @@ using Realm.Jobs;
 using System.Diagnostics;
 using Realm.ModLoading;
 using System.Threading;
-using System.Collections;
+using Realm.Gui.Elements;
 
 namespace Realm.Gui.Menus;
 
@@ -28,7 +28,7 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
 
         owner.Container.AddChild(Container = new());
 
-        MenuContainer inner = new(this) { pos = new((TotalWidth - Width) / 2 + 1, (TotalHeight - Height) / 2) };
+        FixedMenuContainer inner = new(this, new Vector2((TotalWidth - Width) / 2 + 1, (TotalHeight - Height) / 2));
         subObjects.Add(inner);
 
         inner.subObjects.Add(icon = new MenuSprite(inner, default, Asset.SpriteFromRes("NO_ICON")));
@@ -36,11 +36,11 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
         SetIcon();
 
         // Add name + owner
-        LabelLeft(inner, entry.Name.CullLong("DisplayFont", Width - 128 - verWidth - pad * 2), pos: new(128 + pad, 110), big: true, dull: false);
-        LabelLeft(inner, $"by {entry.Owner}".CullLong("font", Width - 128 - updWidth - pad * 2), pos: new(128 + pad, 86));
+        Label(entry.Name.CullLong("DisplayFont", Width - 128 - verWidth - pad * 2), pos: new(128 + pad, 110), true).WithAlignment(FLabelAlignment.Left);
+        Label($"by {entry.Owner}".CullLong("font", Width - 128 - updWidth - pad * 2), pos: new(128 + pad, 86)).WithAlignment(FLabelAlignment.Left).WithColor(MenuColors.MediumGrey);
 
         // Add description
-        var descStr = GuiExt.SplitLinesAndCull(entry.Description, width: Width - 128 - padDesc * 2, rows: 2);
+        var descStr = Gui.SplitLinesAndCull(entry.Description, width: Width - 128 - padDesc * 2, rows: 2);
         var desc = new MenuLabel(menu, inner, descStr.JoinStr("\n"), new(128 + padDesc, 74), new(), false);
         desc.label.anchorY = 1f;
         desc.label.alignment = FLabelAlignment.Left;
@@ -48,10 +48,10 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
         inner.subObjects.Add(desc);
 
         // Add version + last updated text
-        string updatedText = $"updated {GuiExt.GetRelativeTime(entry.LastUpdated)}";
+        string updatedText = $"updated {Gui.GetRelativeTime(entry.LastUpdated)}";
 
-        LabelRight(inner, $"v{entry.Version}".CullLong("font", verWidth - pad), new(Width - pad, 106), dull: false);
-        LabelRight(inner, updatedText.CullLong("font", updWidth - pad), new(Width - pad, 86));
+        Label($"v{entry.Version}".CullLong("font", verWidth - pad), new(Width - pad, 106)).WithAlignment(FLabelAlignment.Right);
+        Label(updatedText.CullLong("font", updWidth - pad), new(Width - pad, 86)).WithAlignment(FLabelAlignment.Right).WithColor(MenuColors.MediumGrey);
 
         inner.subObjects.Add(downloadBtn = new SymbolButton(menu, inner, Asset.SpriteFromRes("DOWNLOAD").element.name, "", new(128 + pad, pad)));
         downloadBtn.size = new(32, 32);
@@ -65,7 +65,7 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
 
         RwmodFileHeader match = State.CurrentRefreshCache.Headers.FirstOrDefault(h => h.Header.Owner == entry.Owner && h.Header.Name == entry.Name);
 
-        if (match.Header != null && (match.Header.Flags & RwmodHeader.FileFlags.IsRdbEntry) != 0) {
+        if (match.Header != null && (match.Header.Flags & RwmodHeader.FileFlags.RdbEntry) != 0) {
             if (match.Header.Version >= entry.Version) {
                 availability = Availability.Installed;
             }
@@ -73,27 +73,12 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
                 availability = Availability.CanUpdate;
             }
         }
-    }
 
-    private static void LabelLeft(MenuObject owner, string txt, Vector2 pos, bool big = false, bool dull = true)
-    {
-        MenuLabel ret = new(owner.menu, owner, txt, pos, default, big);
-        ret.label.alignment = FLabelAlignment.Left;
-        owner.subObjects.Add(ret);
-
-        if (dull) {
-            ret.label.color = MenuRGB(MenuColors.MediumGrey);
-        }
-    }
-
-    private static void LabelRight(MenuObject owner, string txt, Vector2 pos, bool big = false, bool dull = true)
-    {
-        MenuLabel ret = new(owner.menu, owner, txt, pos, default, big);
-        ret.label.alignment = FLabelAlignment.Right;
-        owner.subObjects.Add(ret);
-
-        if (dull) {
-            ret.label.color = MenuRGB(MenuColors.MediumGrey);
+        MenuLabel Label(string txt, Vector2 pos, bool big = false)
+        {
+            MenuLabel ret = new(menu, inner, txt, pos, default, big);
+            owner.subObjects.Add(ret);
+            return ret;
         }
     }
 
@@ -101,7 +86,7 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
 
     private void SetIcon()
     {
-        if (Futile.atlasManager._allElementsByName.TryGetValue(entry.Icon, out var elem)) {
+        if (Futile.atlasManager._allElementsByName.ContainsKey(entry.Icon)) {
             Interlocked.Exchange(ref loadIcon, 1);
             return;
         }
@@ -140,7 +125,8 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
 
     enum Availability { CanInstall, Installed, CanUpdate }
 
-    readonly RdbEntry entry;
+    public readonly RdbEntry entry;
+
     readonly MenuSprite icon;
     readonly SymbolButton downloadBtn;
     readonly SymbolButton homepageBtn;
@@ -199,7 +185,7 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
         }
     }
 
-    static readonly float prefixWidth = "Click again to visit [".MeasureWidth("font");
+    static readonly float prefixWidth = "Click again to visit [".MeasureWidth(Gui.GetFont("font"));
 
     public override void Singal(MenuObject sender, string message)
     {
@@ -218,8 +204,6 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
                 string homepage = entry.Homepage;
                 if (homepage.StartsWith("https://"))
                     homepage = homepage.Substring("https://".Length);
-                else if (homepage.StartsWith("http://"))
-                    homepage = homepage.Substring("http://".Length);
 
                 status.SetLabel(MenuRGB(MenuColors.MediumGrey), "Click again to visit [");
                 status.AddLabel(new(0.5f, 0.9f, 1f), homepage.CullLong("font", Width - status.pos.x - prefixWidth - 12));
@@ -235,6 +219,8 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
 
     private void Download()
     {
+        // TODO remove unnecessary Interlocked and verify that this lockless multithreading is safe
+
         BackendProcess proc = BackendProcess.Execute($"-rdb \"{entry.Owner}/{entry.Name}\"");
 
         if (proc.ExitCode == 0) {

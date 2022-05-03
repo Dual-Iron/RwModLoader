@@ -10,7 +10,9 @@ sealed class RwmodHeader
     [Flags]
     public enum FileFlags : byte
     {
-        IsRdbEntry = 1
+        RdbEntry = 0x1,
+        AudbEntry = 0x2,
+        Hidden = 0x4
     }
 
     public RwmodHeader(FileFlags flags, SemVer? version, string modName, string modOwner, string homepage)
@@ -64,12 +66,9 @@ sealed class RwmodHeader
 
     static Result<RwmodHeader, string> Read(int rwmodVersion, byte[] b, Stream s)
     {
-        var flags = s.ReadByte();
-        if (flags > 1) {
-            return "invalid flags";
-        }
-
         try {
+            var flags = (FileFlags)s.ReadByte();
+
             SemVer? ver;
 
             string verStr = ReadStringFull(ref b, s);
@@ -88,7 +87,7 @@ sealed class RwmodHeader
             var modOwner = ReadStringFull(ref b, s);
             var homepage = ReadStringFull(ref b, s);
 
-            return new RwmodHeader((FileFlags)flags, ver, modName, modOwner, homepage);
+            return new RwmodHeader(flags, ver, modName, modOwner, homepage);
         }
         catch {
             return "corrupt file";

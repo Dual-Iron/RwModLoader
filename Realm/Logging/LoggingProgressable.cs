@@ -1,6 +1,4 @@
-﻿using System.Collections.ObjectModel;
-
-namespace Realm.Logging;
+﻿namespace Realm.Logging;
 
 sealed class LoggingProgressable : Progressable
 {

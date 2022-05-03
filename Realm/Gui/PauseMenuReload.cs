@@ -5,10 +5,10 @@ using UnityEngine;
 
 namespace Realm.Gui;
 
-static class HotReloadingHooks
+static class PauseMenuReload
 {
     private static Job? reloadingJob;
-    private const string HOT_RELOAD = "HRL";
+    private const string SIGNAL = "IN_GAME_RELOAD";
 
     public static void Hook()
     {
@@ -22,14 +22,14 @@ static class HotReloadingHooks
     {
         orig(self, manager, game);
 
-        SimpleButton modsButton = new(self, self.pages[0], "HOT RELOAD", HOT_RELOAD, self.exitButton.pos - new Vector2(140, 0), new(110, 30));
+        SimpleButton modsButton = new(self, self.pages[0], "HOT RELOAD", SIGNAL, self.exitButton.pos - new Vector2(140, 0), new(110, 30));
 
         self.pages[0].subObjects.Add(modsButton);
     }
 
     private static void PauseMenuSingal(On.Menu.PauseMenu.orig_Singal orig, PauseMenu self, MenuObject sender, string message)
     {
-        if (reloadingJob == null && message == HOT_RELOAD) {
+        if (reloadingJob == null && message == SIGNAL) {
             reloadingJob = Job.Start(() => {
                 State.Prefs.Load();
                 State.Mods.Reload(new MessagingProgressable());
@@ -49,7 +49,7 @@ static class HotReloadingHooks
         }
         else {
             foreach (var sob in self.pages[0].subObjects) {
-                if (sob is SimpleButton sib && sib.signalText == HOT_RELOAD) {
+                if (sob is SimpleButton sib && sib.signalText == SIGNAL) {
                     sib.GetButtonBehavior.greyedOut = false;
                     break;
                 }

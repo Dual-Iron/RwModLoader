@@ -1,6 +1,7 @@
 ﻿using BepInEx;
 using Menu;
-using Realm.Gui.Installation;
+using Realm.Gui.Elements;
+using Realm.Gui.Warnings;
 using Realm.Jobs;
 using Realm.Logging;
 using Realm.ModLoading;
@@ -10,13 +11,19 @@ using static Menu.Menu;
 
 namespace Realm.Gui.Menus;
 
-sealed class LocalMods : PositionedMenuObject, IHoverable, IMenuPage
+sealed class LocalMods : ModMenuPage, IHoverable
 {
-    static readonly string[] ReloadingIssues = {
-        "Sharpener", "SeamlessLevels"
-    };
+    static readonly string[] ReloadingIssues = { "Sharpener", "SeamlessLevels" };
+    
+    public override bool BlockMenuInteraction => menu.manager.upcomingProcess != null || reloadJob != null || refreshJob != null || forceExitGame;
+    public override string Tooltip =>
+@"This is your mod list.
+The mods are sorted alphabetically.
+Here, you can enable, disable, install, and uninstall mods.
 
-    public bool BlockMenuInteraction => menu.manager.upcomingProcess != null || reloadJob != null || refreshJob != null || forceExitGame;
+To install mods, you can either:
+- Put DLL files, ZIP files, and folders in the plugins folder, or
+- Use the mod browser on the next page.";
 
     readonly MenuLabel quitWarning;
     readonly MenuLabel changesMade;
@@ -27,11 +34,11 @@ sealed class LocalMods : PositionedMenuObject, IHoverable, IMenuPage
     readonly SimpleButton disableAll;
     readonly SimpleButton refresh;
     readonly Listing modListing;
-    readonly MenuContainer modListingGroup;
+    readonly FixedMenuContainer modListingGroup;
     SimpleButton? openPatchesButton;
 
     readonly LoggingProgressable progress = new();
-    readonly MenuContainer progressContainer;
+    readonly FixedMenuContainer progressContainer;
     readonly ProgressableDisplay progressDisplay;
 
     Job? reloadJob;
@@ -39,7 +46,7 @@ sealed class LocalMods : PositionedMenuObject, IHoverable, IMenuPage
     bool forceExitGame;
     bool quitOnSave;
 
-    public LocalMods(MenuObject owner, Vector2 pos) : base(owner.menu, owner, pos)
+    public LocalMods(MenuObject owner, Vector2 pos) : base(owner, pos)
     {
         // Buttons
         subObjects.Add(cancelButton = new(menu, this, "CANCEL", "", new(200, 50), new(110, 30)));
@@ -49,8 +56,11 @@ sealed class LocalMods : PositionedMenuObject, IHoverable, IMenuPage
         subObjects.Add(enableAll = new(menu, this, "ENABLE ALL", "", new(200, 300), new(110, 30)));
         subObjects.Add(openPluginsButton = new(menu, this, "PLUGINS", "", new(200, 350), new(110, 30)));
 
-        subObjects.Add(modListing = new(this, pos: new(1366 - 200 - ModPane.Width, 50), elementSize: new(ModPane.Width, ModPane.Height), elementsPerScreen: new(1, 15), edgePadding: new(0, 5)));
+        // Reminder: 1366 is screen width on max res, and 1366 - 200 is the screen width on min res with some padding
         subObjects.Add(modListingGroup = new(this));
+        subObjects.Add(
+            modListing = new(this, pos: new(1366 - 200 - LocalModPane.Width, 50), elementSize: new(LocalModPane.Width, LocalModPane.Height), elementsPerScreen: new(1, 12), edgePadding: new(0, 5))
+            );
 
         subObjects.Add(progressContainer = new(this));
         progressContainer.subObjects.Add(
@@ -66,7 +76,7 @@ sealed class LocalMods : PositionedMenuObject, IHoverable, IMenuPage
         changesMade.label.isVisible = false;
         subObjects.Add(changesMade);
 
-        quitWarning = new(menu, this, "(this will close the game)", new(saveButton.pos.x, saveButton.pos.y - 30), saveButton.size, false);
+        quitWarning = new(menu, this, "(this will close the game)", new(saveButton.pos.x, saveButton.pos.y - 28), saveButton.size, false);
         quitWarning.label.color = MenuColor(MenuColors.MediumGrey).rgb;
         quitWarning.label.isVisible = false;
         subObjects.Add(quitWarning);
@@ -83,48 +93,60 @@ sealed class LocalMods : PositionedMenuObject, IHoverable, IMenuPage
     {
         modListingGroup.ClearSubObjects();
 
-        Vector2 notifPos = new(modListing.pos.x, modListing.pos.y - modListing.size.y / 2 - 15);
+        string? message = null;
 
+        // Check if there are patchers other than BepInEx Chainloader, MonoModder, and Realm
+        if (BepInEx.Preloader.Patching.AssemblyPatcher.PatcherPlugins.Count > 3) {
+            message = "can't reload because there are extra patcher plugins in \"Rain World/BepInEx/patchers\"";
+        }
         // Check if there are patch mods that aren't currently loaded, or patch mods that should be unloaded
-        if (!Program.GetPatchMods().SequenceEqual(State.PatchMods)) {
-            quitOnSave = true;
+        else if (!Program.GetPatchMods().SequenceEqual(State.PatchMods)) {
+            modListingGroup.subObjects.Add(openPatchesButton = new(menu, this, "PATCHES", "", new(200, 400), new(110, 30)));
 
-            MenuLabel notListedNotice = new(menu, this, "restart the game to refresh patch mods", notifPos, modListing.size, false);
-            notListedNotice.label.color = MenuColor(MenuColors.MediumGrey).rgb;
-            modListingGroup.subObjects.Add(notListedNotice);
+            message = "updated patches prevent you from reloading";
         }
         // Check if there are any loaded patch mods
         else if (State.PatchMods.Count > 0) {
-            quitOnSave = true;
-
             modListingGroup.subObjects.Add(openPatchesButton = new(menu, this, "PATCHES", "", new(200, 400), new(110, 30)));
 
-            string s = State.PatchMods.Count > 1 ? "s" : "";
+            string offenders = State.PatchMods.JoinStrEnglish();
+            string s = State.PatchMods.Count > 1 ? "es" : "";
+            string S = State.PatchMods.Count > 1 ? "" : "s";
 
-            MenuLabel notListedNotice = new(menu, this, $"and {State.PatchMods.Count} patch mod{s} that prevent you from reloading", notifPos, modListing.size, false);
-            notListedNotice.label.color = MenuColor(MenuColors.MediumGrey).rgb;
-            modListingGroup.subObjects.Add(notListedNotice);
+            message = $"the patch{s} {offenders} prevent{S} you from reloading";
         }
         // Check if there are any mods that are blacklisted from reloading (https://github.com/Dual-Iron/RwModLoader/issues/7)
         else if (State.Mods.LoadedAssemblyPool != null) {
             var cantReload = State.Mods.LoadedAssemblyPool.LoadedAssemblies.Where(l => ReloadingIssues.Contains(l.AsmName)).ToList();
             if (cantReload.Count > 0) {
-                quitOnSave = true;
-
+                string offenders = cantReload.Select(l => l.AsmName).JoinStrEnglish();
                 string s = cantReload.Count > 1 ? "s" : "";
                 string S = cantReload.Count > 1 ? "" : "s";
 
-                MenuLabel notListedNotice = new(menu, this, $"the mod{s} {cantReload.Select(l => l.AsmName).JoinStrEnglish()} prevent{S} you from reloading", notifPos, modListing.size, false);
-                notListedNotice.label.color = MenuColor(MenuColors.MediumGrey).rgb;
-                modListingGroup.subObjects.Add(notListedNotice);
+                message = $"the mod{s} {offenders} prevent{S} you from reloading";
             }
+        }
+
+        if (message != null) {
+            quitOnSave = true;
+
+            Vector2 noticePos = new(modListing.pos.x, quitWarning.pos.y);
+            Vector2 noticeSize = new(modListing.size.x, quitWarning.size.y);
+            MenuLabel notice = new(menu, this, message, noticePos, noticeSize, false);
+            notice.label.color = MenuColor(MenuColors.MediumGrey).rgb;
+            modListingGroup.subObjects.Add(notice);
         }
 
         // Reset mod listing with new panels
         modListing.ClearListElements();
 
-        foreach (var header in State.CurrentRefreshCache.Headers) {
-            modListing.subObjects.Add(new ModPane(header, modListing));
+        // Add the panels sorted alphabetically
+        List<RwmodFileHeader> headers = State.CurrentRefreshCache.Headers.ToList();
+
+        headers.Sort(RwmodFileHeader.AlphabeticSort);
+
+        foreach (var header in headers) {
+            modListing.subObjects.Add(new LocalModPane(header, modListing));
         }
     }
 
@@ -168,6 +190,7 @@ sealed class LocalMods : PositionedMenuObject, IHoverable, IMenuPage
 
         changesMade.label.isVisible = !forceExitGame && State.Prefs.AnyChanges;
         quitWarning.label.isVisible = quitOnSave;
+        quitWarning.label.alpha = saveButton.buttonBehav.col;
 
         base.GrafUpdate(timeStacker);
     }
@@ -200,12 +223,12 @@ sealed class LocalMods : PositionedMenuObject, IHoverable, IMenuPage
         }
 
         if (sender == enableAll) {
-            foreach (ModPane panel in modListing.subObjects.OfType<ModPane>()) {
+            foreach (LocalModPane panel in modListing.subObjects.OfType<LocalModPane>()) {
                 panel.IsEnabled = true;
             }
         }
         else if (sender == disableAll) {
-            foreach (ModPane panel in modListing.subObjects.OfType<ModPane>()) {
+            foreach (LocalModPane panel in modListing.subObjects.OfType<LocalModPane>()) {
                 panel.IsEnabled = false;
             }
         }
@@ -228,7 +251,7 @@ sealed class LocalMods : PositionedMenuObject, IHoverable, IMenuPage
     {
         State.Prefs.Save();
 
-        foreach (var panel in modListing.subObjects.OfType<ModPane>()) {
+        foreach (var panel in modListing.subObjects.OfType<LocalModPane>()) {
             if (panel.WillDelete) {
                 File.Delete(panel.FileHeader.FilePath);
             }
@@ -237,7 +260,7 @@ sealed class LocalMods : PositionedMenuObject, IHoverable, IMenuPage
 
     private void SaveExitJob()
     {
-        FailedLoadNotif.UndoHooks();
+        FailedLoad.UndoHooks();
 
         State.Mods.Reload(progress);
 
@@ -249,9 +272,11 @@ sealed class LocalMods : PositionedMenuObject, IHoverable, IMenuPage
         }
     }
 
-    public void EnterFocus()
+    public override void SetFocus(bool focus)
     {
-        if (menu is ModMenu m && m.NeedsRefresh) {
+        base.SetFocus(focus);
+
+        if (focus && menu is ModMenu m && m.NeedsRefresh) {
             m.NeedsRefresh = false;
 
             StartRefreshJob();
@@ -268,7 +293,7 @@ sealed class LocalMods : PositionedMenuObject, IHoverable, IMenuPage
         if (selected == disableAll) return "Disable all mods";
         if (selected == refresh) return "Refresh mod list";
         if (selected == openPluginsButton) return "Open plugins folder";
-        if (selected == openPatchesButton) return "Open patch mods folder";
+        if (selected == openPatchesButton) return "Open patches folder";
         return null;
     }
 }

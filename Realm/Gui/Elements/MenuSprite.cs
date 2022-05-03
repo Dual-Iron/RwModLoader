@@ -1,7 +1,7 @@
 ﻿using Menu;
 using UnityEngine;
 
-namespace Realm.Gui;
+namespace Realm.Gui.Elements;
 
 sealed class MenuSprite : RectangularMenuObject
 {
