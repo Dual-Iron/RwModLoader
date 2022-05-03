@@ -1,11 +1,9 @@
-﻿using Menu;
+﻿using static Menu.Menu;
+using Menu;
 using Realm.Assets;
 using UnityEngine;
-using static Menu.Menu;
 using Realm.Jobs;
-using System.Diagnostics;
 using Realm.ModLoading;
-using System.Threading;
 using Realm.Gui.Elements;
 using Rwml;
 
@@ -95,7 +93,7 @@ sealed class AudbPane : RectangularMenuObject, IListable, IHoverable
 
     public override void Update()
     {
-        downloadBtn.buttonBehav.greyedOut = BlockInteraction || availability == Availability.Installed || downloadStatus is DownloadStatus.InProgress;
+        downloadBtn.buttonBehav.greyedOut = BlockInteraction || availability == Availability.Installed || downloadStatus == DownloadStatus.InProgress;
 
         // If the download just finished, display its message
         if (downloadMessage != null) {

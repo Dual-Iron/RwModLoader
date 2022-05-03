@@ -24,7 +24,7 @@ There are two types of mods available on the browser:
 - RDB mods (the ones with icons), and
 - AUDB mods (the ones without icons).";
 
-    readonly MenuSprite loadSpinner;
+    readonly LoadSpinny loadSpinny;
     readonly Listing rdbListing;
     readonly MenuLabel warningLabel;
     readonly TextBox search;
@@ -52,8 +52,7 @@ There are two types of mods available on the browser:
             OnInsert = UpdateSearch
         }));
 
-        subObjects.Add(loadSpinner = new(this, rdbListing.pos + rdbListing.size + new Vector2(-24, 8+12), Asset.SpriteFromRes("HARDHAT")));
-
+        subObjects.Add(loadSpinny = new(this, rdbListing.pos + rdbListing.size + new Vector2(-24, 8+12)));
         subObjects.Add(warningLabel = new(menu, this, "", rdbListing.pos, rdbListing.size, true));
 
         pageState.LoadPage();
@@ -65,8 +64,7 @@ There are two types of mods available on the browser:
 
         search.GetButtonBehavior.greyedOut = pageState.State == Errored || BlockMenuInteraction;
 
-        loadSpinner.sprite.rotation += 360f / 40f;
-        loadSpinner.sprite.isVisible = pageState.State == LoadingPages;
+        loadSpinny.ico.sprite.isVisible = pageState.State == LoadingPages;
 
         if (pageState.State == Errored) {
             if (warningLabel.text == "") {

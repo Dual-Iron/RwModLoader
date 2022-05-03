@@ -32,8 +32,12 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
         subObjects.Add(inner);
 
         inner.subObjects.Add(icon = new MenuSprite(inner, default, Asset.SpriteFromRes("NO_ICON")));
+        icon.sprite.isVisible = false;
 
-        SetIcon();
+        inner.subObjects.Add(iconSpinny = new(inner, new Vector2(52, 52)));
+
+        iconLoader = new($"{entry.Owner}~{entry.Name}", entry.Icon);
+        iconLoader.StartLoading();
 
         // Add name + owner
         Label(entry.Name.CullLong("DisplayFont", Width - 128 - verWidth - pad * 2), pos: new(128 + pad, 110), true).WithAlignment(FLabelAlignment.Left);
@@ -82,66 +86,24 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
         }
     }
 
-    int loadIcon; // 0 for loading, 1 for loaded and ready to finish, 2 for finished
-
-    private void SetIcon()
-    {
-        if (Futile.atlasManager._allElementsByName.ContainsKey(entry.Icon)) {
-            Interlocked.Exchange(ref loadIcon, 1);
-            return;
-        }
-
-        string path = Path.Combine(RealmPaths.IconFolder.FullName, $"{entry.Owner}~{entry.Name}");
-
-        if (File.Exists(path) && (DateTime.UtcNow - File.GetLastWriteTimeUtc(path)).TotalDays < 10) {
-            LoadIcon();
-            return;
-        }
-
-        BackendProcess proc = BackendProcess.Execute($"-dl \"{entry.Icon}\" \"{path}\"");
-
-        if (proc.ExitCode != 0) {
-            Program.Logger.LogError($"Error downloading icon for {entry.Owner}/{entry.Name}. {proc}");
-        }
-        else if (File.Exists(path)) {
-            LoadIcon();
-        }
-
-        void LoadIcon()
-        {
-            using FileStream stream = File.OpenRead(path);
-            Texture2D tex = Asset.LoadTexture(stream);
-
-            if (tex.width != 128 || tex.height != 128) {
-                Program.Logger.LogError($"Icon texture for {entry.Owner}/{entry.Name} was not 128x128");
-                UnityEngine.Object.Destroy(tex);
-            }
-            else {
-                HeavyTexturesCache.LoadAndCacheAtlasFromTexture(entry.Icon, tex);
-                Interlocked.Exchange(ref loadIcon, 1);
-            }
-        }
-    }
-
     enum Availability { CanInstall, Installed, CanUpdate }
+    enum DownloadStatus { None, InProgress, Success, Err }
 
     public readonly RdbEntry entry;
 
+    readonly AsyncIcon iconLoader;
+    readonly LoadSpinny iconSpinny;
     readonly MenuSprite icon;
     readonly SymbolButton downloadBtn;
     readonly SymbolButton homepageBtn;
     readonly MultiLabel status;
-    readonly Availability availability;
 
-    const int DownloadInProgress = 1;
-    const int DownloadSuccess = 2;
-    const int DownloadErr = 3;
-
-    int downloadStatus; // must be int for use with Interlocked.Exchange (see Download() method)
+    Availability availability;
+    DownloadStatus downloadStatus;
     string? downloadMessage;
     bool previewingHomepage;
 
-    public bool PreventButtonClicks => downloadStatus == DownloadInProgress;
+    public bool PreventButtonClicks => downloadStatus == DownloadStatus.InProgress;
 
     public bool IsBelow { get; set; }
     public bool BlockInteraction { get; set; }
@@ -151,13 +113,13 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
 
     public override void Update()
     {
-        downloadBtn.buttonBehav.greyedOut = BlockInteraction || availability == Availability.Installed || downloadStatus is DownloadInProgress or DownloadSuccess;
+        downloadBtn.buttonBehav.greyedOut = BlockInteraction || availability == Availability.Installed || downloadStatus == DownloadStatus.InProgress;
         homepageBtn.buttonBehav.greyedOut = BlockInteraction || entry.Homepage.Trim().Length == 0;
 
         // If the download just finished, display its message
         if (downloadMessage != null) {
             string culledMessage = downloadMessage.Replace('\n', ' ').CullLong("font", Width - status.pos.x - 8);
-            Color color = downloadStatus == DownloadSuccess ? new(.5f, 1, .5f) : new(1, .5f, .5f);
+            Color color = downloadStatus == DownloadStatus.Success ? new(.5f, 1, .5f) : new(1, .5f, .5f);
             status.SetLabel(color, culledMessage);
 
             previewingHomepage = false;
@@ -179,8 +141,13 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
 
         Container.alpha = (float)Mathf.Pow(Mathf.InverseLerp(0.5f, 1, Visibility), 3);
 
-        if (loadIcon == 1) {
-            loadIcon = 2;
+        if (iconLoader.Status == AsyncIconStatus.Errored) {
+            iconSpinny.ico.sprite.isVisible = false;
+            icon.sprite.isVisible = true;
+        }
+        else if (iconLoader.Status == AsyncIconStatus.Loaded && !icon.sprite.isVisible) {
+            iconSpinny.ico.sprite.isVisible = false;
+            icon.sprite.isVisible = true;
             icon.sprite.element = Futile.atlasManager._allElementsByName[entry.Icon];
         }
     }
@@ -191,7 +158,7 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
     {
         if (sender == downloadBtn) {
             previewingHomepage = false;
-            downloadStatus = DownloadInProgress;
+            downloadStatus = DownloadStatus.InProgress;
 
             status.SetLabel(MenuRGB(MenuColors.MediumGrey), "Downloading");
             menu.PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
@@ -226,22 +193,23 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
         if (proc.ExitCode == 0) {
             Program.Logger.LogInfo($"Downloaded {entry.Owner}/{entry.Name}");
 
-            Interlocked.Exchange(ref downloadStatus, DownloadSuccess);
-            Interlocked.Exchange(ref downloadMessage, "Download successful");
+            availability = Availability.Installed;
+            downloadStatus = DownloadStatus.Success;
+            downloadMessage = "Download successful";
 
             if (menu is ModMenu m) {
                 m.NeedsRefresh = true;
             }
         }
         else if (proc.ExitCode == null) {
-            Interlocked.Exchange(ref downloadStatus, DownloadErr);
-            Interlocked.Exchange(ref downloadMessage, "Download timed out");
+            downloadStatus = DownloadStatus.Err;
+            downloadMessage = "Download timed out";
         }
         else {
             Program.Logger.LogError($"Failed to download {entry.Owner}/{entry.Name} with err {proc.ExitCode}.\n{proc.Error}");
 
-            Interlocked.Exchange(ref downloadStatus, DownloadErr);
-            Interlocked.Exchange(ref downloadMessage, proc.Error);
+            downloadStatus = DownloadStatus.Err;
+            downloadMessage = proc.Error;
         }
     }
 

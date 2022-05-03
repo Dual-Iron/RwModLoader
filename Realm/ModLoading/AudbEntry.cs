@@ -1,6 +1,4 @@
-﻿using UnityEngine;
-
-namespace Realm.ModLoading;
+﻿namespace Realm.ModLoading;
 
 sealed class AudbEntry
 {
