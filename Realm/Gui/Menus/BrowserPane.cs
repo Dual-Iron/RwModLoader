@@ -2,10 +2,8 @@
 using Realm.Assets;
 using UnityEngine;
 using static Menu.Menu;
-using Realm.Jobs;
 using System.Diagnostics;
 using Realm.ModLoading;
-using System.Threading;
 using Realm.Gui.Elements;
 
 namespace Realm.Gui.Menus;

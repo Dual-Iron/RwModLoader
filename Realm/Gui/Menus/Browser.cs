@@ -1,5 +1,4 @@
 ﻿using Menu;
-using Realm.Assets;
 using Realm.Gui.Elements;
 using Realm.ModLoading;
 using UnityEngine;

@@ -4,12 +4,8 @@ namespace Realm.ModLoading;
 
 sealed class RefreshCache
 {
-    private ICollection<RwmodFileHeader> headers;
-
-    public RefreshCache()
-    {
-        headers = RwmodFileHeader.GetRwmodHeaders();
-    }
+    // This collection should never be accessed while `Refresh`ing for thread-safety.
+    private ICollection<RwmodFileHeader> headers = RwmodFileHeader.GetRwmodHeaders();
 
     public void Refresh(Progressable progressable)
     {

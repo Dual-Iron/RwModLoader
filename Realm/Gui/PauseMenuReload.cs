@@ -1,5 +1,4 @@
 ﻿using Menu;
-using Realm.Jobs;
 using Realm.Logging;
 using UnityEngine;
 
@@ -58,7 +57,7 @@ static class PauseMenuReload
 
         orig(self);
 
-        if (reloadingJob?.Status == JobStatus.Finished) {
+        if (reloadingJob?.Finished == true) {
             reloadingJob = null;
         }
     }

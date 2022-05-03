@@ -2,7 +2,6 @@
 using Menu;
 using Realm.Gui.Elements;
 using Realm.Gui.Warnings;
-using Realm.Jobs;
 using Realm.Logging;
 using Realm.ModLoading;
 using System.Diagnostics;
@@ -164,7 +163,7 @@ To install mods, you can either:
         }
 
         // If refreshing just finished, update the mod list
-        if (refreshJob?.Status == JobStatus.Finished) {
+        if (refreshJob?.Finished == true) {
             refreshJob = null;
             UpdateModListing();
         }
