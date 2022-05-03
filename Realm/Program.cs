@@ -8,12 +8,11 @@ using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using Mono.Cecil.Cil;
-using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
 using Partiality.Modloader;
 using Realm.AssemblyLoading;
-using Realm.Gui;
-using Realm.Gui.Installation;
+using Realm.ModLoading;
+using Realm.Gui.Warnings;
 using Realm.Logging;
 
 namespace Realm;
@@ -23,31 +22,30 @@ static class Program
     public static ManualLogSource Logger { get; } = BepInEx.Logging.Logger.CreateLogSource("Realm");
 
     // Start doing stuff here.
-    internal static void Main(List<string> earlyWrappedAsms, bool extraPatchers)
+    internal static void Main(List<string> earlyWrappedAsms)
     {
         Logger.LogDebug("Debug logging enabled.");
 
         if (!File.Exists(RealmPaths.BackendPath)) {
             Logger.LogFatal("Backend.exe was not found. Please reinstall Realm!");
-            ReinstallNotif.ApplyHooks();
+            Reinstall.Hook();
             return;
         }
 
         State.PatchMods = GetPatchMods();
-        State.NoHotReloading = extraPatchers || State.PatchMods.Count > 0;
 
         NeuterPartiality();
-        UpdateOldLogs();
-        StaticFixes.Hook();
-        GuiHooks.Hook();
+        DeleteOldLogs();
+        ReloadFixes.Hook();
+        VanillaFixes.Hook();
+        Gui.Gui.Hook();
         State.Prefs.Load();
 
         ConfigFile file = new(configPath: Path.Combine(Paths.ConfigPath, "Realm.cfg"), saveOnInit: true);
-        State.DeveloperMode = file.Bind("General", "HotReloading", false, "While enabled, Realm will allow hot reloading assemblies in-game. This feature is unstable.").Value;
-        bool skip = file.Bind("General", "SkipLoading", false, "While enabled, Realm won't self-update or load mods when starting the game.").Value;
+        State.DeveloperMode = file.Bind("General", "DeveloperMode", false, "Enables reloading mods in the pause menu. This feature is prone to breaking and best suited for mod development.").Value;
+        bool load = file.Bind("General", "LoadOnStart", true, "Enables loading mods before the main menu appears.").Value;
 
-        if (!skip) {
-            CheckForSelfUpdate();
+        if (load) {
             State.Prefs.Enable(earlyWrappedAsms);
             State.Prefs.Save();
 
@@ -56,9 +54,11 @@ static class Program
             State.Mods.Reload(prog);
 
             if (prog.ProgressState == ProgressStateType.Failed) {
-                FailedLoadNotif.ApplyHooks();
+                FailedLoad.Hook();
             }
         }
+
+        CheckForSelfUpdate();
     }
 
     public static List<string> GetPatchMods()
@@ -82,19 +82,18 @@ static class Program
         return ret;
     }
 
-    private static void UpdateOldLogs()
+    private static void NeuterPartiality()
     {
-        string rw = Paths.GameRootPath;
-        string[] files = { Path.Combine(rw, "consoleLog.txt"), Path.Combine(rw, "exceptionLog.txt") };
+        new ILHook(typeof(ModManager).GetMethod("LoadAllMods"), il => {
+            il.Instrs.Clear();
+            il.Instrs.Add(Instruction.Create(OpCodes.Ret));
+        });
+    }
 
-        foreach (string file in files) {
-            try {
-                if (File.Exists(file)) {
-                    File.WriteAllText(file, "Check \"LogOutput.log\" in the BepInEx folder instead");
-                }
-            }
-            catch { }
-        }
+    private static void DeleteOldLogs()
+    {
+        File.Delete(Path.Combine(Paths.GameRootPath, "consoleLog.txt"));
+        File.Delete(Path.Combine(Paths.GameRootPath, "exceptionLog.txt"));
     }
 
     private static void CheckForSelfUpdate()
@@ -105,7 +104,7 @@ static class Program
             if (proc.Output == "y") {
                 Logger.LogError("Realm is not up to date.");
 
-                UpdateNotif.ApplyHooks();
+                Update.Hook();
             }
             else {
                 Logger.LogInfo("Realm is up to date.");
@@ -115,16 +114,5 @@ static class Program
             Logger.LogError("Couldn't determine if Realm is up to date.");
             Logger.LogDebug(proc);
         }
-    }
-
-    private static void NeuterPartiality()
-    {
-        static void LoadAllModsIL(ILContext il)
-        {
-            il.Instrs.Clear();
-            il.Instrs.Add(Instruction.Create(OpCodes.Ret));
-        }
-
-        _ = new ILHook(typeof(ModManager).GetMethod("LoadAllMods"), LoadAllModsIL);
     }
 }

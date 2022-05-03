@@ -29,9 +29,11 @@ while (argEnumerator.MoveNext()) {
         "-i" => RealmInstaller.Install(),
         "-q" => SelfUpdater.QuerySelfUpdate().Result,
         "-dl" => Download(argEnumerator),
+        "-audb" => Downloader.Audb().Result,
         "-rdb" => argEnumerator.MoveNext() ? Downloader.Rdb(argEnumerator.Current).Result : ExitStatus.ExpectedArg,
         "-p" => argEnumerator.MoveNext() ? Patcher.Patch(argEnumerator.Current) : ExitStatus.ExpectedArg,
         "-w" => argEnumerator.MoveNext() ? Wrapper.Wrap(argEnumerator.Current) : ExitStatus.ExpectedArg,
+        "-wau" => WrapAutoUpdate(argEnumerator),
         "-e" => argEnumerator.MoveNext() ? Extractor.Extract(argEnumerator.Current) : ExitStatus.ExpectedArg,
         _ => ExitStatus.UnknownArg
     };
@@ -60,6 +62,18 @@ static ExitStatus Download(IEnumerator<string> args)
     return ExitStatus.ExpectedArg;
 }
 
+static ExitStatus WrapAutoUpdate(IEnumerator<string> args)
+{
+    if (args.MoveNext()) {
+        string first = args.Current;
+
+        if (args.MoveNext() && int.TryParse(args.Current, out int ver)) {
+            return Wrapper.WrapAutoUpdate(first, ver);
+        }
+    }
+    return ExitStatus.ExpectedArg;
+}
+
 static ExitStatus PrintHelp()
 {
     Console.WriteLine();
@@ -69,9 +83,11 @@ static ExitStatus PrintHelp()
 -u                 uninstalls Realm
 -q                 queries for a self-update and prints 'y' or 'n'
 -dl  [url]  [name] downloads the icon at [url] into the file at [name]
+-audb              prints the json from https://beestuff.pythonanywhere.com/audb/api/v2/rdb to stdout
 -rdb [name]        downloads the specified mod from https://rdb.dual-iron.xyz and installs it
 -p   [path]        patches the .dll file at [path]
 -w   [path]        wraps the file or directory at [path] into a new RWMOD file and prints the RWMOD's name
+-wau [path] [ver]  wraps the file or directory at [path] into a new RWMOD file and prints the RWMOD's name. the RWMOD uses the version specified at [ver] and is considered to be from AUDB
 -e   [path]        extracts the contents of the .rwmod file at [path] into a new directory
 ");
     return ExitStatus.Success;

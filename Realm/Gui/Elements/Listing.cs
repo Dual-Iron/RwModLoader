@@ -2,12 +2,12 @@
 using RWCustom;
 using UnityEngine;
 
-namespace Realm.Gui;
+namespace Realm.Gui.Elements;
 
 sealed class Listing : RectangularMenuObject, Slider.ISliderOwner
 {
     private readonly VerticalSlider slider;
-    private readonly MenuContainer sliderContainer;
+    private readonly FixedMenuContainer sliderContainer;
     private readonly Vector2 edgePadding;
 
     public bool ForceBlockInteraction;
@@ -41,10 +41,11 @@ sealed class Listing : RectangularMenuObject, Slider.ISliderOwner
         this.edgePadding = edgePadding;
     }
 
-    public void ClearListElements()
+    public void ClearListElements() => ClearListElements(l => true);
+    public void ClearListElements(Predicate<IListable> predicate)
     {
         for (int i = subObjects.Count - 1; i >= 0; i--) {
-            if (subObjects[i] is IListable) {
+            if (subObjects[i] is IListable l && predicate(l)) {
                 subObjects[i].RemoveSprites();
                 RemoveSubObject(subObjects[i]);
             }
@@ -56,27 +57,12 @@ sealed class Listing : RectangularMenuObject, Slider.ISliderOwner
         float snapToPos = 0;
         float snapDist = float.PositiveInfinity;
 
-        float x = edgePadding.x;
         float depth = edgePadding.y;
-        foreach (var sob in subObjects) {
-            if (sob is not IListable listable) {
-                continue;
-            }
+        foreach (var elem in subObjects.OfType<IListable>()) {
+            float topDepth = depth;
+            depth += elem.Size.y;
 
-            var elemSize = listable.Size;
-            var topDepth = depth;
-            var bottomDepth = depth + elemSize.y;
-            float left = x;
-
-            if (x + elemSize.x >= size.x - edgePadding.x) {
-                x = edgePadding.x;
-                depth = bottomDepth;
-            }
-            else {
-                x += elemSize.x;
-            }
-
-            listable.Pos = new Vector2(left, scrollPos + size.y - bottomDepth);
+            elem.Pos = new Vector2(edgePadding.x, scrollPos + size.y - depth);
 
             if (topDepth < scrollPos) {
                 if (snapDist > scrollPos - topDepth) {
@@ -84,14 +70,14 @@ sealed class Listing : RectangularMenuObject, Slider.ISliderOwner
                     snapToPos = topDepth - edgePadding.y;
                 }
 
-                listable.IsBelow = false;
-                listable.BlockInteraction = true;
-                listable.Visibility = Mathf.Clamp01(1 - (scrollPos - topDepth) / elemSize.y);
+                elem.IsBelow = false;
+                elem.BlockInteraction = true;
+                elem.Visibility = Mathf.Clamp01(1 - (scrollPos - topDepth) / elem.Size.y);
             }
-            else if (bottomDepth > scrollPos + size.y) {
-                listable.IsBelow = true;
-                listable.BlockInteraction = true;
-                listable.Visibility = Mathf.Clamp01(1 - (bottomDepth - (scrollPos + size.y)) / elemSize.y);
+            else if (depth > scrollPos + size.y) {
+                elem.IsBelow = true;
+                elem.BlockInteraction = true;
+                elem.Visibility = Mathf.Clamp01(1 - (depth - (scrollPos + size.y)) / elem.Size.y);
             }
             else {
                 if (snapDist > topDepth - scrollPos) {
@@ -99,9 +85,9 @@ sealed class Listing : RectangularMenuObject, Slider.ISliderOwner
                     snapToPos = topDepth - edgePadding.y;
                 }
 
-                listable.IsBelow = false;
-                listable.BlockInteraction = ForceBlockInteraction;
-                listable.Visibility = 1;
+                elem.IsBelow = false;
+                elem.BlockInteraction = ForceBlockInteraction;
+                elem.Visibility = 1;
             }
         }
 
@@ -119,7 +105,7 @@ sealed class Listing : RectangularMenuObject, Slider.ISliderOwner
 
         float sliderSize = depth + edgePadding.y - size.y;
 
-        bool beingUsed = slider.mouseDragged || (slider.Selected && menu.input.y != 0);
+        bool beingUsed = slider.mouseDragged || slider.Selected && menu.input.y != 0;
         if (!beingUsed && vel < 0.01f) {
             sliderValue = Mathf.Lerp(sliderValue, snapToPos / sliderSize, SnapLerp);
         }

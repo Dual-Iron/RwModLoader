@@ -21,7 +21,6 @@ namespace Realm;
 static class EntryPoint
 {
     private static List<string> earlyWrappedAsms = new();
-    private static bool extraPatchers;
     private static bool initialized;
     private static bool chainloaderHooked;
 
@@ -36,7 +35,6 @@ static class EntryPoint
         }
 
         initialized = true;
-        extraPatchers = AssemblyPatcher.PatcherPlugins.Count > 3; // Realm, Monomodder, Chainloader
 
         // Have to use EmptyProgressable and can't log the result here.
         ModLoading.PluginWrapper.WrapPlugins(new Progressable(), out earlyWrappedAsms);
@@ -78,7 +76,7 @@ static class EntryPoint
         PastebinMachine.EnumExtender.EnumExtender.Test();
 
         try {
-            Program.Main(earlyWrappedAsms, extraPatchers);
+            Program.Main(earlyWrappedAsms);
         }
         catch (Exception e) {
             Program.Logger.LogFatal(e);

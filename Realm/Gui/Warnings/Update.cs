@@ -2,13 +2,13 @@
 using System.Diagnostics;
 using UnityEngine;
 
-namespace Realm.Gui.Installation;
+namespace Realm.Gui.Warnings;
 
-static class UpdateNotif
+static class Update
 {
     const string UpdateSignal = "UPDATE";
 
-    public static void ApplyHooks()
+    public static void Hook()
     {
         On.Menu.MainMenu.Singal += SignalUpdate;
         On.Menu.MainMenu.ctor += AddUpdateButton;

@@ -2,7 +2,7 @@
 using Realm.Logging;
 using UnityEngine;
 
-namespace Realm.Gui;
+namespace Realm.Gui.Elements;
 
 sealed class ProgressableDisplay : RectangularMenuObject
 {

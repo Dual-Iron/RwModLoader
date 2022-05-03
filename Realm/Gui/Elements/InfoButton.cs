@@ -3,7 +3,7 @@ using RWCustom;
 using UnityEngine;
 using static Menu.Menu;
 
-namespace Realm.Gui;
+namespace Realm.Gui.Elements;
 
 struct InfoBox
 {
@@ -94,7 +94,7 @@ sealed class InfoButton : SymbolButton
             lastLabelFade = labelFade;
             counter++;
 
-            fade = Custom.LerpAndTick(fade, (!wantToGoAway) ? 1f : 0f, 0.05f, 0.025f);
+            fade = Custom.LerpAndTick(fade, !wantToGoAway ? 1f : 0f, 0.05f, 0.025f);
             if (labelFade > Mathf.InverseLerp(0.8f, 1f, fade)) {
                 labelFade = Mathf.InverseLerp(0.8f, 1f, fade);
             }

@@ -1,20 +1,19 @@
-﻿using Realm.Gui.Menus;
-using UnityEngine;
+﻿using UnityEngine;
 
-namespace Realm.Gui;
+namespace Realm.ModLoading;
 
-static class GuiHooks
+static class VanillaFixes
 {
     public static void Hook()
     {
-        ModsMenuMusic.Hook();
-        ModMenuHooks.Hook();
-
-        if (State.DeveloperMode) {
-            HotReloadingHooks.Hook();
-        }
-
+        On.Options.Save += CreateUserDataDir;
         On.FFont.GetQuadInfoForText += FixFLabel;
+    }
+
+    private static void CreateUserDataDir(On.Options.orig_Save orig, Options self)
+    {
+        Directory.CreateDirectory(Path.Combine(RWCustom.Custom.RootFolderDirectory(), "UserData"));
+        orig(self);
     }
 
     private static FLetterQuadLine[] FixFLabel(On.FFont.orig_GetQuadInfoForText orig, FFont self, string text, FTextParams labelTextParams)

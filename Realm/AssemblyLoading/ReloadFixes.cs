@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace Realm.AssemblyLoading;
 
-internal static class StaticFixes
+internal static class ReloadFixes
 {
     private static bool stubbed;
 
@@ -80,7 +80,7 @@ internal static class StaticFixes
         // Initialize partiality manager
         PartialityManager.CreateInstance();
 
-        // Add internally-supported mods
+        // Add enum extender to PartialityManager for mods to detect it
         if (!PartialityManager.Instance.modManager.loadedMods.Contains(ee)) {
             PartialityManager.Instance.modManager.loadedMods.Add(ee);
         }

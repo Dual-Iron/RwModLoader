@@ -1,24 +1,26 @@
 ﻿using Menu;
-using System.Net;
+using Realm.Gui.Menus;
 using UnityEngine;
 
 namespace Realm.Gui;
 
-static class GuiExt
+static class Gui
 {
-    public static Vector2 ScreenSize => new(1366f, 768f);
+    public static void Hook()
+    {
+        ModMenuMusic.Hook();
+        ModMenuHooks.Hook();
 
-    /// <summary>
-    /// Gets the font with the specified name.
-    /// </summary>
+        if (State.DeveloperMode) {
+            PauseMenuReload.Hook();
+        }
+    }
+
     public static FFont GetFont(string font)
     {
         return Futile.atlasManager.GetFontWithName(font) ?? throw new ArgumentException("No font.", nameof(font));
     }
 
-    /// <summary>
-    /// Join a string sequence. Because I'm tired of using this <see cref="string.Join(string, string[])"/> junk.
-    /// </summary>
     public static string JoinStr(this IEnumerable<string> strings, string join)
     {
         StringBuilder result = new();
@@ -36,10 +38,6 @@ static class GuiExt
         return result.ToString();
     }
 
-    // God this would suck to localize
-    /// <summary>
-    /// Join a string sequence using English grammar. ["x", "y", "z"] will become "x, y, and z".
-    /// </summary>
     public static string JoinStrEnglish(this IEnumerable<string> strings)
     {
         List<string> strs = strings.ToList();
@@ -64,27 +62,10 @@ static class GuiExt
         }
     }
 
-    /// <summary>
-    /// Splits a string so that each segment's width is below <paramref name="maxWidth"/>.
-    /// </summary>
-    /// <param name="text">The text to split.</param>
-    /// <param name="font">The font used to measure text width.</param>
-    /// <param name="maxWidth">The upper bound for line width.</param>
-    /// <returns>String segments that will be under <paramref name="maxWidth"/> when displayed using <paramref name="font"/>.</returns>
-    public static IEnumerable<string> SplitLongLines(this string text, string font, float maxWidth)
-    {
-        return text.SplitLongLines(GetFont(font), maxWidth);
-    }
-
     // CREDIT: https://github.com/SlimeCubed/DevConsole/blob/b0fe50a8af03cf3e686fc4c6f644bd01adb2f8cc/DevConsole/StringEx.cs
     // Awesome string split function
-    /// <summary>
-    /// Splits a string so that each segment's width is below <paramref name="maxWidth"/>.
-    /// </summary>
-    /// <param name="text">The text to split.</param>
-    /// <param name="font">The font used to measure text width.</param>
-    /// <param name="maxWidth">The upper bound for line width.</param>
-    /// <returns>String segments that will be under <paramref name="maxWidth"/> when displayed using <paramref name="font"/>.</returns>
+    // Seriously this function is an MVP
+    /// <summary>Splits a string so that each segment's width is below <paramref name="maxWidth"/>.</summary>
     public static IEnumerable<string> SplitLongLines(this string text, FFont font, float maxWidth)
     {
         int sliceStart = 0;
@@ -114,7 +95,14 @@ static class GuiExt
             else
                 x += kInfo.amount + font._textParams.scaledKerningOffset;
 
-            if (char.IsWhiteSpace(c)) {
+            if (c == '\n') {
+                yield return text.Substring(sliceStart, i - sliceStart);
+
+                sliceStart = i + 1;
+                lastWhitespace = i + 1;
+                x = 0;
+            }
+            else if (char.IsWhiteSpace(c)) {
                 // Never split on whitespace
                 lastWhitespace = i;
 
@@ -142,23 +130,7 @@ static class GuiExt
         yield return text.Substring(sliceStart);
     }
 
-    /// <summary>
-    /// Calculates the width, in pixels, of a string using <paramref name="font"/>.
-    /// </summary>
-    /// <param name="text">The text to measure.</param>
-    /// <param name="font">The font used to measure length.</param>
-    /// <returns></returns>
-    public static float MeasureWidth(this string text, string font)
-    {
-        return text.MeasureWidth(GetFont(font));
-    }
-
-    /// <summary>
-    /// Calculates the width, in pixels, of a string using <paramref name="font"/>.
-    /// </summary>
-    /// <param name="text">The text to measure.</param>
-    /// <param name="font">The font used to measure text width.</param>
-    /// <returns></returns>
+    /// <summary>Calculates the width, in pixels, of a string using <paramref name="font"/>. Ignores newlines.</summary>
     public static float MeasureWidth(this string text, FFont font)
     {
         char lastChar = '\0';
@@ -194,25 +166,13 @@ static class GuiExt
         return x;
     }
 
-    /// <summary>
-    /// Culls text if it's too long.
-    /// </summary>
-    /// <param name="text">The text to cull.</param>
-    /// <param name="font">The font to measure text width.</param>
-    /// <param name="maxWidth">The maximum width before the text is culled.</param>
-    /// <param name="ellipses">If text is culled, this string is appended to the end of it.</param>
+    /// <summary>Culls text if it's too long. Ignores newlines.</summary>
     public static string CullLong(this string text, string font, float maxWidth, string ellipses = "...")
     {
         return text.CullLong(GetFont(font), maxWidth, ellipses);
     }
 
-    /// <summary>
-    /// Culls text if it's too long.
-    /// </summary>
-    /// <param name="text">The text to cull.</param>
-    /// <param name="font">The font to measure text width.</param>
-    /// <param name="maxWidth">The maximum width before the text is culled.</param>
-    /// <param name="ellipses">If text is culled, this string is appended to the end of it.</param>
+    /// <summary>Culls text if it's too long. Ignores newlines.</summary>
     public static string CullLong(this string text, FFont font, float maxWidth, string ellipses = "...")
     {
         float ellipsesWidth = ellipses.MeasureWidth(font);
@@ -259,16 +219,14 @@ static class GuiExt
         return text;
     }
 
-    /// <summary>
-    /// Splits lines up until a certain number of rows.
-    /// </summary>
-    public static List<string> SplitLinesAndCull(string text, float width, int rows)
+    /// <summary>Splits lines up until a certain number of rows.</summary>
+    public static List<string> SplitLinesAndCull(string text, float width, int rows, string ellipses = "...")
     {
-        var descStr = text.SplitLongLines("font", width).ToList();
+        var descStr = text.SplitLongLines(GetFont("font"), width).ToList();
         if (descStr.Count > rows) {
             // Append what's gonna be removed to the last line, then cull that last line.
             descStr[rows - 1] += descStr.GetRange(rows, descStr.Count - rows).JoinStr(" ");
-            descStr[rows - 1] = descStr[rows - 1].CullLong("font", width);
+            descStr[rows - 1] = descStr[rows - 1].CullLong("font", width, ellipses);
 
             // Remove extra lines.
             descStr.RemoveRange(rows, descStr.Count - rows);
@@ -276,9 +234,35 @@ static class GuiExt
         return descStr;
     }
 
-    /// <summary>
-    /// Clears all sub objects from a <see cref="MenuObject"/> and clears their sprites.
-    /// </summary>
+    /// <summary>Equivalent to <see cref="string.TrimEnd(char[])"/> but takes a predicate.</summary>
+    public static string TrimEnd(this string s, Predicate<char> charFn)
+    {
+        return s.Substring(0, 1 + s.LastIndex(c => !charFn(c)));
+    }
+
+    /// <summary>Equivalent to <see cref="string.LastIndexOf(char)"/> but takes a predicate.</summary>
+    public static int LastIndex(this string s, Predicate<char> charFn)
+    {
+        for (int i = s.Length - 1; i >= 0; i--) {
+            if (charFn(s[i])) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public static MenuLabel WithColor(this MenuLabel label, Menu.Menu.MenuColors color)
+    {
+        label.label.color = Menu.Menu.MenuRGB(color);
+        return label;
+    }
+
+    public static MenuLabel WithAlignment(this MenuLabel label, FLabelAlignment horizontalAlignment)
+    {
+        label.label.alignment = horizontalAlignment;
+        return label;
+    }
+
     public static void ClearSubObjects(this MenuObject menuObject)
     {
         foreach (var subObj in menuObject.subObjects) {
@@ -288,9 +272,6 @@ static class GuiExt
         menuObject.subObjects.Clear();
     }
 
-    /// <summary>
-    /// Gets all sub objects from a <see cref="MenuObject"/>.
-    /// </summary>
     public static IEnumerable<MenuObject> RecursiveSubObjects(this MenuObject menuObject)
     {
         foreach (var sob in menuObject.subObjects) {
@@ -302,9 +283,6 @@ static class GuiExt
         }
     }
 
-    /// <summary>
-    /// Gets a relative time string. God forbid I ever localize this.
-    /// </summary>
     public static string GetRelativeTime(DateTime time)
     {
         var now = DateTime.UtcNow;

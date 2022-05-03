@@ -6,6 +6,21 @@ namespace Backend.Web;
 
 static class Downloader
 {
+    public static async Task<ExitStatus> Audb()
+    {
+        try {
+            using var request = new HttpRequestMessage(HttpMethod.Get, $"https://beestuff.pythonanywhere.com/audb/api/v2/rdb");
+            using var response = await ExtWeb.Client.SendAsync(request);
+
+            Console.WriteLine(await response.Content.ReadAsStringAsync());
+
+            return ExitStatus.Success;
+        }
+        catch (HttpRequestException e) {
+            return ExitStatus.ConnectionFailed(e.Message);
+        }
+    }
+
     public static async Task<ExitStatus> Download(string url, string file)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
@@ -39,14 +54,16 @@ static class Downloader
 
             using var stream = await content.ReadAsStreamAsync();
 
+            RdbEntry doc;
             try {
-                RdbEntry doc = JsonSerializer.Deserialize(stream, SourceGenerationContext.Default.RdbEntry) ?? throw new();
-                return await Rdb(doc);
+                doc = JsonSerializer.Deserialize(stream, SourceGenerationContext.Default.RdbEntry) ?? throw new();
             }
             catch {
                 // Failed to read JSON so we're probably using an outdated client.
                 return ExitStatus.OutdatedClient;
             }
+
+            return await Rdb(doc);
         }
         catch (HttpRequestException e) {
             return ExitStatus.ConnectionFailed(e.Message);
@@ -71,7 +88,9 @@ static class Downloader
             return ExitStatus.InvalidVersion;
         }
 
-        return Wrapper.Wrap(o.Path, () => new(RwmodHeader.FileFlags.IsRdbEntry, ver, entry.name, entry.owner, entry.homepage));
+        o.Stream.Dispose();
+
+        return Wrapper.Wrap(o.Path, () => new(RwmodHeader.FileFlags.RdbEntry, ver, entry.name, entry.owner, entry.homepage));
     }
 }
 

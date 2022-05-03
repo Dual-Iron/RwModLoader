@@ -33,7 +33,7 @@ Click [here](https://github.com/Dual-Iron/RwModLoader/releases/latest) to instal
 2. Run `uninstall_realm.bat` while the game is closed.
 
 ## Resources
-- Skim the [dev guide](DEVELOPERS.md) to enable "hot reloading" while playing in story/arena mode.
+- Skim the [dev guide](DEVELOPERS.md) to enable reloading from the pause menu.
 - Run the [rdb client](https://github.com/Dual-Iron/rdb-client#readme) to submit mods to the browser.
 - Visit the [support page](.github/SUPPORT.md) to report bugs, suggest features, or get technical support.
 

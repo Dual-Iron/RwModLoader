@@ -12,12 +12,12 @@ namespace VirtualEnums;
 /// </summary>
 public static partial class VirtualEnumApi
 {
-    static VirtualEnumApi() => ApplyHooks();
+    static VirtualEnumApi() => Hook();
 
     private static MethodBase EnumMethod(string name) => typeof(Enum).GetMethod(name);
     private static MethodBase EnumMethod(string name, params Type[] types) => typeof(Enum).GetMethod(name, types);
 
-    internal static void ApplyHooks()
+    internal static void Hook()
     {
         new Hook(EnumMethod("Parse", typeof(Type), typeof(string), typeof(bool)), Parse).Apply();
         new Hook(EnumMethod("GetName"), GetName).Apply();
