@@ -21,8 +21,10 @@ sealed class AsyncIcon
 
     public void StartLoading()
     {
-        Status = AsyncIconStatus.Loading;
-        Job.Start(() => Status = Load());
+        if (Status == AsyncIconStatus.Unstarted) {
+            Status = AsyncIconStatus.Loading;
+            Job.Start(() => Status = Load());
+        }
     }
 
     private AsyncIconStatus Load()
