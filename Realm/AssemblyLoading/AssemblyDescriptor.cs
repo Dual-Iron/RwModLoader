@@ -114,7 +114,11 @@ sealed class AssemblyDescriptor
 
         if (type is not null && !type.IsAbstract && !type.IsInterface && !type.IsValueType) {
             if (type.IsSubtypeOf(typeof(BaseUnityPlugin))) {
-                return new Plugin(Chainloader.ToPluginInfo(type), type.FullName);
+                if (Chainloader.ToPluginInfo(type) is PluginInfo info && info.Metadata != null) {
+                    return new Plugin(info, type.FullName);
+                }
+                Program.Logger.LogError($"The BaseUnityPlugin {modType} from {definition.Name} did not have valid BepInPlugin metadata.");
+                return new Lib();
             }
             if (type.IsSubtypeOf(typeof(PartialityMod))) {
                 return new PartMod(type.FullName);
