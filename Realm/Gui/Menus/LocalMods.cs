@@ -81,6 +81,33 @@ To install mods, you can either:
         subObjects.Add(quitWarning);
     }
 
+    public void DisplayError(Exception error)
+    {
+        const string title = "Something went wrong.";
+        const string body = 
+@"This is likely because one or more mods caused an error when they shouldn't have. For more details, check the game's log.
+
+If you have an idea of which mod caused the error, disable the mod and send your log to that mod's developers.
+
+To find which mod caused the error, disable half your mods until the error stops happening. Then, re-enable those mods one-by-one. When the error happens again, the last mod you enabled is likely the culprit.";
+
+        var bodySplit = body.SplitLongLines(Gui.GetFont("font"), modListing.pos.x - 50 - 335);
+
+        RoundedRect rect;
+        MenuLabel errLabel;
+
+        subObjects.Add(rect = new RoundedRect(menu, this, pos: new(335, 140), size: new(modListing.pos.x - 25 - 335, 275), true));
+        rect.fillAlpha = 0.5f;
+
+        subObjects.Add(errLabel = new MenuLabel(menu, this, title, new(335, rect.pos.y + rect.size.y - 10), new(rect.size.x, 0), true));
+        errLabel.label.color = new(1, 0, 0);
+        errLabel.label.anchorY = 1;
+
+        subObjects.Add(errLabel = new MenuLabel(menu, this, bodySplit.JoinStr("\n"), new(335 + 8, rect.pos.y + rect.size.y - 50), default, false));
+        errLabel.label.alignment = FLabelAlignment.Left;
+        errLabel.label.anchorY = 1;
+    }
+
     private void StartRefreshJob()
     {
         progressDisplay.ShowProgressPercent = false;

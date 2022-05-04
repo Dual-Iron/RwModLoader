@@ -26,6 +26,8 @@ sealed class ModMenu : Menu.Menu, ITextBoxMenu
     int page;
     float pageSmoothed;
 
+    public ModMenu(ProcessManager manager, Exception error) : this(manager) => local.DisplayError(error);
+
     public ModMenu(ProcessManager manager) : base(manager, ModMenuID)
     {
         pages.Add(new(this, null, "main", 0));

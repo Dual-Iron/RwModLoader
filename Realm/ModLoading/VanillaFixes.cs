@@ -6,8 +6,24 @@ static class VanillaFixes
 {
     public static void Hook()
     {
+        On.ProcessManager.SwitchMainProcess += ProcessManager_SwitchMainProcess;
         On.Options.Save += CreateUserDataDir;
         On.FFont.GetQuadInfoForText += FixFLabel;
+    }
+
+    private static void ProcessManager_SwitchMainProcess(On.ProcessManager.orig_SwitchMainProcess orig, ProcessManager self, ProcessManager.ProcessID ID)
+    {
+        try {
+            orig(self, ID);
+        }
+        catch (Exception e) {
+            Program.Logger.LogError($"There was an error while initializing MainLoopProcess {ID}! This normally freezes the game but it was caught because Realm.");
+            Program.Logger.LogError(e.ToString());
+
+            self.currentMainLoop = new Gui.Menus.ModMenu(self, e);
+            self.blackFadeTime = self.currentMainLoop.FadeInTime;
+            self.blackDelay = self.currentMainLoop.InitialBlackSeconds;
+        }
     }
 
     private static void CreateUserDataDir(On.Options.orig_Save orig, Options self)
