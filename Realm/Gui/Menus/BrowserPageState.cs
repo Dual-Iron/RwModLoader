@@ -61,7 +61,7 @@ sealed class BrowserPageState
         }
 
         // Load AUDB entries from the worker thread. Don't need to use the value yet
-        _ = AudbEntry.GetAudbEntriesBlocking();
+        AudbEntry.PopulateAudb();
 
         // Get rdb entries and add them to the list
         List<RdbEntry> entries = GetEntriesFrom(www.text).ToList();

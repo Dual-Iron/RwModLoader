@@ -36,9 +36,17 @@ sealed class BackendProcess
     {
         using Process p = Begin(args);
 
+        StringBuilder output = new();
+        StringBuilder error = new();
+
+        p.OutputDataReceived += (_, arg) => output.AppendLine(arg.Data);
+        p.ErrorDataReceived += (_, arg) => error.AppendLine(arg.Data);
+        p.BeginOutputReadLine();
+        p.BeginErrorReadLine();
+
         int? exitCode = WaitKill(p, timeout) ? p.ExitCode : null;
 
-        return new(exitCode, p.StandardOutput.ReadToEnd(), p.StandardError.ReadToEnd());
+        return new(exitCode, output.ToString(), error.ToString());
     }
 
     private BackendProcess(int? exitCode, string output, string error)

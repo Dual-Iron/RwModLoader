@@ -88,7 +88,7 @@ There are two types of mods available on the browser:
 
             // Keep AUDB entries behind all others by clearing/readding them whenever this refreshes
             rdbListing.ClearListElements(m => m is AudbPane);
-            foreach (var entry in AudbEntry.GetAudbEntriesBlocking()) {
+            foreach (var entry in AudbEntry.AudbEntries) {
 
                 // If there's a search query, skip entries that don't match it
                 if (pageState.Search != null &&

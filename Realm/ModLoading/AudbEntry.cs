@@ -62,27 +62,26 @@ sealed class AudbEntry
     }
 
     #region AUDB cache
-    private static readonly List<AudbEntry> entries = new();
-    private static bool err;
+    // AUDB is small enough that its entire contents can be reliably stored in memory.
+    // There's no point in paging or anything.
 
-    public static List<AudbEntry> GetAudbEntriesBlocking()
+    public static List<AudbEntry> AudbEntries { get; } = new();
+
+    public static void PopulateAudb()
     {
-        if (entries.Count == 0 && !err) {
+        if (AudbEntries.Count == 0) {
             Populate();
 
-            // Remove AutoUpdate and EnumExtender
-            entries.RemoveAll(e => e.ID == new AudbID(0, 0) || e.ID == new AudbID(0, 1));
+            AudbEntries.RemoveAll(e => e.ID == new AudbID(0, 0) || e.ID == new AudbID(0, 1));
         }
-        return entries;
     }
 
     private static void Populate()
     {
-        BackendProcess proc = BackendProcess.Execute("-audb");
+        BackendProcess proc = BackendProcess.Execute("-audb", timeout: 3000);
 
         if (proc.ExitCode != 0) {
             Program.Logger.LogError($"Error while getting AUDB entries: {proc}");
-            err = true;
             return;
         }
 
@@ -97,11 +96,10 @@ sealed class AudbEntry
 
         foreach (var json in objs.OfType<Dictionary<string, object>>()) {
             if (FromJson(json) is AudbEntry entry) {
-                entries.Add(entry);
+                AudbEntries.Add(entry);
             }
             else {
                 Program.Logger.LogError($"Failed to parse AUDB entries. JSON: {text}");
-                err = true;
                 break;
             }
         }

@@ -177,11 +177,8 @@ sealed class AudbPane : RectangularMenuObject, IListable, IHoverable
 
         dls.Append($"-dl \"{entry.Url}\" \"{Path.Combine(path, entry.Filename)}\" ");
 
-        // Won't block here, was called on a worker thread already.
-        var allMods = AudbEntry.GetAudbEntriesBlocking();
-
         foreach (var dep in entry.Dependencies) {
-            var depEntry = allMods.FirstOrDefault(a => a.ID == dep);
+            var depEntry = AudbEntry.AudbEntries.FirstOrDefault(a => a.ID == dep);
             if (depEntry != null) {
                 downloadCount += 1;
                 dls.Append($"-dl \"{depEntry.Url}\" \"{Path.Combine(path, depEntry.Filename)}\" ");
