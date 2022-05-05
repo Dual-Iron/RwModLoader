@@ -18,7 +18,7 @@ sealed class AsyncIcon
         this.iconURL = iconURL;
     }
 
-    public void StartLoading()
+    public void Start()
     {
         if (Status == AsyncIconStatus.Unstarted) {
             Status = AsyncIconStatus.Loading;

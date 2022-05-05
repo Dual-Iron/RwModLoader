@@ -24,6 +24,9 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
 
         this.entry = entry;
 
+        downloadJob = new($"-rdb \"{entry.Owner}/{entry.Name}\"");
+        downloadJob.OnFinish += FinishDownload;
+
         owner.Container.AddChild(Container = new());
 
         FixedMenuContainer inner = new(this, new Vector2((TotalWidth - Width) / 2 + 1, (TotalHeight - Height) / 2));
@@ -35,7 +38,7 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
         inner.subObjects.Add(iconSpinny = new(inner, new Vector2(52, 52)));
 
         iconLoader = new($"{entry.Owner}~{entry.Name}", entry.Icon);
-        iconLoader.StartLoading();
+        iconLoader.Start();
 
         // Add name + owner
         Label(entry.Name.CullLong("DisplayFont", Width - 128 - verWidth - pad * 2), pos: new(128 + pad, 110), true).WithAlignment(FLabelAlignment.Left);
@@ -85,7 +88,6 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
     }
 
     enum Availability { CanInstall, Installed, CanUpdate }
-    enum DownloadStatus { None, InProgress, Success, Err }
 
     public readonly RdbEntry entry;
 
@@ -95,13 +97,13 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
     readonly SymbolButton downloadBtn;
     readonly SymbolButton homepageBtn;
     readonly MultiLabel status;
+    readonly AsyncDownload downloadJob;
 
     Availability availability;
-    DownloadStatus downloadStatus;
     string? downloadMessage;
     bool previewingHomepage;
 
-    public bool PreventButtonClicks => downloadStatus == DownloadStatus.InProgress;
+    public bool PreventButtonClicks => downloadJob.Status == AsyncDownloadStatus.Downloading;
 
     public bool IsBelow { get; set; }
     public bool BlockInteraction { get; set; }
@@ -111,13 +113,13 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
 
     public override void Update()
     {
-        downloadBtn.buttonBehav.greyedOut = BlockInteraction || availability == Availability.Installed || downloadStatus == DownloadStatus.InProgress;
+        downloadBtn.buttonBehav.greyedOut = BlockInteraction || availability == Availability.Installed || downloadJob.Status == AsyncDownloadStatus.Downloading;
         homepageBtn.buttonBehav.greyedOut = BlockInteraction || entry.Homepage.Trim().Length == 0;
 
         // If the download just finished, display its message
         if (downloadMessage != null) {
             string culledMessage = downloadMessage.Replace('\n', ' ').CullLong("font", Width - status.pos.x - 8);
-            Color color = downloadStatus == DownloadStatus.Success ? new(.5f, 1, .5f) : new(1, .5f, .5f);
+            Color color = downloadJob.Status == AsyncDownloadStatus.Success ? new(.5f, 1, .5f) : new(1, .5f, .5f);
             status.SetLabel(color, culledMessage);
 
             previewingHomepage = false;
@@ -150,21 +152,20 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
         }
     }
 
-    static readonly float prefixWidth = "Click again to visit [".MeasureWidth(Gui.GetFont("font"));
-
     public override void Singal(MenuObject sender, string message)
     {
-        if (sender == downloadBtn) {
+        if (sender == downloadBtn && downloadJob.Status == AsyncDownloadStatus.Unstarted) {
             previewingHomepage = false;
-            downloadStatus = DownloadStatus.InProgress;
 
             status.SetLabel(MenuRGB(MenuColors.MediumGrey), "Downloading");
             menu.PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
-            Job.Start(Download);
+            downloadJob.Start();
         }
         else if (sender == homepageBtn) {
             if (!previewingHomepage) {
                 previewingHomepage = true;
+
+                float prefixWidth = "Click again to visit [".MeasureWidth(Gui.GetFont("font"));
 
                 string homepage = entry.Homepage;
                 if (homepage.StartsWith("https://"))
@@ -182,33 +183,12 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
         }
     }
 
-    private void Download()
+    private void FinishDownload()
     {
-        // TODO remove unnecessary Interlocked and verify that this lockless multithreading is safe
+        downloadMessage = downloadJob.ToString();
+        availability = Availability.Installed;
 
-        BackendProcess proc = BackendProcess.Execute($"-rdb \"{entry.Owner}/{entry.Name}\"");
-
-        if (proc.ExitCode == 0) {
-            Program.Logger.LogInfo($"Downloaded {entry.Owner}/{entry.Name}");
-
-            availability = Availability.Installed;
-            downloadStatus = DownloadStatus.Success;
-            downloadMessage = "Download successful";
-
-            if (menu is ModMenu m) {
-                m.NeedsRefresh = true;
-            }
-        }
-        else if (proc.ExitCode == null) {
-            downloadStatus = DownloadStatus.Err;
-            downloadMessage = "Download timed out";
-        }
-        else {
-            Program.Logger.LogError($"Failed to download {entry.Owner}/{entry.Name} with err {proc.ExitCode}.\n{proc.Error}");
-
-            downloadStatus = DownloadStatus.Err;
-            downloadMessage = proc.Error;
-        }
+        if (menu is ModMenu modMenu) modMenu.NeedsRefresh = true;
     }
 
     string? IHoverable.GetHoverInfo(MenuObject selected)

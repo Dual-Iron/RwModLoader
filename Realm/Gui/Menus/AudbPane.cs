@@ -72,17 +72,18 @@ sealed class AudbPane : RectangularMenuObject, IListable, IHoverable
     }
 
     enum Availability { CanInstall, Installed, CanUpdate }
-    enum DownloadStatus { None, InProgress, Success, Err }
 
     readonly AudbEntry entry;
     readonly SymbolButton downloadBtn;
     readonly MultiLabel status;
+
+    TempDir? tempDir;
+    AsyncDownload? downloadJob;
     
     Availability availability;
-    DownloadStatus downloadStatus;
     string? downloadMessage;
 
-    public bool PreventButtonClicks => downloadStatus == DownloadStatus.InProgress;
+    public bool PreventButtonClicks => downloadJob?.Status == AsyncDownloadStatus.Downloading;
 
     public bool IsBelow { get; set; }
     public bool BlockInteraction { get; set; }
@@ -92,12 +93,12 @@ sealed class AudbPane : RectangularMenuObject, IListable, IHoverable
 
     public override void Update()
     {
-        downloadBtn.buttonBehav.greyedOut = BlockInteraction || availability == Availability.Installed || downloadStatus == DownloadStatus.InProgress;
+        downloadBtn.buttonBehav.greyedOut = BlockInteraction || availability == Availability.Installed || PreventButtonClicks;
 
         // If the download just finished, display its message
         if (downloadMessage != null) {
             string culledMessage = downloadMessage.Replace('\n', ' ').CullLong("font", Width - status.pos.x - 8);
-            Color color = downloadStatus == DownloadStatus.Success ? new(.5f, 1, .5f) : new(1, .5f, .5f);
+            Color color = downloadJob?.Status == AsyncDownloadStatus.Success ? new(.5f, 1, .5f) : new(1, .5f, .5f);
             status.SetLabel(color, culledMessage);
 
             downloadMessage = null;
@@ -121,18 +122,41 @@ sealed class AudbPane : RectangularMenuObject, IListable, IHoverable
 
     public override void Singal(MenuObject sender, string message)
     {
-        if (downloadStatus == DownloadStatus.None && sender == downloadBtn) {
-            downloadStatus = DownloadStatus.InProgress;
-
+        if (downloadJob == null && sender == downloadBtn) {
             status.SetLabel(MenuRGB(MenuColors.MediumGrey), "Downloading");
             menu.PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
-            Job.Start(Download);
+
+            GetDownloadArgs(out var dir, out var args);
+
+            tempDir = dir;
+            downloadJob = new AsyncDownload(args);
+            downloadJob.OnFinish += FinishDownload;
+            downloadJob.Start();
         }
     }
 
-    private void Download()
+    public override void RemoveSprites()
     {
-        using TempDir dir = new();
+        base.RemoveSprites();
+
+        tempDir?.Dispose();
+    }
+
+    private void FinishDownload()
+    {
+        tempDir?.Dispose();
+        tempDir = null;
+
+        availability = Availability.Installed;
+        downloadMessage = downloadJob?.ToString();
+
+        if (menu is ModMenu m) m.NeedsRefresh = true;
+    }
+
+    private void GetDownloadArgs(out TempDir dir, out string args)
+    {
+        dir = new();
+
         string path = dir.Info.CreateSubdirectory(entry.Name).FullName;
 
         StringBuilder dls = new();
@@ -148,39 +172,13 @@ sealed class AudbPane : RectangularMenuObject, IListable, IHoverable
                 dls.Append($"-dl \"{depEntry.Url}\" \"{Path.Combine(path, depEntry.Filename)}\" ");
             }
             else {
-                Program.Logger.LogError($"Couldn't find AUDB mod matching dependency {dep}!");
-
-                downloadStatus = DownloadStatus.Err;
-                downloadMessage = "Couldn't locate one of the mod's dependencies";
-                return;
+                Program.Logger.LogError($"Couldn't find AUDB mod matching dependency {dep}! Downloading without.");
             }
         }
 
         dls.Append($"-wau \"{path}\" \"{entry.Version}\"");
 
-        BackendProcess proc = BackendProcess.Execute(dls.ToString());
-
-        if (proc.ExitCode == 0) {
-            Program.Logger.LogInfo($"Downloaded {entry.Name} ({entry.ID})");
-
-            availability = Availability.Installed;
-            downloadStatus = DownloadStatus.Success;
-            downloadMessage = "Download successful";
-
-            if (menu is ModMenu m) {
-                m.NeedsRefresh = true;
-            }
-        }
-        else if (proc.ExitCode == null) {
-            downloadStatus = DownloadStatus.Err;
-            downloadMessage = "Download timed out";
-        }
-        else {
-            Program.Logger.LogError($"Failed to download {entry.Name} ({entry.ID}) from AUDB with err {proc.ExitCode}.\n{proc.Error}");
-
-            downloadStatus = DownloadStatus.Err;
-            downloadMessage = proc.Error;
-        }
+        args = dls.ToString();
     }
 
     string? IHoverable.GetHoverInfo(MenuObject selected)

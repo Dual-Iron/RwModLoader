@@ -19,7 +19,7 @@ readonly struct TempDir : IDisposable
     public DirectoryInfo Info { get; }
     public string Path => Info.FullName;
 
-    void IDisposable.Dispose()
+    public void Dispose()
     {
         Info.Delete(true);
     }
@@ -45,7 +45,7 @@ readonly struct TempFile : IDisposable
     public FileInfo Info { get; }
     public string Path => Info.FullName;
 
-    void IDisposable.Dispose()
+    public void Dispose()
     {
         Stream.Dispose();
         Info.Delete();
