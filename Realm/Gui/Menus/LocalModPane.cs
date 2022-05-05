@@ -31,7 +31,7 @@ sealed class LocalModPane : RectangularMenuObject, CheckBox.IOwnCheckBox, ILista
         if (subtext.Length > 0) {
             subObjects.Add(new MenuLabel(menu, this, fileHeader.Header.Name.CullLong("DisplayFont", leftColWidth), new(leftColPos, Height / 2 - 2), new(0, Height / 2), true)
                 .WithAlignment(FLabelAlignment.Left));
-            subObjects.Add(new MenuLabel(menu, this, subtext.CullLong("DisplayFont", leftColWidth), new(leftColPos, 0), new(0, Height / 2), false)
+            subObjects.Add(new MenuLabel(menu, this, subtext.CullLong("font", leftColWidth), new(leftColPos, 0), new(0, Height / 2), false)
                 .WithAlignment(FLabelAlignment.Left)
                 .WithColor(MenuColors.MediumGrey));
         }
@@ -154,6 +154,13 @@ sealed class LocalModPane : RectangularMenuObject, CheckBox.IOwnCheckBox, ILista
         }
         if ((header.Flags & RwmodHeader.FileFlags.AudbEntry) != 0) {
             sb.Append("from AUDB ");
+
+            if (header.Version is SemVer ver2) {
+                bool newer = AudbEntry.AudbEntries.Any(e => e.Name == header.Name && e.Version > ver2.Minor);
+                if (newer) {
+                    sb.Append("- update available in browser!");
+                }
+            }
         }
         else if ((header.Flags & RwmodHeader.FileFlags.RdbEntry) != 0) {
             sb.Append("from RDB ");

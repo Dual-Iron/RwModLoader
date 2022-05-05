@@ -67,12 +67,16 @@ sealed class AudbEntry
 
     public static List<AudbEntry> AudbEntries { get; } = new();
 
+    private static readonly object writeLock = new();
+
     public static void PopulateAudb()
     {
-        if (AudbEntries.Count == 0) {
-            Populate();
+        lock (writeLock) {
+            if (AudbEntries.Count == 0) {
+                Populate();
 
-            AudbEntries.RemoveAll(e => e.ID == new AudbID(0, 0) || e.ID == new AudbID(0, 1));
+                AudbEntries.RemoveAll(e => e.ID == new AudbID(0, 0) || e.ID == new AudbID(0, 1));
+            }
         }
     }
 

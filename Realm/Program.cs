@@ -59,6 +59,8 @@ static class Program
         }
 
         CheckForSelfUpdate();
+
+        Job.Start(AudbEntry.PopulateAudb);
     }
 
     public static List<string> GetPatchMods()
