@@ -36,11 +36,9 @@ sealed class BackendProcess
     {
         using Process p = Begin(args);
 
-        string output = p.StandardOutput.ReadToEnd();
-        string error = p.StandardError.ReadToEnd();
+        int? exitCode = WaitKill(p, timeout) ? p.ExitCode : null;
 
-        // TODO does WaitKill even.. do anything here?
-        return WaitKill(p, timeout) ? new(p.ExitCode, output, error) : new(null, output, error);
+        return new(exitCode, p.StandardOutput.ReadToEnd(), p.StandardError.ReadToEnd());
     }
 
     private BackendProcess(int? exitCode, string output, string error)
