@@ -62,32 +62,17 @@ sealed class Listing : RectangularMenuObject, Slider.ISliderOwner
             float topDepth = depth;
             depth += elem.Size.y;
 
-            elem.Pos = new Vector2(edgePadding.x, scrollPos + size.y - depth);
-
             if (topDepth < scrollPos) {
                 if (snapDist > scrollPos - topDepth) {
                     snapDist = scrollPos - topDepth;
                     snapToPos = topDepth - edgePadding.y;
                 }
-
-                elem.IsBelow = false;
-                elem.BlockInteraction = true;
-                elem.Visibility = Mathf.Clamp01(1 - (scrollPos - topDepth) / elem.Size.y);
             }
-            else if (depth > scrollPos + size.y) {
-                elem.IsBelow = true;
-                elem.BlockInteraction = true;
-                elem.Visibility = Mathf.Clamp01(1 - (depth - (scrollPos + size.y)) / elem.Size.y);
-            }
-            else {
+            else if (depth <= scrollPos + size.y) {
                 if (snapDist > topDepth - scrollPos) {
                     snapDist = topDepth - scrollPos;
                     snapToPos = topDepth - edgePadding.y;
                 }
-
-                elem.IsBelow = false;
-                elem.BlockInteraction = ForceBlockInteraction;
-                elem.Visibility = 1;
             }
         }
 
@@ -119,6 +104,35 @@ sealed class Listing : RectangularMenuObject, Slider.ISliderOwner
         scrollPos = shouldShowSlider ? sliderValue * sliderSize : 0;
 
         base.Update();
+    }
+
+    public override void GrafUpdate(float timeStacker)
+    {
+        float depth = edgePadding.y;
+        foreach (var elem in subObjects.OfType<IListable>()) {
+            float topDepth = depth;
+            depth += elem.Size.y;
+
+            elem.Pos = new Vector2(edgePadding.x, scrollPos + size.y - depth);
+
+            if (topDepth < scrollPos) {
+                elem.IsBelow = false;
+                elem.BlockInteraction = true;
+                elem.Visibility = Mathf.Clamp01(1 - (scrollPos - topDepth) / elem.Size.y);
+            }
+            else if (depth > scrollPos + size.y) {
+                elem.IsBelow = true;
+                elem.BlockInteraction = true;
+                elem.Visibility = Mathf.Clamp01(1 - (depth - (scrollPos + size.y)) / elem.Size.y);
+            }
+            else {
+                elem.IsBelow = false;
+                elem.BlockInteraction = ForceBlockInteraction;
+                elem.Visibility = 1;
+            }
+        }
+
+        base.GrafUpdate(timeStacker);
     }
 
     public float sliderValue;
