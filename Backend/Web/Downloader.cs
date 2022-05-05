@@ -1,6 +1,7 @@
 ﻿using Backend.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System;
 
 namespace Backend.Web;
 
@@ -24,16 +25,16 @@ static class Downloader
     public static async Task<ExitStatus> Download(string url, string file)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
-        using var response = await ExtWeb.Client.SendAsync(request);
+        using var response = await ExtWeb.Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
         using var content = response.Content;
 
         if (!response.IsSuccessStatusCode) {
             return ExitStatus.ConnectionFailed($"({response.StatusCode}) {await content.ReadAsStringAsync()}");
         }
 
-        using (var outStream = File.Create(file))
-        using (var inStream = await content.ReadAsStreamAsync())
-            await inStream.CopyToAsync(outStream);
+        using (var o = File.Create(file))
+        using (var i = await content.ReadAsStreamAsync())
+            await i.CopyToWithProgress(o, content.Headers.ContentLength!.Value, ExtWeb.PrintProgress);
 
         return ExitStatus.Success;
     }
@@ -52,10 +53,10 @@ static class Downloader
                 return ExitStatus.ConnectionFailed(response.StatusCode.ToString());
             }
 
-            using var stream = await content.ReadAsStreamAsync();
-
             RdbEntry doc;
             try {
+                using var stream = await content.ReadAsStreamAsync();
+
                 doc = JsonSerializer.Deserialize(stream, SourceGenerationContext.Default.RdbEntry) ?? throw new();
             }
             catch {
@@ -77,16 +78,16 @@ static class Downloader
         }
 
         using var request = new HttpRequestMessage(HttpMethod.Get, entry.binary);
-        using var response = await ExtWeb.Client.SendAsync(request);
+        using var response = await ExtWeb.Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
         using var content = response.Content;
 
         if (!response.IsSuccessStatusCode) {
-            return ExitStatus.ConnectionFailed($"{response.StatusCode}; {await content.ReadAsStringAsync()}");
+            return ExitStatus.ConnectionFailed($"{response.StatusCode}: {await content.ReadAsStringAsync()}");
         }
 
         using var o = new TempFile();
         using (var i = await content.ReadAsStreamAsync())
-            await i.CopyToAsync(o.Stream);
+            await i.CopyToWithProgress(o.Stream, content.Headers.ContentLength!.Value, ExtWeb.PrintProgress);
 
         o.Stream.Dispose();
 

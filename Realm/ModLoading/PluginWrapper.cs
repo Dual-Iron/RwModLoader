@@ -44,7 +44,7 @@ static class PluginWrapper
             if (proc.ExitCode == 0) {
                 if (proc.Output.Length > 0) {
                     var wrapped = proc.Output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-                    // TODO delete only .DLL files that were returned by the backend
+
                     wrappedMods.AddRange(wrapped);
 
                     progressable.Message(MessageType.Debug, $"Wrapped {wrappedMods.JoinStrEnglish()}");

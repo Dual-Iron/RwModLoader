@@ -26,6 +26,7 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
 
         downloadJob = new($"-rdb \"{entry.Owner}/{entry.Name}\"");
         downloadJob.OnFinish += FinishDownload;
+        downloadJob.OnProgressUpdate += (i, j) => downloadProgress = i / (float)j;
 
         owner.Container.AddChild(Container = new());
 
@@ -103,6 +104,7 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
 
     Availability availability;
     string? downloadMessage;
+    float downloadProgress;
 
     public bool PreventButtonClicks => downloadJob.Status == AsyncDownloadStatus.Downloading;
 
@@ -118,6 +120,11 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
         homepageBtn.buttonBehav.greyedOut = BlockInteraction || entry.Homepage.Trim().Length == 0;
 
         // If the download just finished, display its message
+        if (downloadProgress > 0 && downloadProgress < 1) {
+            downloadLabel.SetLabel(MenuRGB(MenuColors.MediumGrey), $"Downloading... ");
+            downloadLabel.AddLabel(MenuRGB(MenuColors.DarkGrey), $"{Mathf.FloorToInt(downloadProgress * 100)}%");
+        }
+
         if (downloadMessage != null) {
             string culledMessage = downloadMessage.Replace('\n', ' ').CullLong("font", Width - downloadLabel.pos.x - 8);
             Color color = downloadJob.Status == AsyncDownloadStatus.Success ? new(.5f, 1, .5f) : new(1, .5f, .5f);
@@ -155,7 +162,7 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
     public override void Singal(MenuObject sender, string message)
     {
         if (sender == downloadBtn && downloadJob.Status == AsyncDownloadStatus.Unstarted) {
-            downloadLabel.SetLabel(MenuRGB(MenuColors.MediumGrey), "Downloading");
+            downloadLabel.SetLabel(MenuRGB(MenuColors.MediumGrey), "Downloading...");
             menu.PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
             downloadJob.Start();
         }

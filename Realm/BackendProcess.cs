@@ -39,6 +39,7 @@ sealed class BackendProcess
         string output = p.StandardOutput.ReadToEnd();
         string error = p.StandardError.ReadToEnd();
 
+        // TODO does WaitKill even.. do anything here?
         return WaitKill(p, timeout) ? new(p.ExitCode, output, error) : new(null, output, error);
     }
 

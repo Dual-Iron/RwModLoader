@@ -5,16 +5,15 @@ public enum AsyncDownloadStatus { Unstarted, Downloading, Success, Errored }
 sealed class AsyncDownload
 {
     private readonly string backendArgs;
-    private readonly int timeout;
     private string? error;
 
     /// <summary>This will be called from the worker thread. Beware.</summary>
     public event Action? OnFinish;
+    public event Action<long, long>? OnProgressUpdate;
 
-    public AsyncDownload(string backendArgs, int timeout = -1)
+    public AsyncDownload(string backendArgs)
     {
         this.backendArgs = backendArgs;
-        this.timeout = timeout;
     }
 
     public AsyncDownloadStatus Status { get; private set; }
@@ -32,25 +31,32 @@ sealed class AsyncDownload
 
     private AsyncDownloadStatus Download()
     {
-        var proc = BackendProcess.Execute(backendArgs, timeout);
+        var proc = BackendProcess.Begin(backendArgs);
+
+        while (proc.StandardOutput.ReadLine() is string line) {
+            if (line.StartsWith("PROGRESS: ")) {
+                string[] split = line.Substring("PROGRESS: ".Length).Split('/');
+
+                if (split.Length == 2 && long.TryParse(split[0], out long current) && long.TryParse(split[1], out long max)) {
+                    OnProgressUpdate?.Invoke(current, max);
+                }
+            }
+        }
+
+        string? error = proc.StandardError.ReadToEnd();
 
         if (proc.ExitCode == 0) {
             return AsyncDownloadStatus.Success;
         }
-        else if (proc.ExitCode == null) {
-            Program.Logger.LogError($"Download timed out.");
-            error = "Download timed out";
-            return AsyncDownloadStatus.Errored;
-        }
         else {
             Program.Logger.LogError($"Failed to download with error {proc.ExitCode}." +
                 $"\n  ARGS   {backendArgs}" +
-                $"\n  ERROR  {proc.Error}"
+                $"\n  ERROR  {error}"
                 );
 
-            error = proc.ExitCode == 0x31 // Connection failed
+            this.error = proc.ExitCode == 0x31 // Connection failed
                 ? "Connection failed. Do you have internet access?"
-                : proc.Error;
+                : error;
 
             return AsyncDownloadStatus.Errored;
         }
