@@ -66,7 +66,8 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
         homepageBtn.size = new(32, 32);
         homepageBtn.roundedRect.size = homepageBtn.size;
 
-        inner.subObjects.Add(status = new(inner, new(128 + 32 * 2 + pad * 3, 16), default));
+        inner.subObjects.Add(downloadLabel = new(inner, new(128 + 32 * 2 + pad * 3, 16), default));
+        inner.subObjects.Add(homepageLabel = new(inner, new(128 + 32 * 2 + pad * 3, 32), default));
 
         RwmodFileHeader match = State.CurrentRefreshCache.Headers.FirstOrDefault(h => h.Header.Owner == entry.Owner && h.Header.Name == entry.Name);
 
@@ -96,12 +97,12 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
     readonly MenuSprite icon;
     readonly SymbolButton downloadBtn;
     readonly SymbolButton homepageBtn;
-    readonly MultiLabel status;
+    readonly MultiLabel downloadLabel;
+    readonly MultiLabel homepageLabel;
     readonly AsyncDownload downloadJob;
 
     Availability availability;
     string? downloadMessage;
-    bool previewingHomepage;
 
     public bool PreventButtonClicks => downloadJob.Status == AsyncDownloadStatus.Downloading;
 
@@ -118,11 +119,10 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
 
         // If the download just finished, display its message
         if (downloadMessage != null) {
-            string culledMessage = downloadMessage.Replace('\n', ' ').CullLong("font", Width - status.pos.x - 8);
+            string culledMessage = downloadMessage.Replace('\n', ' ').CullLong("font", Width - downloadLabel.pos.x - 8);
             Color color = downloadJob.Status == AsyncDownloadStatus.Success ? new(.5f, 1, .5f) : new(1, .5f, .5f);
-            status.SetLabel(color, culledMessage);
+            downloadLabel.SetLabel(color, culledMessage);
 
-            previewingHomepage = false;
             downloadMessage = null;
         }
 
@@ -155,25 +155,21 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
     public override void Singal(MenuObject sender, string message)
     {
         if (sender == downloadBtn && downloadJob.Status == AsyncDownloadStatus.Unstarted) {
-            previewingHomepage = false;
-
-            status.SetLabel(MenuRGB(MenuColors.MediumGrey), "Downloading");
+            downloadLabel.SetLabel(MenuRGB(MenuColors.MediumGrey), "Downloading");
             menu.PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
             downloadJob.Start();
         }
         else if (sender == homepageBtn) {
-            if (!previewingHomepage) {
-                previewingHomepage = true;
-
+            if (homepageLabel.IsEmpty) {
                 float prefixWidth = "Click again to visit [".MeasureWidth(Gui.GetFont("font"));
 
                 string homepage = entry.Homepage;
                 if (homepage.StartsWith("https://"))
                     homepage = homepage.Substring("https://".Length);
 
-                status.SetLabel(MenuRGB(MenuColors.MediumGrey), "Click again to visit [");
-                status.AddLabel(new(0.5f, 0.9f, 1f), homepage.CullLong("font", Width - status.pos.x - prefixWidth - 12));
-                status.AddLabel(MenuRGB(MenuColors.MediumGrey), "]");
+                homepageLabel.SetLabel(MenuRGB(MenuColors.MediumGrey), "Click again to visit [");
+                homepageLabel.AddLabel(new(0.5f, 0.9f, 1f), homepage.CullLong("font", Width - homepageLabel.pos.x - prefixWidth - 12));
+                homepageLabel.AddLabel(MenuRGB(MenuColors.MediumGrey), "]");
             }
             else {
                 Process.Start(entry.Homepage)?.Dispose();
@@ -199,8 +195,8 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
             _ => "Download mod",
         };
         if (selected == homepageBtn && string.IsNullOrEmpty(entry.Homepage)) return "Mod has no homepage";
-        if (selected == homepageBtn && previewingHomepage) return "Visit homepage";
-        if (selected == homepageBtn) return "Preview homepage";
+        if (selected == homepageBtn && homepageLabel.IsEmpty) return "Preview homepage";
+        if (selected == homepageBtn) return "Visit homepage";
         return null;
     }
 }

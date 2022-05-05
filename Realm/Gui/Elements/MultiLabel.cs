@@ -8,7 +8,7 @@ sealed class MultiLabel : RectangularMenuObject
     readonly List<FLabel> labels = new();
     readonly string font;
 
-    public float LineHeight { get; set; }
+    public bool IsEmpty => labels.Count == 0;
 
     public MultiLabel(MenuObject owner, Vector2 pos, Vector2 size, string font = "font") : base(owner.menu, owner, pos, size)
     {
