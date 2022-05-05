@@ -79,9 +79,9 @@ sealed class AudbPane : RectangularMenuObject, IListable, IHoverable
 
     TempDir? tempDir;
     AsyncDownload? downloadJob;
-    
     Availability availability;
     string? downloadMessage;
+    float downloadProgress;
 
     public bool PreventButtonClicks => downloadJob?.Status == AsyncDownloadStatus.Downloading;
 
@@ -94,6 +94,11 @@ sealed class AudbPane : RectangularMenuObject, IListable, IHoverable
     public override void Update()
     {
         downloadBtn.buttonBehav.greyedOut = BlockInteraction || availability == Availability.Installed || PreventButtonClicks;
+
+        if (downloadProgress > 0 && downloadProgress < 1) {
+            status.SetLabel(MenuRGB(MenuColors.MediumGrey), $"Downloading... ");
+            status.AddLabel(MenuRGB(MenuColors.DarkGrey), $"{Mathf.FloorToInt(downloadProgress * 100)}%");
+        }
 
         // If the download just finished, display its message
         if (downloadMessage != null) {
@@ -123,14 +128,22 @@ sealed class AudbPane : RectangularMenuObject, IListable, IHoverable
     public override void Singal(MenuObject sender, string message)
     {
         if (downloadJob == null && sender == downloadBtn) {
-            status.SetLabel(MenuRGB(MenuColors.MediumGrey), "Downloading");
+            status.SetLabel(MenuRGB(MenuColors.MediumGrey), "Downloading...");
             menu.PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
 
-            GetDownloadArgs(out var dir, out var args);
+            GetDownloadArgs(out TempDir dir, out int downloadCount, out string args);
+
+            int downloadCurrent = 0;
 
             tempDir = dir;
             downloadJob = new AsyncDownload(args);
             downloadJob.OnFinish += FinishDownload;
+            downloadJob.OnProgressUpdate += (current, max) => {
+                if (current == 0) {
+                    downloadCurrent++;
+                }
+                downloadProgress = current / (float)max * (downloadCurrent / (float)downloadCurrent);
+            };
             downloadJob.Start();
         }
     }
@@ -153,9 +166,10 @@ sealed class AudbPane : RectangularMenuObject, IListable, IHoverable
         if (menu is ModMenu m) m.NeedsRefresh = true;
     }
 
-    private void GetDownloadArgs(out TempDir dir, out string args)
+    private void GetDownloadArgs(out TempDir dir, out int downloadCount, out string args)
     {
         dir = new();
+        downloadCount = 1;
 
         string path = dir.Info.CreateSubdirectory(entry.Name).FullName;
 
@@ -169,6 +183,7 @@ sealed class AudbPane : RectangularMenuObject, IListable, IHoverable
         foreach (var dep in entry.Dependencies) {
             var depEntry = allMods.FirstOrDefault(a => a.ID == dep);
             if (depEntry != null) {
+                downloadCount += 1;
                 dls.Append($"-dl \"{depEntry.Url}\" \"{Path.Combine(path, depEntry.Filename)}\" ");
             }
             else {
