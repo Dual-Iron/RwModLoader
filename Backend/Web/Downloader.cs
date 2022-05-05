@@ -72,6 +72,10 @@ static class Downloader
 
     static async Task<ExitStatus> Rdb(RdbEntry entry)
     {
+        if (SemVer.Parse(entry.version) is not SemVer ver) {
+            return ExitStatus.InvalidVersion;
+        }
+
         using var request = new HttpRequestMessage(HttpMethod.Get, entry.binary);
         using var response = await ExtWeb.Client.SendAsync(request);
         using var content = response.Content;
@@ -83,10 +87,6 @@ static class Downloader
         using var o = new TempFile();
         using (var i = await content.ReadAsStreamAsync())
             await i.CopyToAsync(o.Stream);
-
-        if (SemVer.Parse(entry.version) is not SemVer ver) {
-            return ExitStatus.InvalidVersion;
-        }
 
         o.Stream.Dispose();
 
