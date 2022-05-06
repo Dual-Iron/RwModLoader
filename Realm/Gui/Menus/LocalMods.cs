@@ -169,6 +169,7 @@ To find which mod caused the error, disable half your mods until the error stops
         // Add the panels sorted alphabetically
         List<RwmodFileHeader> headers = State.CurrentRefreshCache.Headers.ToList();
 
+        headers.RemoveAll(h => (h.Header.Flags & RwmodHeader.FileFlags.Hidden) != 0);
         headers.Sort(RwmodFileHeader.AlphabeticSort);
 
         foreach (var header in headers) {
