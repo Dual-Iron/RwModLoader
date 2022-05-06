@@ -8,6 +8,13 @@ sealed class ModLoader
 {
     public LoadedAssemblyPool? LoadedAssemblyPool { get; private set; }
 
+    public void UnloadAndQuit(Progressable progressable)
+    {
+        GetReloadState(progressable);
+        Unload(progressable);
+        UnityEngine.Application.Quit();
+    }
+
     public void Reload(Progressable progressable)
     {
         List<ModReloadState> reloadState = GetReloadState(progressable);

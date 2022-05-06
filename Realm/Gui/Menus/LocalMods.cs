@@ -237,14 +237,9 @@ To find which mod caused the error, disable half your mods until the error stops
 
         if (sender == saveButton && reloadJob == null) {
             SaveChanges();
-            if (quitOnSave) {
-                Application.Quit();
-            }
-            else {
-                reloadJob = Job.Start(SaveExitJob);
-                progressDisplay.ShowProgressPercent = true;
-                menu.PlaySound(SoundID.MENU_Switch_Page_Out);
-            }
+            reloadJob = Job.Start(SaveExitJob);
+            progressDisplay.ShowProgressPercent = true;
+            menu.PlaySound(SoundID.MENU_Switch_Page_Out);
             return;
         }
 
@@ -288,7 +283,12 @@ To find which mod caused the error, disable half your mods until the error stops
     {
         FailedLoad.UndoHooks();
 
-        State.Mods.Reload(progress);
+        if (quitOnSave) {
+            State.Mods.UnloadAndQuit(progress);
+        }
+        else {
+            State.Mods.Reload(progress);
+        }
 
         if (progress.ProgressState == ProgressStateType.Failed) {
             forceExitGame = true;
