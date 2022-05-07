@@ -21,7 +21,7 @@ sealed class ModLoader
 
         Unload(progressable);
 
-        if (progressable.ProgressState == ProgressStateType.Failed) return;
+        if (progressable.Errors) return;
 
         Load(progressable, reloadState);
     }
@@ -40,7 +40,7 @@ sealed class ModLoader
     {
         PluginWrapper.WrapPlugins(progressable, out var wrappedAsms);
 
-        if (progressable.ProgressState == ProgressStateType.Failed) return;
+        if (progressable.Errors) return;
 
         if (wrappedAsms.Count > 0) {
             State.Prefs.Enable(wrappedAsms);
@@ -69,19 +69,19 @@ sealed class ModLoader
 
         AssemblyPool assemblyPool = AssemblyPool.Read(progressable, plugins);
 
-        if (progressable.ProgressState == ProgressStateType.Failed) return;
+        if (progressable.Errors) return;
         progressable.Message(MessageType.Info, "Loading assemblies");
         progressable.Progress = 0;
 
         LoadedAssemblyPool = LoadedAssemblyPool.Load(progressable, assemblyPool);
 
-        if (progressable.ProgressState == ProgressStateType.Failed) return;
+        if (progressable.Errors) return;
         progressable.Message(MessageType.Info, "Enabling mods");
         progressable.Progress = 0;
 
         LoadedAssemblyPool.InitializeMods(progressable);
 
-        if (progressable.ProgressState == ProgressStateType.Failed) return;
+        if (progressable.Errors) return;
 
         // Call Reload after the mods are loaded
         // This ensures they have an instance to pass the state to

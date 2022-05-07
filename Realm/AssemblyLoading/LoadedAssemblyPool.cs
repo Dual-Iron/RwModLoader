@@ -27,7 +27,7 @@ sealed class LoadedAssemblyPool
         }
 
         tasksComplete++;
-        if (progressable.ProgressState == ProgressStateType.Failed) {
+        if (progressable.Errors) {
             return ret;
         }
 
@@ -135,7 +135,7 @@ sealed class LoadedAssemblyPool
             }
         }
 
-        if (progressable.ProgressState == ProgressStateType.Failed) return;
+        if (progressable.Errors) return;
 
         ReloadFixes.PreLoad();
 
@@ -163,7 +163,7 @@ sealed class LoadedAssemblyPool
             progressable.Progress = ++finished / (float)total;
         }
 
-        if (progressable.ProgressState == ProgressStateType.Failed) return;
+        if (progressable.Errors) return;
 
         ReloadFixes.PostLoad();
     }

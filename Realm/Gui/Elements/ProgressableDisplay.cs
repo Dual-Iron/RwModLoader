@@ -55,7 +55,7 @@ sealed class ProgressableDisplay : RectangularMenuObject
         }
 
         if (progress != null) {
-            if (messages.ProgressState == ProgressStateType.Failed)
+            if (messages.Errors)
                 progress.label.isVisible = false;
             else
                 progress.text = messages.Progress.ToString("p");

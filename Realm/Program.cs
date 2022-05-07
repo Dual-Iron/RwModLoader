@@ -54,7 +54,7 @@ static class Program
 
             State.Mods.Reload(prog);
 
-            if (prog.ProgressState == ProgressStateType.Failed) {
+            if (prog.Errors) {
                 FailedLoad.Hook();
             }
         }

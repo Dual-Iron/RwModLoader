@@ -292,7 +292,7 @@ To find which mod caused the error, disable half your mods until the error stops
             State.Mods.Reload(progress);
         }
 
-        if (progress.ProgressState == ProgressStateType.Failed) {
+        if (progress.Errors) {
             forceExitGame = true;
         }
         else {

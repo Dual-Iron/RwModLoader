@@ -5,12 +5,12 @@ namespace Realm.Logging;
 class Progressable
 {
     public virtual float Progress { get; set; }
-    public ProgressStateType ProgressState { get; set; }
+    public bool Errors { get; set; }
 
     public virtual void Message(MessageType messageType, string message)
     {
         if (messageType == MessageType.Fatal) {
-            ProgressState = ProgressStateType.Failed;
+            Errors = true;
         }
 
         Program.Logger.Log(messageType switch {
