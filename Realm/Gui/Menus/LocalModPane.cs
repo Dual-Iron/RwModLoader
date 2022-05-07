@@ -58,7 +58,6 @@ sealed class LocalModPane : RectangularMenuObject, CheckBox.IOwnCheckBox, ILista
     private readonly SymbolButton deleteButton;
     private readonly SymbolButton? homepageButton;
 
-    public bool IsBelow { get; set; }
     public bool BlockInteraction { get; set; }
     public float Visibility { get; set; }
 

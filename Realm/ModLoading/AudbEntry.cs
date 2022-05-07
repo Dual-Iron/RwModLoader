@@ -31,6 +31,7 @@ sealed class AudbEntry
 
     public static AudbEntry? FromJson(Dictionary<string, object> json)
     {
+        // help
         if (json.TryGetValue("url", out var v) && v is string url &&
             json.TryGetValue("version", out v) && v is long version &&
             json.TryGetValue("lastmodified", out v) && v is var updated &&

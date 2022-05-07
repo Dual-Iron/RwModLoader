@@ -5,7 +5,6 @@ namespace Realm.Gui;
 
 interface IListable
 {
-    bool IsBelow { set; }
     bool BlockInteraction { set; }
     float Visibility { set; }
     Vector2 Pos { set; }

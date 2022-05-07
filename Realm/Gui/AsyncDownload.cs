@@ -9,7 +9,6 @@ sealed class AsyncDownload
     private readonly string backendArgs;
     private string? error;
 
-    /// <summary>This will be called from the worker thread. Beware.</summary>
     public event Action? OnFinish;
     public event Action<long, long>? OnProgressUpdate;
 

@@ -108,7 +108,6 @@ sealed class BrowserPane : RectangularMenuObject, IListable, IHoverable
 
     public bool PreventButtonClicks => downloadJob.Status == AsyncDownloadStatus.Downloading;
 
-    public bool IsBelow { get; set; }
     public bool BlockInteraction { get; set; }
     public float Visibility { get; set; }
     public Vector2 Pos { get => pos; set => pos = value; }
