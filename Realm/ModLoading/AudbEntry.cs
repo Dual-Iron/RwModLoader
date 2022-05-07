@@ -1,4 +1,6 @@
-﻿namespace Realm.ModLoading;
+﻿using Realm.Threading;
+
+namespace Realm.ModLoading;
 
 sealed class AudbEntry
 {
@@ -69,20 +71,20 @@ sealed class AudbEntry
 
     private static readonly object writeLock = new();
 
-    public static void PopulateAudb()
+    public static void PopulateAudb(CancelationToken cancel)
     {
         lock (writeLock) {
             if (AudbEntries.Count == 0) {
-                Populate();
+                Populate(cancel);
 
                 AudbEntries.RemoveAll(e => e.ID == new AudbID(0, 0) || e.ID == new AudbID(0, 1));
             }
         }
     }
 
-    private static void Populate()
+    private static void Populate(CancelationToken cancel)
     {
-        BackendProcess proc = BackendProcess.Execute("-audb", timeout: 3000);
+        BackendProcess proc = BackendProcess.Execute("-audb", timeout: 3000, cancel);
 
         if (proc.ExitCode != 0) {
             Program.Logger.LogError($"Error while getting AUDB entries: {proc}");

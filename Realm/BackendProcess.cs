@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using Realm.Threading;
+using System.Diagnostics;
+using System.Threading;
 
 namespace Realm;
 
@@ -23,16 +25,22 @@ sealed class BackendProcess
     /// Waits for the process to die and kills it if it takes too long.
     /// </summary>
     /// <returns><see langword="false"/> if the process timed out; otherwise <see langword="true"/>.</returns>
-    public static bool WaitKill(Process p, int timeout = -1)
+    public static bool WaitKill(Process p, int timeout = -1, CancelationToken cancelation = default)
     {
-        if (!p.WaitForExit(timeout)) {
-            p.Kill();
-            return false;
+        int timer = 0;
+        while ((timer < timeout || timeout < 0) && !cancelation.Canceled) {
+            if (p.HasExited) {
+                return true;
+            }
+
+            timer += 1;
+            Thread.Sleep(1);
         }
-        return true;
+        p.Kill();
+        return false;
     }
 
-    public static BackendProcess Execute(string args, int timeout = -1)
+    public static BackendProcess Execute(string args, int timeout = -1, CancelationToken cancelation = default)
     {
         using Process p = Begin(args);
 
@@ -44,7 +52,7 @@ sealed class BackendProcess
         p.BeginOutputReadLine();
         p.BeginErrorReadLine();
 
-        int? exitCode = WaitKill(p, timeout) ? p.ExitCode : null;
+        int? exitCode = WaitKill(p, timeout, cancelation) ? p.ExitCode : null;
 
         return new(exitCode, output.ToString(), error.ToString());
     }

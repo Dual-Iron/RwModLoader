@@ -1,4 +1,6 @@
-﻿namespace Realm.Gui;
+﻿using Realm.Threading;
+
+namespace Realm.Gui;
 
 public enum AsyncDownloadStatus { Unstarted, Downloading, Success, Errored }
 
@@ -22,7 +24,8 @@ sealed class AsyncDownload
     {
         if (Status == AsyncDownloadStatus.Unstarted) {
             Status = AsyncDownloadStatus.Downloading;
-            Job.Start(() => {
+
+            NetworkThread.Instance.Enqueue(() => {
                 Status = Download();
                 OnFinish?.Invoke();
             });

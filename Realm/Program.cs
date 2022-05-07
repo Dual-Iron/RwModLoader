@@ -14,6 +14,7 @@ using Realm.AssemblyLoading;
 using Realm.ModLoading;
 using Realm.Gui.Warnings;
 using Realm.Logging;
+using Realm.Threading;
 
 namespace Realm;
 
@@ -60,7 +61,7 @@ static class Program
 
         CheckForSelfUpdate();
 
-        Job.Start(AudbEntry.PopulateAudb);
+        NetworkThread.Instance.Enqueue(() => AudbEntry.PopulateAudb(cancel: default));
     }
 
     public static List<string> GetPatchMods()

@@ -1,6 +1,7 @@
 ﻿using Menu;
 using Realm.Gui.Elements;
 using Realm.ModLoading;
+using Realm.Threading;
 using UnityEngine;
 
 namespace Realm.Gui.Menus;
@@ -27,11 +28,16 @@ There are two types of mods available on the browser:
     readonly Listing rdbListing;
     readonly MenuLabel warningLabel;
     readonly TextBox search;
-
-    BrowserPageState pageState = new(null);
+    
+    CancelationSource cancel;
+    BrowserPageState pageState;
 
     public Browser(MenuObject owner, Vector2 pos) : base(owner, pos)
     {
+        cancel = new();
+        pageState = new(null, cancel.Token);
+        pageState.LoadPage();
+
         subObjects.Add(rdbListing = new(
             this,
             pos: new(1366 / 2 - BrowserPane.TotalWidth / 2, 40),
@@ -53,8 +59,6 @@ There are two types of mods available on the browser:
 
         subObjects.Add(loadSpinny = new(this, rdbListing.pos + rdbListing.size + new Vector2(-24, 8+12)));
         subObjects.Add(warningLabel = new(menu, this, "", rdbListing.pos, rdbListing.size, true));
-
-        pageState.LoadPage();
     }
 
     public override void Update()
@@ -134,7 +138,11 @@ There are two types of mods available on the browser:
     {
         searching = search != null;
         rdbListing.ClearListElements();
-        pageState = new(search);
+
+        cancel.Cancel();
+        cancel = new();
+
+        pageState = new(search, cancel.Token);
         pageState.LoadPage();
     }
 }

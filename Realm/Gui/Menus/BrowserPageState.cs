@@ -1,4 +1,5 @@
 ﻿using Realm.ModLoading;
+using Realm.Threading;
 using System.Threading;
 using UnityEngine;
 
@@ -8,6 +9,8 @@ sealed class BrowserPageState
 {
     public readonly List<RdbEntry> Entries = new();
     public readonly string? Search;
+
+    private readonly CancelationToken cancel;
 
     private bool justFinished;
     public bool JustFinished {
@@ -24,16 +27,18 @@ sealed class BrowserPageState
     public string? Error;
     public int Page;
 
-    public BrowserPageState(string? search)
+    public BrowserPageState(string? search, CancelationToken cancelation)
     {
         Search = search;
+
+        cancel = cancelation;
     }
 
     public void LoadPage()
     {
         if (State is not BrowserState.LoadingPages and not BrowserState.Errored) {
             State = BrowserState.LoadingPages;
-            Job.Start(DoLoad);
+            NetworkThread.Instance.Enqueue(DoLoad);
         }
     }
 
@@ -48,6 +53,10 @@ sealed class BrowserPageState
         while (time > 0 && !www.isDone) {
             time -= 1;
             Thread.Sleep(1);
+
+            if (cancel.Canceled) {
+                return;
+            }
         }
 
         string error = time > 0 ? www.error : "Timed out";
@@ -61,7 +70,11 @@ sealed class BrowserPageState
         }
 
         // Load AUDB entries from the worker thread. Don't need to use the value yet
-        AudbEntry.PopulateAudb();
+        AudbEntry.PopulateAudb(cancel);
+
+        if (cancel.Canceled) {
+            return;
+        }
 
         // Get rdb entries and add them to the list
         List<RdbEntry> entries = GetEntriesFrom(www.text).ToList();

@@ -1,4 +1,5 @@
 ﻿using Realm.Assets;
+using Realm.Threading;
 using UnityEngine;
 
 namespace Realm.Gui;
@@ -22,7 +23,7 @@ sealed class AsyncIcon
     {
         if (Status == AsyncIconStatus.Unstarted) {
             Status = AsyncIconStatus.Loading;
-            Job.Start(() => Status = Load());
+            NetworkThread.Instance.Enqueue(() => Status = Load());
         }
     }
 

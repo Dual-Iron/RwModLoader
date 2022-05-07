@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 
-namespace Realm;
+namespace Realm.Threading;
 
 sealed class Job
 {
