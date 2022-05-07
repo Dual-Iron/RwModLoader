@@ -6,14 +6,7 @@ sealed class NetworkThread : BackgroundThread
 {
     private NetworkThread() : base("network", sleepTime: 10_000) { }
 
-    private static readonly NetworkThread current = new();
-
-    public static NetworkThread Instance {
-        get {
-            current.Awaken();
-            return current;
-        }
-    }
+    public static NetworkThread Instance { get; } = new();
 }
 
 abstract class BackgroundThread
@@ -42,10 +35,10 @@ abstract class BackgroundThread
             actionsNext.Add(src);
         }
 
+        mre.Set();
+
         return new(src);
     }
-
-    protected void Awaken() => mre.Set();
 
     private void RunLoop()
     {
