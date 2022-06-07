@@ -91,9 +91,11 @@ public static partial class VirtualEnumApi
     private static readonly Func<Func<Type, object, bool>, Type, object, bool> IsDefined = (orig, type, value) => {
         var ret = orig(type, value);
         if (!ret && virtualEnums.TryGetValue(type, out var data)) {
+            if (value is string name) {
+                return data.EnumValues.Forward.TryGetValue(name, out _);
+            }
             var asLong = AsLong(Enum.GetUnderlyingType(type), value);
-            if (data.EnumValues.Reverse.TryGetValue(asLong, out _))
-                ret = true;
+            return data.EnumValues.Reverse.TryGetValue(asLong, out _);
         }
         return ret;
     };

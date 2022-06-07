@@ -110,14 +110,26 @@ public static partial class VirtualEnumApi
         public static T Cast<T>(object o) => (T)o;
         public static object CastRuntime(Type t, object o)
         {
-            return castMethod.MakeGenericMethod(t).Invoke(null, new[] { o });
+            try {
+                return castMethod.MakeGenericMethod(t).Invoke(null, new[] { o });
+            }
+            catch (TargetInvocationException e) {
+                throw e.InnerException;
+            }
         }
         private static readonly MethodInfo castMethod = typeof(Caster).GetMethod("Cast", BindingFlags.Public | BindingFlags.Static | BindingFlags.ExactBinding);
     }
 
     private static long AsLong(Type underlyingType, object enumValue)
     {
-        var asUnderlyingType = Caster.CastRuntime(underlyingType, enumValue);
+        object asUnderlyingType;
+
+        try {
+            asUnderlyingType = Caster.CastRuntime(underlyingType, enumValue);
+        }
+        catch (InvalidCastException) {
+            throw new ArgumentException($"Provided value's type was \"{underlyingType}\" which is not an integral type.");
+        }
 
         if (underlyingType == typeof(int)) return unchecked((int)asUnderlyingType);
         if (underlyingType == typeof(short)) return unchecked((short)asUnderlyingType);
