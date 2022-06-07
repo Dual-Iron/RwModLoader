@@ -9,7 +9,7 @@ To compare Realm with other similar projects:
 - [BepInEx](https://github.com/BepInEx/BepInEx) loads mods for Unity games. Realm uses BepInEx as a framework to bootstrap the vanilla game.
 - [Partiality](https://github.com/PartialityModding) loads mods for Rain World and a few other games. It's slowly being replaced by BepInEx, though.
 
-Realm loads and manages your mods in-game, so you can manage mods **without closing the game**. It's a minor miracle this works at all, and there are [a few](#7) mods it breaks. If a mod doesn't work after reloading in-game, restart and avoid reloading while that mod is installed.
+Realm loads and manages your mods in-game, so you can manage mods **without closing the game**. It's a minor miracle this works at all, and there are [a few](https://github.com/Dual-Iron/RwModLoader/issues/7) mods it breaks. If a mod doesn't work after reloading in-game, restart and avoid reloading while that mod is installed.
 
 There's a **mod browser** to make installing mods easier. You can still install them manually though: Drop the mod's files and dependencies into the plugins folder as one `.zip` file, `.dll` file, or folder. You can find the plugins folder within the mod menu.[<sup>?</sup>](.github/SUPPORT.md)
 
