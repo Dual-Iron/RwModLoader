@@ -25,6 +25,7 @@ static class Program
     // Start doing stuff here.
     internal static void Main(List<string> earlyWrappedAsms)
     {
+        Logger.LogInfo($"Process started at {DateTime.UtcNow} UTC");
         Logger.LogDebug("Debug logging enabled.");
 
         if (!File.Exists(RealmPaths.BackendPath)) {
