@@ -1,6 +1,6 @@
 ﻿namespace Realm.Logging;
 
-sealed class LoggingProgressable : Progressable
+sealed class CachedProgressable : Progressable
 {
     public MessageInfo this[int index] {
         get {

@@ -37,7 +37,7 @@ To install mods, you can either:
     readonly FixedMenuContainer modListingGroup;
     SimpleButton? openPatchesButton;
 
-    readonly LoggingProgressable progress = new();
+    readonly CachedProgressable progress = new();
     readonly FixedMenuContainer progressContainer;
     readonly ProgressableDisplay progressDisplay;
 

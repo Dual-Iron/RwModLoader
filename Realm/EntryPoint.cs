@@ -35,7 +35,7 @@ static class EntryPoint
 
         initialized = true;
 
-        // Have to use EmptyProgressable and can't log the result here.
+        // Be careful not to end up calling LogMessage through this progressable. Not currently possible tho.
         ModLoading.PluginWrapper.WrapPlugins(new Progressable(), out earlyWrappedAsms);
 
         // Can't reference or hook Chainloader before it's been initialized on its own or the game bluescreens

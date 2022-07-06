@@ -42,8 +42,9 @@ static class PluginWrapper
             BackendProcess proc = BackendProcess.Execute(args.ToString());
 
             if (proc.ExitCode == 0) {
-                if (proc.Output.Length > 0) {
-                    var wrapped = proc.Output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+                var output = proc.Output.Trim();
+                if (output.Length > 0) {
+                    var wrapped = output.Split(new[] { "\n", "\r", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
 
                     wrappedMods.AddRange(wrapped);
 
