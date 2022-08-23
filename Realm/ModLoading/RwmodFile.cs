@@ -53,4 +53,9 @@ sealed class RwmodFile
         Header = header;
         Entries = entries;
     }
+
+    public override string ToString()
+    {
+        return Header.ToString();
+    }
 }

@@ -44,25 +44,10 @@ sealed class BrowserPageState
 
     private void DoLoad()
     {
-        string? searchQuery = Search == null ? "" : $"&search={Uri.EscapeDataString(Search)}";
+        BackendProcess proc = BackendProcess.Execute($"-rdblist {Page} \"{Search}\"", timeout: 3000, cancel);
 
-        using WWW www = new($"https://rdb.dual-iron.xyz/mods?page={Page}{searchQuery}");
-
-        int time = 3000; // milliseconds approx
-
-        while (time > 0 && !www.isDone) {
-            time -= 1;
-            Thread.Sleep(1);
-
-            if (cancel.Canceled) {
-                return;
-            }
-        }
-
-        string error = time > 0 ? www.error : "Timed out";
-
-        if (!string.IsNullOrEmpty(error)) {
-            Program.Logger.LogError($"Error while adding mods: {error}");
+        if (proc.ExitCode != 0) {
+            Program.Logger.LogError($"Error while adding mods: {proc}");
 
             State = BrowserState.Errored;
             Error = "Offline";
@@ -77,7 +62,7 @@ sealed class BrowserPageState
         }
 
         // Get rdb entries and add them to the list
-        List<RdbEntry> entries = GetEntriesFrom(www.text).ToList();
+        List<RdbEntry> entries = GetEntriesFrom(proc.Output.TrimEnd()).ToList();
 
         foreach (var entry in entries) {
             Entries.Add(entry);

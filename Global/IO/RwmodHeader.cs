@@ -30,6 +30,11 @@ sealed class RwmodHeader
     public readonly string Owner;
     public readonly string Homepage;
 
+    public override string ToString()
+    {
+        return Version.HasValue ? $"{Name} {Version}" : Name;
+    }
+
     public void Write(Stream s)
     {
         s.Write(new byte[] { 0x52, 0x57, 0x4d, 0x4f, 0x44 }, 0, 5);

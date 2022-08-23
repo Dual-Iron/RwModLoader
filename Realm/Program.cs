@@ -34,6 +34,10 @@ static class Program
             return;
         }
 
+        ConfigFile file = new(configPath: Path.Combine(Paths.ConfigPath, "Realm.cfg"), saveOnInit: true);
+        State.DeveloperMode = file.Bind("General", "DeveloperMode", false, "Enables reloading mods in the pause menu. This feature is prone to breaking and best suited for mod development.").Value;
+        bool load = file.Bind("General", "LoadOnStart", true, "Enables loading mods before the main menu appears.").Value;
+
         State.PatchMods = GetPatchMods();
 
         NeuterPartiality();
@@ -42,10 +46,6 @@ static class Program
         VanillaFixes.Hook();
         Gui.Gui.Hook();
         State.Prefs.Load();
-
-        ConfigFile file = new(configPath: Path.Combine(Paths.ConfigPath, "Realm.cfg"), saveOnInit: true);
-        State.DeveloperMode = file.Bind("General", "DeveloperMode", false, "Enables reloading mods in the pause menu. This feature is prone to breaking and best suited for mod development.").Value;
-        bool load = file.Bind("General", "LoadOnStart", true, "Enables loading mods before the main menu appears.").Value;
 
         if (load) {
             State.Prefs.Enable(earlyWrappedAsms);

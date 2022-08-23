@@ -6,6 +6,23 @@ namespace Backend.Web;
 
 static class Downloader
 {
+    public static async Task<ExitStatus> RdbList(int page, string search)
+    {
+        try {
+            string searchQuery = search == "" ? "" : $"&search={Uri.EscapeDataString(search)}";
+
+            using var request = new HttpRequestMessage(HttpMethod.Get, $"https://rdb.dual-iron.xyz/mods?page={page}{searchQuery}");
+            using var response = await ExtWeb.Client.SendAsync(request);
+
+            Console.WriteLine(await response.Content.ReadAsStringAsync());
+
+            return ExitStatus.Success;
+        }
+        catch (HttpRequestException e) {
+            return ExitStatus.ConnectionFailed(e.Message);
+        }
+    }
+
     public static async Task<ExitStatus> Audb()
     {
         try {

@@ -29,6 +29,7 @@ while (argEnumerator.MoveNext()) {
         "-i" => RealmInstaller.Install(),
         "-q" => SelfUpdater.QuerySelfUpdate().Result,
         "-dl" => Download(argEnumerator),
+        "-rdblist" => RdbList(argEnumerator),
         "-audb" => Downloader.Audb().Result,
         "-rdb" => argEnumerator.MoveNext() ? Downloader.Rdb(argEnumerator.Current).Result : ExitStatus.ExpectedArg,
         "-p" => argEnumerator.MoveNext() ? Patcher.Patch(argEnumerator.Current) : ExitStatus.ExpectedArg,
@@ -49,6 +50,16 @@ while (argEnumerator.MoveNext()) {
 }
 
 return 0;
+
+static ExitStatus RdbList(IEnumerator<string> args)
+{
+    if (args.MoveNext()) {
+        if (int.TryParse(args.Current, out int page) && args.MoveNext()) {
+            return Downloader.RdbList(page, args.Current).Result;
+        }
+    }
+    return ExitStatus.ExpectedArg;
+}
 
 static ExitStatus Download(IEnumerator<string> args)
 {

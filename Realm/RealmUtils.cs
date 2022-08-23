@@ -17,17 +17,17 @@ internal static class RealmUtils
             to.Write(b, 0, r);
     }
 
-    public static IEnumerable<TNode> TopologicalSort<TNode>(this IEnumerable<TNode> nodes, Func<TNode, IEnumerable<TNode>> dependencySelector)
+    public static IEnumerable<T> TopologicalSort<T>(this IEnumerable<T> nodes, Func<T, IEnumerable<T>> dependencySelector)
     {
         // https://github.com/BepInEx/BepInEx/blob/82d8daeac165f8454afcd7f94333fe890663ccec/BepInEx/Utility.cs#L129
 
-        List<TNode> sorted_list = new();
+        List<T> sorted_list = new();
 
-        HashSet<TNode> visited = new();
-        HashSet<TNode> sorted = new();
+        HashSet<T> visited = new();
+        HashSet<T> sorted = new();
 
-        foreach (TNode input in nodes) {
-            Stack<TNode> currentStack = new();
+        foreach (T input in nodes) {
+            Stack<T> currentStack = new();
             if (!Visit(input, currentStack)) {
                 throw new Exception($"Cyclic Dependency:\r\n{currentStack.Select(x => $" - {x}").Aggregate((a, b) => $"{a}\r\n{b}")}");
             }
@@ -35,7 +35,7 @@ internal static class RealmUtils
 
         return sorted_list;
 
-        bool Visit(TNode node, Stack<TNode> stack)
+        bool Visit(T node, Stack<T> stack)
         {
             if (visited.Contains(node)) {
                 if (!sorted.Contains(node)) {
