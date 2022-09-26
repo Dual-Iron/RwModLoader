@@ -26,6 +26,8 @@ While Realm is installed, keep in mind:
 - You don't need to use BOI. In fact, you shouldn't—just launch the game without it.
 - Logs are sent to `BepInEx/LogOutput.log`.
 
+If you're on Linux or Steam Deck, please check [PJB's guide](https://gist.github.com/PJB3005/a7b635f171bd34f18a28885afa8f6e8e) for playing Rain World on those platforms.
+
 Click [here](https://github.com/Dual-Iron/RwModLoader/releases/latest) to install.
 
 ## Uninstall Realm
