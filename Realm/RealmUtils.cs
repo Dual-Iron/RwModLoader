@@ -32,7 +32,7 @@ internal static class RealmUtils
         {
             if (visited.Add(node)) {
                 foreach (var dep in dependencySelector(node)) {
-                    Visit(node);
+                    Visit(dep);
                 }
                 sorted.Add(node);
             }
