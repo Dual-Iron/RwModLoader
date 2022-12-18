@@ -28,8 +28,8 @@ internal static class RealmUtils
 
         foreach (T input in nodes) {
             Stack<T> currentStack = new();
-            if (!Visit(input, currentStack)) {
-                throw new Exception($"Cyclic Dependency:\r\n{currentStack.Select(x => $" - {x}").Aggregate((a, b) => $"{a}\r\n{b}")}");
+            if (!Visit(input, currentStack) && currentStack.Any()) {
+                Program.Logger.LogWarning($"Cyclic Dependency:\r\n{currentStack.Select(x => $" - {x}").Aggregate((a, b) => $"{a}\r\n{b}")}");
             }
         }
 
