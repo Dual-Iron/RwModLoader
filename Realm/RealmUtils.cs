@@ -17,48 +17,25 @@ internal static class RealmUtils
             to.Write(b, 0, r);
     }
 
-    public static IEnumerable<T> TopologicalSort<T>(this IEnumerable<T> nodes, Func<T, IEnumerable<T>> dependencySelector)
+    public static IEnumerable<T> LooseTopologicalSort<T>(this IEnumerable<T> nodes, Func<T, IEnumerable<T>> dependencySelector)
     {
-        // https://github.com/BepInEx/BepInEx/blob/82d8daeac165f8454afcd7f94333fe890663ccec/BepInEx/Utility.cs#L129
-
-        List<T> sorted_list = new();
-
+        List<T> sorted = new();
         HashSet<T> visited = new();
-        HashSet<T> sorted = new();
 
         foreach (T input in nodes) {
-            Stack<T> currentStack = new();
-            if (!Visit(input, currentStack) && currentStack.Any()) {
-                Program.Logger.LogWarning($"Cyclic Dependency:\r\n{currentStack.Select(x => $" - {x}").Aggregate((a, b) => $"{a}\r\n{b}")}");
-            }
+            Visit(input);
         }
 
-        return sorted_list;
+        return sorted;
 
-        bool Visit(T node, Stack<T> stack)
+        void Visit(T node)
         {
-            if (visited.Contains(node)) {
-                if (!sorted.Contains(node)) {
-                    return false;
+            if (visited.Add(node)) {
+                foreach (var dep in dependencySelector(node)) {
+                    Visit(node);
                 }
-            }
-            else {
-                visited.Add(node);
-
-                stack.Push(node);
-
-                foreach (var dep in dependencySelector(node))
-                    if (!Visit(dep, stack))
-                        return false;
-
-
                 sorted.Add(node);
-                sorted_list.Add(node);
-
-                stack.Pop();
             }
-
-            return true;
         }
     }
 }

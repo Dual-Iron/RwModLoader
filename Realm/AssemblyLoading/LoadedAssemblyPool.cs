@@ -81,7 +81,7 @@ sealed class LoadedAssemblyPool
         }
 
         // Sort assemblies by their dependencies
-        IEnumerable<ModAssembly> sortedAssemblies = Pool.Assemblies.TopologicalSort(GetDependencies);
+        IEnumerable<ModAssembly> sortedAssemblies = Pool.Assemblies.LooseTopologicalSort(GetDependencies);
 
         int total = Pool.Count;
         int finished = 0;
